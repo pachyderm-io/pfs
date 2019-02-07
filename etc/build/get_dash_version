@@ -1,0 +1,4 @@
+#!/bin/bash
+
+MOST_RECENT_VERSION=$(ls ./etc/compatibility | grep -E "([0-9]+\.){2}[0-9]+" | sort --version-sort | tail -n 1)
+echo $(cat ./etc/compatibility/$MOST_RECENT_VERSION | tail -n 1)

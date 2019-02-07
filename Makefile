@@ -19,7 +19,8 @@ COMPILE_RUN_ARGS = -d -v /var/run/docker.sock:/var/run/docker.sock --privileged=
 # Label it w the go version we bundle in:
 COMPILE_IMAGE = "pachyderm/compile:$(shell cat etc/compile/GO_VERSION)"
 export VERSION_ADDITIONAL = -$(shell git log --pretty=format:%H | head -n 1)
-LD_FLAGS = -X github.com/pachyderm/pachyderm/src/server/vendor/github.com/pachyderm/pachyderm/src/client/version.AdditionalVersion=$(VERSION_ADDITIONAL)
+DEFAULT_DASH_VERSION = $(shell etc/build/get_dash_version)
+LD_FLAGS = -X github.com/pachyderm/pachyderm/src/server/vendor/github.com/pachyderm/pachyderm/src/client/version.AdditionalVersion=$(VERSION_ADDITIONAL) -X github.com/pachyderm/pachyderm/src/server/vendor/github.com/pachyderm/pachyderm/src/client/version.DefaultDashVersion=$(DEFAULT_DASH_VERSION)
 
 CLUSTER_NAME?=pachyderm
 CLUSTER_MACHINE_TYPE?=n1-standard-4
@@ -666,11 +667,11 @@ goxc-release:
 	  @echo "Missing version. Please run via: 'make VERSION=v1.2.3-4567 VERSION_ADDITIONAL=4567 goxc-release'"; \
 	  @exit 1; \
 	fi
-	sed 's/%%VERSION_ADDITIONAL%%/$(VERSION_ADDITIONAL)/' .goxc.json.template > .goxc.json
+	sed 's/%%VERSION_ADDITIONAL%%/$(VERSION_ADDITIONAL)/;s/%%DEFAULT_DASH_VERSION%%/$(DEFAULT_DASH_VERSION)/' .goxc.json.template > .goxc.json
 	goxc -pv="$(VERSION)" -wd=./src/server/cmd/pachctl
 
 goxc-build:
-	sed 's/%%VERSION_ADDITIONAL%%/$(VERSION_ADDITIONAL)/' .goxc.json.template > .goxc.json
+	sed 's/%%VERSION_ADDITIONAL%%/$(VERSION_ADDITIONAL)/;s/%%DEFAULT_DASH_VERSION%%/$(DEFAULT_DASH_VERSION)/' .goxc.json.template > .goxc.json
 	goxc -tasks=xc -wd=./src/server/cmd/pachctl
 
 .PHONY: all \

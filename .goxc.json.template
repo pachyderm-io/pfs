@@ -5,9 +5,9 @@
 		"publish-github"
 	],
 	"BuildConstraints": "linux,amd64 darwin,amd64",
-    "BuildSettings" : {
-        "LdFlags": "-X github.com/pachyderm/pachyderm/src/server/vendor/github.com/pachyderm/pachyderm/src/client/version.AdditionalVersion=%%VERSION_ADDITIONAL%%"
-    },
+	"BuildSettings" : {
+		"LdFlags": "-X github.com/pachyderm/pachyderm/src/server/vendor/github.com/pachyderm/pachyderm/src/client/version.AdditionalVersion=%%VERSION_ADDITIONAL%% -X github.com/pachyderm/pachyderm/src/server/vendor/github.com/pachyderm/pachyderm/src/client/version.DefaultDashVersion=%%DEFAULT_DASH_VERSION%%"
+	},
 	"TaskSettings": {
 		"publish-github": {
 			"owner": "pachyderm",

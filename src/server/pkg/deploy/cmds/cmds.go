@@ -750,18 +750,18 @@ removed.`)
 
 func getDefaultOrLatestDashImage(dashImage string, dryRun bool) string {
 	var err error
-	version := version.PrettyPrintVersion(version.Version)
+	v := version.PrettyPrintVersion(version.Version)
 	defer func() {
 		if err != nil && !dryRun {
-			fmt.Printf("No updated dash image found for pachctl %v: %v Falling back to dash image %v\n", version, err, defaultDashImage)
+			fmt.Printf("No updated dash image found for pachctl %v: %v Falling back to dash image %v\n", v, err, version.DefaultDashVersion)
 		}
 	}()
 	if dashImage != "" {
 		// It has been supplied explicitly by version on the command line
 		return dashImage
 	}
-	dashImage = defaultDashImage
-	compatibleDashVersionsURL := fmt.Sprintf("https://raw.githubusercontent.com/pachyderm/pachyderm/master/etc/compatibility/%v", version)
+	dashImage = fmt.Sprintf("pachyderm/dash:%v", version.DefaultDashVersion)
+	compatibleDashVersionsURL := fmt.Sprintf("https://raw.githubusercontent.com/pachyderm/pachyderm/master/etc/compatibility/%v", v)
 	resp, err := http.Get(compatibleDashVersionsURL)
 	if err != nil {
 		return dashImage
