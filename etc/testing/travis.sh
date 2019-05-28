@@ -2,74 +2,36 @@
 
 set -ex
 
-# Make sure cache dirs exist and are writable
-mkdir -p ~/.cache/go-build
-sudo chown -R `whoami` ~/.cache/go-build
-sudo chown -R `whoami` ~/cached-deps
-
-# Note that this script executes as the user `travis`, vs the pre-install
-# script which executes as `root`. Without `chown`ing `~/cached-deps` (where
-# we store cacheable binaries), any calls to those binaries would fail because
-# they're otherwised owned by `root`.
-#
-# To further complicate things, we update the `PATH` to include
-# `~/cached-deps` in `.travis.yml`, but this doesn't update the PATH for
-# calls using `sudo`. If you need to make a `sudo` call to a binary in
-# `~/cached-deps`, you'll need to explicitly set the path like so:
-#
-#     sudo env "PATH=$PATH" minikube foo
-#
-kubectl version --client
-etcdctl --version
-
-minikube delete || true  # In case we get a recycled machine
-make launch-kube
-sleep 5
-
-# Wait until a connection with kubernetes has been established
-echo "Waiting for connection to kubernetes..."
-max_t=90
-WHEEL="\|/-";
-until {
-  minikube status 2>&1 >/dev/null
-  kubectl version 2>&1 >/dev/null
-}; do
-    if ((max_t-- <= 0)); then
-        echo "Could not connect to minikube"
-        echo "minikube status --alsologtostderr --loglevel=0 -v9:"
-        echo "==================================================="
-        minikube status --alsologtostderr --loglevel=0 -v9
-        exit 1
-    fi
-    echo -en "\e[G$${WHEEL:0:1}";
-    WHEEL="$${WHEEL:1}$${WHEEL:0:1}";
-    sleep 1;
-done
-minikube status
-kubectl version
-
 echo "Running test suite based on BUCKET=$BUCKET"
 
 PPS_SUITE=`echo $BUCKET | grep PPS > /dev/null; echo $?`
 
 make install
 make docker-build
-make docker-build-kafka
-for i in $(seq 3); do
-    make clean-launch-dev || true # may be nothing to delete
-    make launch-dev && break
-    (( i < 3 )) # false if this is the last loop (causes exit)
-    sleep 10
-done
+
+kind load docker-image pachyderm/worker:local
+kind load docker-image pachyderm/pachd:local
+
+#make docker-build-kafka
+
+#kind load docker-image kafka-demo
+
+make docker-build-test-entrypoint
+
+kind load docker-image pachyderm_entrypoint
+
+make launch-dev
 
 go install ./src/testing/match
+
+echo 'something'
 
 if [[ "$BUCKET" == "MISC" ]]; then
     if [[ "$TRAVIS_SECURE_ENV_VARS" == "true" ]]; then
         echo "Running the full misc test suite because secret env vars exist"
 
-        make lint enterprise-code-checkin-test docker-build test-pfs-server \
-            test-pfs-cmds test-pfs-storage test-deploy-cmds test-libs test-vault test-auth \
+        make lint test-pfs-server \
+            test-pfs-cmds test-pfs-storage test-deploy-cmds test-libs test-auth \
             test-enterprise test-worker test-admin test-s3gateway-integration \
             test-proto-static test-transaction
     else
@@ -77,7 +39,7 @@ if [[ "$BUCKET" == "MISC" ]]; then
 
         # Do not run some tests when we don't have access to secret
         # credentials
-        make lint enterprise-code-checkin-test docker-build test-pfs-server \
+        make lint test-pfs-server \
             test-pfs-cmds test-pfs-storage test-deploy-cmds test-libs test-admin \
             test-s3gateway-integration
     fi

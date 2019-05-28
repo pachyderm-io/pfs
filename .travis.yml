@@ -5,7 +5,7 @@ services:
 cache:
   directories:
     - $HOME/.cache/go-build
-    - $HOME/cached-deps
+#    - $HOME/cached-deps
 language: go
 go:
 - "1.11.1"
@@ -24,7 +24,14 @@ branches:
   except:
     - /^v[0-9]/
 before_install:
-- sudo etc/testing/travis_before_install.sh
+- curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+- curl -Lo kind https://github.com/kubernetes-sigs/kind/releases/download/0.2.1/kind-linux-amd64 && chmod +x kind && sudo mv kind /usr/local/bin/
+# Create a new Kubernetes cluster using KinD
+- kind create cluster
+# Set KUBECONFIG environment variable for KinD
+- export KUBECONFIG="$(kind get kubeconfig-path)"
+- pachctl port-forward &
+#- sudo etc/testing/travis_before_install.sh
 before_script:
 - docker version
 script:

@@ -23,8 +23,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/segmentio/kafka-go"
-
 	"golang.org/x/sync/errgroup"
 
 	"github.com/pachyderm/pachyderm/src/client"
@@ -48,9 +46,6 @@ import (
 
 	etcd "github.com/coreos/etcd/clientv3"
 	"github.com/gogo/protobuf/types"
-	prom_api "github.com/prometheus/client_golang/api"
-	prom_api_v1 "github.com/prometheus/client_golang/api/prometheus/v1"
-	prom_model "github.com/prometheus/common/model"
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -8222,70 +8217,6 @@ func TestCorruption(t *testing.T) {
 	}
 }
 
-func TestPachdPrometheusStats(t *testing.T) {
-	t.Skip("flake")
-	if testing.Short() {
-		t.Skip("Skipping integration tests in short mode")
-	}
-
-	port := os.Getenv("PROM_PORT")
-	promClient, err := prom_api.NewClient(prom_api.Config{
-		Address: fmt.Sprintf("http://127.0.0.1:%v", port),
-	})
-	require.NoError(t, err)
-	promAPI := prom_api_v1.NewAPI(promClient)
-
-	countQuery := func(t *testing.T, query string) float64 {
-		result, err := promAPI.Query(context.Background(), query, time.Now())
-		require.NoError(t, err)
-		resultVec := result.(prom_model.Vector)
-		require.Equal(t, 1, len(resultVec))
-		return float64(resultVec[0].Value)
-	}
-	avgQuery := func(t *testing.T, sumQuery string, countQuery string, expected int) {
-		query := "(" + sumQuery + ")/(" + countQuery + ")"
-		result, err := promAPI.Query(context.Background(), query, time.Now())
-		require.NoError(t, err)
-		resultVec := result.(prom_model.Vector)
-		require.Equal(t, expected, len(resultVec))
-	}
-	// Check stats reported on pachd pod
-	pod := "app=\"pachd\""
-	without := "(instance)"
-
-	// Check PFS API is reported
-	t.Run("GetFileAvgRuntime", func(t *testing.T) {
-		sum := fmt.Sprintf("sum(pachyderm_pachd_get_file_time_sum{%v}) without %v", pod, without)
-		count := fmt.Sprintf("sum(pachyderm_pachd_get_file_time_count{%v}) without %v", pod, without)
-		avgQuery(t, sum, count, 2) // 2 results ... one for finished, one for errored
-	})
-	t.Run("PutFileAvgRuntime", func(t *testing.T) {
-		sum := fmt.Sprintf("sum(pachyderm_pachd_put_file_time_sum{%v}) without %v", pod, without)
-		count := fmt.Sprintf("sum(pachyderm_pachd_put_file_time_count{%v}) without %v", pod, without)
-		avgQuery(t, sum, count, 1)
-	})
-	t.Run("GetFileSeconds", func(t *testing.T) {
-		query := fmt.Sprintf("sum(pachyderm_pachd_get_file_seconds_count{%v}) without %v", pod, without)
-		countQuery(t, query) // Just check query has a result
-	})
-	t.Run("PutFileSeconds", func(t *testing.T) {
-		query := fmt.Sprintf("sum(pachyderm_pachd_put_file_seconds_count{%v}) without %v", pod, without)
-		countQuery(t, query) // Just check query has a result
-	})
-
-	// Check PPS API is reported
-	t.Run("ListJobSeconds", func(t *testing.T) {
-		query := fmt.Sprintf("sum(pachyderm_pachd_list_job_seconds_count{%v}) without %v", pod, without)
-		countQuery(t, query)
-	})
-	t.Run("ListJobAvgRuntime", func(t *testing.T) {
-		sum := fmt.Sprintf("sum(pachyderm_pachd_list_job_time_sum{%v}) without %v", pod, without)
-		count := fmt.Sprintf("sum(pachyderm_pachd_list_job_time_count{%v}) without %v", pod, without)
-		avgQuery(t, sum, count, 1)
-	})
-
-}
-
 func TestRapidUpdatePipelines(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration tests in short mode")
@@ -8774,139 +8705,6 @@ func TestSpout(t *testing.T) {
 			}
 		}
 	})
-}
-
-func TestKafka(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration tests in short mode")
-	}
-	c := getPachClient(t)
-	require.NoError(t, c.DeleteAll())
-
-	host := "localhost"
-
-	// Open a connection to the kafka cluster
-	conn, err := kafka.Dial("tcp", fmt.Sprintf("%v:%v", host, 32400))
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer conn.Close()
-
-	// create the topic
-	port := ""
-	topic := tu.UniqueString("demo")
-	// this part is kinda finnicky because sometimes the zookeeper session will timeout for one of the brokers
-	brokers, err := conn.Brokers()
-	// so to deal with that, we try connecting to each broker
-	for i, b := range brokers {
-		conn, err := kafka.Dial("tcp", fmt.Sprintf("%v:%v", host, b.Port))
-		if err != nil {
-			t.Fatal(err)
-		}
-		// we keep track of the port number of brokers
-		brokers, err = conn.Brokers() // this is ok since Go does the for loop over brokers as it was for the initial loop
-		port = fmt.Sprint(b.Port)
-		// and try creating the topic
-		err = conn.CreateTopics(kafka.TopicConfig{
-			Topic:             topic,
-			NumPartitions:     1,
-			ReplicationFactor: len(brokers),
-		})
-		if err != nil {
-			// it's ok if the first n-1 fail
-			if i < len(brokers)-1 {
-				continue
-			}
-			// but if all of them fail, that's bad
-			t.Fatal("Can't create topic", err)
-		}
-		// once we found one that works, we can be done with this part
-		break
-	}
-
-	// now we want to connect to the leader broker with our topic
-	// so we look up the partiton which will have this information
-	part, err := kafka.LookupPartition(context.Background(), "tcp", fmt.Sprintf("%v:%v", host, port), topic, 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// we grab the host IP and port to pass to the image
-	host = part.Leader.Host
-	port = fmt.Sprint(part.Leader.Port)
-	// since kafka and pachyderm are in the same kubernetes cluster, we need to adjust the host address to "localhost" here
-	part.Leader.Host = "localhost"
-	// and we can now make a connection to the leader
-	conn, err = kafka.DialPartition(context.Background(), "tcp", fmt.Sprintf("%v:%v", "localhost", port), part)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// now we asynchronously write to the kafka topic
-	go func() {
-		i := 0
-		for {
-			if _, err = conn.WriteMessages(
-				kafka.Message{Value: []byte(fmt.Sprintf("Now it's %v\n", i))},
-			); err != nil {
-				t.Fatal(err)
-			}
-			i++
-		}
-	}()
-
-	// create a spout pipeline running the kafka consumer
-	_, err = c.PpsAPIClient.CreatePipeline(
-		c.Ctx(),
-		&pps.CreatePipelineRequest{
-			Pipeline: client.NewPipeline(topic),
-			Transform: &pps.Transform{
-				Image: "kafka-demo:latest",
-				Cmd:   []string{"go", "run", "./main.go"},
-				Env: map[string]string{
-					"HOST":  host,
-					"TOPIC": topic,
-					"PORT":  port,
-				},
-			},
-			Spout: &pps.Spout{}, // this needs to be non-nil to make it a spout
-		})
-	require.NoError(t, err)
-	// and verify that the spout is consuming it
-	// we'll get 5 succesive commits, and ensure that we find all the kafka messages we wrote
-	// to the first five files.
-	iter, err := c.SubscribeCommit(topic, "master", "", pfs.CommitState_FINISHED)
-	require.NoError(t, err)
-	num := 1
-	for i := 0; i < 5; i++ {
-		num-- // files end in a newline so we need to decrement here inbetween iterations
-		commitInfo, err := iter.Next()
-		require.NoError(t, err)
-		files, err := c.ListFile(topic, commitInfo.Commit.ID, "")
-		require.NoError(t, err)
-		require.Equal(t, i+1, len(files))
-
-		// get the i'th file
-		var buf bytes.Buffer
-		err = c.GetFile(topic, commitInfo.Commit.ID, files[i].File.Path, 0, 0, &buf)
-		if err != nil {
-			t.Errorf("Could not get file %v", err)
-		}
-
-		// read the lines and verify that we see each line we wrote
-		for err != io.EOF {
-			line := ""
-			line, err = buf.ReadString('\n')
-			if len(line) > 0 && line != fmt.Sprintf("Now it's %v\n", num) {
-				t.Error("Missed a kafka message:", num)
-			}
-			num++
-		}
-	}
-	// we also check that at least 5 kafka messages were consumed
-	if num < 5 {
-		t.Error("Expected to process more than 5 kafka messages:", num)
-	}
 }
 
 func TestDeferredProcessing(t *testing.T) {
