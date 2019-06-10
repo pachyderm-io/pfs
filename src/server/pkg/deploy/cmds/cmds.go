@@ -562,6 +562,11 @@ If <object store backend> is \"s3\", then the arguments are:
 	var etcdNodes int
 	var etcdStorageClassName string
 	var etcdVolume string
+	var postgresCPURequest string
+	var postgresMemRequest string
+	var postgresNodes int
+	var postgresStorageClassName string
+	var postgresVolume string
 	var exposeObjectAPI bool
 	var imagePullSecret string
 	var localRoles bool
@@ -586,29 +591,34 @@ If <object store backend> is \"s3\", then the arguments are:
 				FeatureFlags: assets.FeatureFlags{
 					NewHashTree: newHashTree,
 				},
-				PachdShards:             uint64(pachdShards),
-				Version:                 version.PrettyPrintVersion(version.Version),
-				LogLevel:                logLevel,
-				Metrics:                 !*noMetrics,
-				PachdCPURequest:         pachdCPURequest,
-				PachdNonCacheMemRequest: pachdNonCacheMemRequest,
-				BlockCacheSize:          blockCacheSize,
-				EtcdCPURequest:          etcdCPURequest,
-				EtcdMemRequest:          etcdMemRequest,
-				EtcdNodes:               etcdNodes,
-				EtcdVolume:              etcdVolume,
-				EtcdStorageClassName:    etcdStorageClassName,
-				DashOnly:                dashOnly,
-				NoDash:                  noDash,
-				DashImage:               dashImage,
-				Registry:                registry,
-				ImagePullSecret:         imagePullSecret,
-				NoGuaranteed:            noGuaranteed,
-				NoRBAC:                  noRBAC,
-				LocalRoles:              localRoles,
-				Namespace:               namespace,
-				NoExposeDockerSocket:    noExposeDockerSocket,
-				ExposeObjectAPI:         exposeObjectAPI,
+				PachdShards:              uint64(pachdShards),
+				Version:                  version.PrettyPrintVersion(version.Version),
+				LogLevel:                 logLevel,
+				Metrics:                  !*noMetrics,
+				PachdCPURequest:          pachdCPURequest,
+				PachdNonCacheMemRequest:  pachdNonCacheMemRequest,
+				BlockCacheSize:           blockCacheSize,
+				EtcdCPURequest:           etcdCPURequest,
+				EtcdMemRequest:           etcdMemRequest,
+				EtcdNodes:                etcdNodes,
+				EtcdVolume:               etcdVolume,
+				EtcdStorageClassName:     etcdStorageClassName,
+				PostgresCPURequest:       postgresCPURequest,
+				PostgresMemRequest:       postgresMemRequest,
+				PostgresNodes:            postgresNodes,
+				PostgresVolume:           postgresVolume,
+				PostgresStorageClassName: postgresStorageClassName,
+				DashOnly:                 dashOnly,
+				NoDash:                   noDash,
+				DashImage:                dashImage,
+				Registry:                 registry,
+				ImagePullSecret:          imagePullSecret,
+				NoGuaranteed:             noGuaranteed,
+				NoRBAC:                   noRBAC,
+				LocalRoles:               localRoles,
+				Namespace:                namespace,
+				NoExposeDockerSocket:     noExposeDockerSocket,
+				ExposeObjectAPI:          exposeObjectAPI,
 			}
 			if tlsCertKey != "" {
 				// TODO(msteffen): If either the cert path or the key path contains a
@@ -629,6 +639,9 @@ If <object store backend> is \"s3\", then the arguments are:
 	deploy.PersistentFlags().IntVar(&etcdNodes, "dynamic-etcd-nodes", 0, "Deploy etcd as a StatefulSet with the given number of pods.  The persistent volumes used by these pods are provisioned dynamically.  Note that StatefulSet is currently a beta kubernetes feature, which might be unavailable in older versions of kubernetes.")
 	deploy.PersistentFlags().StringVar(&etcdVolume, "static-etcd-volume", "", "Deploy etcd as a ReplicationController with one pod.  The pod uses the given persistent volume.")
 	deploy.PersistentFlags().StringVar(&etcdStorageClassName, "etcd-storage-class", "", "If set, the name of an existing StorageClass to use for etcd storage. Ignored if --static-etcd-volume is set.")
+	deploy.PersistentFlags().IntVar(&postgresNodes, "dynamic-postgres-nodes", 0, "Deploy postgres as a StatefulSet with the given number of pods.  The persistent volumes used by these pods are provisioned dynamically.  Note that StatefulSet is currently a beta kubernetes feature, which might be unavailable in older versions of kubernetes.")
+	deploy.PersistentFlags().StringVar(&postgresVolume, "static-postgres-volume", "", "Deploy postgres as a ReplicationController with one pod.  The pod uses the given persistent volume.")
+	deploy.PersistentFlags().StringVar(&postgresStorageClassName, "postgres-storage-class", "", "If set, the name of an existing StorageClass to use for postgres storage. Ignored if --static-postgres-volume is set.")
 	deploy.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Don't actually deploy pachyderm to Kubernetes, instead just print the manifest.")
 	deploy.PersistentFlags().StringVarP(&outputFormat, "output", "o", "json", "Output formmat. One of: json|yaml")
 	deploy.PersistentFlags().StringVar(&logLevel, "log-level", "info", "The level of log messages to print options are, from least to most verbose: \"error\", \"info\", \"debug\".")
@@ -669,6 +682,14 @@ If <object store backend> is \"s3\", then the arguments are:
 			"allowed and encouraged).")
 	deploy.PersistentFlags().StringVar(&etcdMemRequest,
 		"etcd-memory-request", "", "(rarely set) The size of etcd's memory "+
+			"request. Size is in bytes, with SI suffixes (M, K, G, Mi, Ki, Gi, "+
+			"etc).")
+	deploy.PersistentFlags().StringVar(&postgresCPURequest,
+		"postgres-cpu-request", "", "(rarely set) The size of postgres's CPU request, "+
+			"which we give to Kubernetes. Size is in cores (with partial cores "+
+			"allowed and encouraged).")
+	deploy.PersistentFlags().StringVar(&postgresMemRequest,
+		"postgres-memory-request", "", "(rarely set) The size of postgres's memory "+
 			"request. Size is in bytes, with SI suffixes (M, K, G, Mi, Ki, Gi, "+
 			"etc).")
 
