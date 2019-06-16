@@ -41,6 +41,7 @@ import (
 	"github.com/pachyderm/pachyderm/src/server/pkg/cmdutil"
 	col "github.com/pachyderm/pachyderm/src/server/pkg/collection"
 	"github.com/pachyderm/pachyderm/src/server/pkg/deploy/assets"
+	"github.com/pachyderm/pachyderm/src/server/pkg/grpcserver"
 	"github.com/pachyderm/pachyderm/src/server/pkg/hashtree"
 	logutil "github.com/pachyderm/pachyderm/src/server/pkg/log"
 	"github.com/pachyderm/pachyderm/src/server/pkg/metrics"
@@ -143,8 +144,8 @@ func doSidecarMode(config interface{}) (retErr error) {
 	// The sidecar only needs to serve traffic on the peer port, as it only serves
 	// traffic from the user container (the worker binary and occasionally user
 	// pipelines)
-	return grpcutil.Serve(
-		grpcutil.ServerOptions{
+	return grpcserver.Serve(
+		grpcserver.ServerOptions{
 			Port:       env.PeerPort,
 			MaxMsgSize: grpcutil.MaxMsgSize,
 			RegisterFunc: func(s *grpc.Server) error {
@@ -350,8 +351,8 @@ func doFullMode(config interface{}) (retErr error) {
 		return fmt.Errorf("ListenAndServe: %v", err)
 	})
 	eg.Go(func() error {
-		err := grpcutil.Serve(
-			grpcutil.ServerOptions{
+		err := grpcserver.Serve(
+			grpcserver.ServerOptions{
 				Port:                 env.Port,
 				MaxMsgSize:           grpcutil.MaxMsgSize,
 				PublicPortTLSAllowed: true,
@@ -456,8 +457,8 @@ func doFullMode(config interface{}) (retErr error) {
 	// APIServer structs here so we can serve the Pachyderm API on the
 	// peer port
 	eg.Go(func() error {
-		err := grpcutil.Serve(
-			grpcutil.ServerOptions{
+		err := grpcserver.Serve(
+			grpcserver.ServerOptions{
 				Port:       env.PeerPort,
 				MaxMsgSize: grpcutil.MaxMsgSize,
 				RegisterFunc: func(s *grpc.Server) error {

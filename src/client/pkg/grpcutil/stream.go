@@ -8,11 +8,6 @@ import (
 	"github.com/gogo/protobuf/types"
 )
 
-var (
-	// MaxMsgSize is used to define the GRPC frame size
-	MaxMsgSize = 20 * 1024 * 1024
-)
-
 // Chunk splits a piece of data up, this is useful for splitting up data that's
 // bigger than MaxMsgSize
 func Chunk(data []byte, chunkSize int) [][]byte {

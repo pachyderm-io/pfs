@@ -11,7 +11,7 @@ import (
 
 	"github.com/pachyderm/pachyderm/src/client"
 	"github.com/pachyderm/pachyderm/src/client/auth"
-	"github.com/pachyderm/pachyderm/src/server/pkg/errutil"
+	"github.com/pachyderm/pachyderm/src/client/pkg/errutil"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/julienschmidt/httprouter"

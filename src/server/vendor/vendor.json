@@ -868,10 +868,10 @@
 			"revisionTime": "2017-11-02T01:26:30Z"
 		},
 		{
-			"checksumSHA1": "cwA2z5ZZliFbv5a8UWp7njzrGc8=",
+			"checksumSHA1": "2diceRafV64A/+WkhbheGKs+Spo=",
 			"path": "github.com/grpc-ecosystem/go-grpc-middleware",
-			"revision": "cfaf5686ec79ff8344257723b6f5ba1ae0ffeb4d",
-			"revisionTime": "2019-02-22T13:33:41Z"
+			"revision": "27f3801344b24dd6e9c608692368947f674a8298",
+			"revisionTime": "2019-06-03T14:06:46Z"
 		},
 		{
 			"checksumSHA1": "3wzsPPMqn5TgyqyPBQ/G0sOa414=",
@@ -1112,6 +1112,12 @@
 			"path": "github.com/julienschmidt/httprouter",
 			"revision": "975b5c4c7c21c0e3d2764200bf2aa8e34657ae6e",
 			"revisionTime": "2017-04-30T22:20:11Z"
+		},
+		{
+			"checksumSHA1": "Aulh7C5SVOA4Jzt5eHNH6197Mbk=",
+			"path": "github.com/konsorten/go-windows-terminal-sequences",
+			"revision": "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e",
+			"revisionTime": "2019-02-26T22:47:05Z"
 		},
 		{
 			"checksumSHA1": "U2SPoYbH/b9NTJKekAHYZCsd4/M=",
@@ -1489,10 +1495,10 @@
 			"revisionTime": "2015-10-28T00:19:15Z"
 		},
 		{
-			"checksumSHA1": "pM62rxq4aiX661tBbd7EanttmSw=",
+			"checksumSHA1": "SVO+Zm6SNwWrpgyc6mcTXbH4aJ8=",
 			"path": "github.com/sirupsen/logrus",
-			"revision": "59d0ca41e5faad81cac03f7a7d84ba80d9cc9673",
-			"revisionTime": "2017-07-06T13:44:07Z"
+			"revision": "2a22dbedbad1fd454910cd1f44f210ef90c28464",
+			"revisionTime": "2019-05-18T13:52:02Z"
 		},
 		{
 			"checksumSHA1": "jAzqolwnRJhHsKXmmvKNrHqxqAw=",

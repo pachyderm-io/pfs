@@ -77,9 +77,6 @@ func (a *apiServer) CreateRepoInTransaction(
 
 // CreateRepo implements the protobuf pfs.CreateRepo RPC
 func (a *apiServer) CreateRepo(ctx context.Context, request *pfs.CreateRepoRequest) (response *types.Empty, retErr error) {
-	func() { a.Log(request, nil, nil, 0) }()
-	defer func(start time.Time) { a.Log(request, response, retErr, time.Since(start)) }(time.Now())
-
 	if err := a.txnEnv.WithTransaction(ctx, func(txn txnenv.Transaction) error {
 		return txn.CreateRepo(request)
 	}); err != nil {

@@ -255,7 +255,7 @@ func Pretty(entry *logrus.Entry) ([]byte, error) {
 	serialized := []byte(
 		fmt.Sprintf(
 			"%v %v ",
-			entry.Time.Format(logrus.DefaultTimestampFormat),
+			entry.Time.Format(time.RFC3339),
 			strings.ToUpper(entry.Level.String()),
 		),
 	)

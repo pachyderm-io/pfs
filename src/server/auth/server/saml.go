@@ -17,7 +17,7 @@ import (
 
 	"github.com/pachyderm/pachyderm/src/client/auth"
 	"github.com/pachyderm/pachyderm/src/server/pkg/backoff"
-	"github.com/pachyderm/pachyderm/src/server/pkg/errutil"
+	"github.com/pachyderm/pachyderm/src/server/pkg/httperr"
 )
 
 // canonicalConfig contains the values specified in an auth.AuthConfig proto
@@ -384,23 +384,23 @@ var defaultDashRedirectURL = &url.URL{
 }
 
 // handleSAMLResponseInternal is a helper function called by handleSAMLResponse
-func (a *apiServer) handleSAMLResponseInternal(req *http.Request) (string, string, *errutil.HTTPError) {
+func (a *apiServer) handleSAMLResponseInternal(req *http.Request) (string, string, *httperr.HTTPError) {
 	a.configMu.Lock()
 	defer a.configMu.Unlock()
 	a.samlSPMu.Lock()
 	defer a.samlSPMu.Unlock()
 
 	if a.configCache == nil {
-		return "", "", errutil.NewHTTPError(http.StatusConflict, "auth has no active config (either never set or disabled)")
+		return "", "", httperr.New(http.StatusConflict, "auth has no active config (either never set or disabled)")
 
 	}
 	if a.samlSP == nil {
-		return "", "", errutil.NewHTTPError(http.StatusConflict, "SAML ACS has not been configured or was disabled")
+		return "", "", httperr.New(http.StatusConflict, "SAML ACS has not been configured or was disabled")
 	}
 	sp := a.samlSP
 
 	if err := req.ParseForm(); err != nil {
-		return "", "", errutil.NewHTTPError(http.StatusConflict, "Could not parse request form: %v", err)
+		return "", "", httperr.New(http.StatusConflict, "Could not parse request form: %v", err)
 	}
 	// No possible request IDs b/c only IdP-initiated auth is implemented for now
 	assertion, err := sp.ParseResponse(req, []string{""})
@@ -409,19 +409,19 @@ func (a *apiServer) handleSAMLResponseInternal(req *http.Request) (string, strin
 		if invalidRespErr, ok := err.(*saml.InvalidResponseError); ok {
 			errMsg += "\n(" + invalidRespErr.PrivateErr.Error() + ")"
 		}
-		return "", "", errutil.NewHTTPError(http.StatusBadRequest, errMsg)
+		return "", "", httperr.New(http.StatusBadRequest, errMsg)
 	}
 
 	// Make sure all the fields we need are present (avoid segfault)
 	switch {
 	case assertion == nil:
-		return "", "", errutil.NewHTTPError(http.StatusConflict, "Error parsing SAML response: assertion is nil")
+		return "", "", httperr.New(http.StatusConflict, "Error parsing SAML response: assertion is nil")
 	case assertion.Subject == nil:
-		return "", "", errutil.NewHTTPError(http.StatusConflict, "Error parsing SAML response: assertion.Subject is nil")
+		return "", "", httperr.New(http.StatusConflict, "Error parsing SAML response: assertion.Subject is nil")
 	case assertion.Subject.NameID == nil:
-		return "", "", errutil.NewHTTPError(http.StatusConflict, "Error parsing SAML response: assertion.Subject.NameID is nil")
+		return "", "", httperr.New(http.StatusConflict, "Error parsing SAML response: assertion.Subject.NameID is nil")
 	case assertion.Subject.NameID.Value == "":
-		return "", "", errutil.NewHTTPError(http.StatusConflict, "Error parsing SAML response: assertion.Subject.NameID.Value is unset")
+		return "", "", httperr.New(http.StatusConflict, "Error parsing SAML response: assertion.Subject.NameID.Value is unset")
 	}
 
 	// User is successfully authenticated
@@ -434,7 +434,7 @@ func (a *apiServer) handleSAMLResponseInternal(req *http.Request) (string, strin
 	}
 	authCode, err := a.getOneTimePassword(req.Context(), subject, expiration)
 	if err != nil {
-		return "", "", errutil.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return "", "", httperr.New(http.StatusInternalServerError, err.Error())
 	}
 
 	// Update group memberships
@@ -451,7 +451,7 @@ func (a *apiServer) handleSAMLResponseInternal(req *http.Request) (string, strin
 					groups = append(groups, fmt.Sprintf("group/%s:%s", a.configCache.IDP.Name, v.Value))
 				}
 				if err := a.setGroupsForUserInternal(context.Background(), subject, groups); err != nil {
-					return "", "", errutil.NewHTTPError(http.StatusInternalServerError, err.Error())
+					return "", "", httperr.New(http.StatusInternalServerError, err.Error())
 				}
 			}
 		}
@@ -465,7 +465,7 @@ func (a *apiServer) handleSAMLResponseInternal(req *http.Request) (string, strin
 // configured)
 func (a *apiServer) handleSAMLResponse(w http.ResponseWriter, req *http.Request) {
 	var subject, authCode string
-	var err *errutil.HTTPError
+	var err *httperr.HTTPError
 
 	logRequest := "SAML login request"
 	a.LogReq(logRequest)
@@ -473,7 +473,7 @@ func (a *apiServer) handleSAMLResponse(w http.ResponseWriter, req *http.Request)
 		if subject != "" {
 			logRequest = fmt.Sprintf("SAML login request for %s", subject)
 		}
-		a.LogResp(logRequest, errutil.PrettyPrintCode(err), err, time.Since(start))
+		a.LogResp(logRequest, httperr.PrettyPrintCode(err), err, time.Since(start))
 	}(time.Now())
 
 	subject, authCode, err = a.handleSAMLResponseInternal(req)

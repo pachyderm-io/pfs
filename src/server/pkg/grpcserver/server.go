@@ -1,4 +1,4 @@
-package grpcutil
+package grpcserver
 
 import (
 	"errors"
@@ -13,22 +13,11 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/pachyderm/pachyderm/src/client/pkg/grpcutil"
 	"github.com/pachyderm/pachyderm/src/client/pkg/tracing"
+	pachlog "github.com/pachyderm/pachyderm/src/server/pkg/log"
 	log "github.com/sirupsen/logrus"
-)
-
-const (
-	// TLSVolumePath is the path at which the tls cert and private key (if any)
-	// will be mounted in the pachd pod
-	TLSVolumePath = "/pachd-tls-cert"
-
-	// TLSCertFile is the name of the mounted file containing a TLS certificate
-	// that identifies pachd
-	TLSCertFile = "tls.crt"
-
-	// TLSKeyFile is the name of the mounted file containing a private key
-	// corresponding to the public certificate in TLSCertFile
-	TLSKeyFile = "tls.key"
 )
 
 var (
@@ -50,9 +39,11 @@ type ServerOptions struct {
 	// serve GRPC services to 3rd party clients.
 	//
 	// If set, the criterion for actually serving over TLS is:
-	// if a signed TLS cert and corresponding private key in 'TLSVolumePath',
-	// this will serve GRPC traffic over TLS. If either are missing this will
-	// serve GRPC traffic over unencrypted HTTP,
+	// - if a signed TLS cert and corresponding private key is in
+	//   'src/client/pkg/grpcutil/constants.go#TLSVolumePath',
+	//   then this will serve GRPC traffic over TLS.
+	// - If either the signed cert or the key are missing, then this will
+	//   serve GRPC traffic over unencrypted HTTP,
 	//
 	// TODO make the TLS cert and key path a parameter, as pachd will need
 	// multiple certificates for multiple ports
@@ -78,13 +69,19 @@ func Serve(
 				MinTime:             5 * time.Second,
 				PermitWithoutStream: true,
 			}),
-			grpc.UnaryInterceptor(tracing.UnaryServerInterceptor()),
-			grpc.StreamInterceptor(tracing.StreamServerInterceptor()),
+			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+				grpc.UnaryServerInterceptor(pachlog.UnaryInterceptor),
+				tracing.UnaryServerInterceptor(),
+			)),
+			grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+				grpc.StreamServerInterceptor(pachlog.StreamInterceptor),
+				tracing.StreamServerInterceptor(),
+			)),
 		}
 		if server.PublicPortTLSAllowed {
 			// Validate environment
-			certPath := path.Join(TLSVolumePath, TLSCertFile)
-			keyPath := path.Join(TLSVolumePath, TLSKeyFile)
+			certPath := path.Join(grpcutil.TLSVolumePath, grpcutil.TLSCertFile)
+			keyPath := path.Join(grpcutil.TLSVolumePath, grpcutil.TLSKeyFile)
 			_, certPathStatErr := os.Stat(certPath)
 			_, keyPathStatErr := os.Stat(keyPath)
 			if certPathStatErr != nil {

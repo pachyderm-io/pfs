@@ -19,6 +19,7 @@ import (
 	"github.com/pachyderm/pachyderm/src/client/version/versionpb"
 	authtesting "github.com/pachyderm/pachyderm/src/server/auth/testing"
 	"github.com/pachyderm/pachyderm/src/server/pkg/backoff"
+	"github.com/pachyderm/pachyderm/src/server/pkg/grpcserver"
 	"github.com/pachyderm/pachyderm/src/server/pkg/hashtree"
 	"github.com/pachyderm/pachyderm/src/server/pkg/serviceenv"
 	tu "github.com/pachyderm/pachyderm/src/server/pkg/testutil"
@@ -60,8 +61,8 @@ func runServers(
 ) {
 	ready := make(chan bool)
 	go func() {
-		err := grpcutil.Serve(
-			grpcutil.ServerOptions{
+		err := grpcserver.Serve(
+			grpcserver.ServerOptions{
 				Port:       uint16(port),
 				MaxMsgSize: grpcutil.MaxMsgSize,
 				RegisterFunc: func(s *grpc.Server) error {

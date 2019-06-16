@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/pachyderm/pachyderm/src/client/pfs"
+	"github.com/pachyderm/pachyderm/src/client/pkg/errutil"
 	"github.com/pachyderm/pachyderm/src/client/pkg/grpcutil"
 	"github.com/pachyderm/pachyderm/src/client/pps"
-	"github.com/pachyderm/pachyderm/src/server/pkg/errutil"
 
 	"github.com/gogo/protobuf/types"
 )

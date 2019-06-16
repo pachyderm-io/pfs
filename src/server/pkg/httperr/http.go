@@ -1,4 +1,4 @@
-package errutil
+package httperr
 
 import (
 	"fmt"
@@ -36,9 +36,9 @@ func PrettyPrintCode(h *HTTPError) string {
 	return fmt.Sprintf("%d %s", codeNumber, codeText)
 }
 
-// NewHTTPError returns a new HTTPError where the HTTP error code is 'code' and
+// New returns a new HTTPError where the HTTP error code is 'code' and
 // the error message is based on 'formatStr' and 'args'
-func NewHTTPError(code int, formatStr string, args ...interface{}) *HTTPError {
+func New(code int, formatStr string, args ...interface{}) *HTTPError {
 	return &HTTPError{
 		code: code,
 		err:  fmt.Sprintf(formatStr, args...),

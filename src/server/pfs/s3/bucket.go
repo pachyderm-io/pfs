@@ -11,8 +11,8 @@ import (
 	"github.com/gogo/protobuf/types"
 	"github.com/pachyderm/pachyderm/src/client"
 	pfsClient "github.com/pachyderm/pachyderm/src/client/pfs"
+	"github.com/pachyderm/pachyderm/src/client/pkg/errutil"
 	pfsServer "github.com/pachyderm/pachyderm/src/server/pfs"
-	"github.com/pachyderm/pachyderm/src/server/pkg/errutil"
 )
 
 const defaultMaxKeys int = 1000

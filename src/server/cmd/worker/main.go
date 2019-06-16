@@ -23,6 +23,7 @@ import (
 	"github.com/pachyderm/pachyderm/src/client/version/versionpb"
 	debugserver "github.com/pachyderm/pachyderm/src/server/debug/server"
 	"github.com/pachyderm/pachyderm/src/server/pkg/cmdutil"
+	"github.com/pachyderm/pachyderm/src/server/pkg/grpcserver"
 	logutil "github.com/pachyderm/pachyderm/src/server/pkg/log"
 	"github.com/pachyderm/pachyderm/src/server/pkg/ppsutil"
 	"github.com/pachyderm/pachyderm/src/server/pkg/serviceenv"
@@ -152,8 +153,8 @@ func do(config interface{}) error {
 	eg := errgroup.Group{}
 	ready := make(chan error)
 	eg.Go(func() error {
-		return grpcutil.Serve(
-			grpcutil.ServerOptions{
+		return grpcserver.Serve(
+			grpcserver.ServerOptions{
 				MaxMsgSize: grpcutil.MaxMsgSize,
 				Port:       env.PPSWorkerPort,
 				RegisterFunc: func(s *grpc.Server) error {

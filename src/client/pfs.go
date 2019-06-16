@@ -9,8 +9,8 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"github.com/pachyderm/pachyderm/src/client/pfs"
+	"github.com/pachyderm/pachyderm/src/client/pkg/errutil"
 	"github.com/pachyderm/pachyderm/src/client/pkg/grpcutil"
-	"github.com/pachyderm/pachyderm/src/server/pkg/errutil"
 )
 
 // NewRepo creates a pfs.Repo.

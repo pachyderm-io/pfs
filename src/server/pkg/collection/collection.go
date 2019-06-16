@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/pachyderm/pachyderm/src/client/pkg/errutil"
 	"github.com/pachyderm/pachyderm/src/client/pkg/tracing"
-	"github.com/pachyderm/pachyderm/src/server/pkg/errutil"
 	"github.com/pachyderm/pachyderm/src/server/pkg/watch"
 
 	etcd "github.com/coreos/etcd/clientv3"
