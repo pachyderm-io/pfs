@@ -2,7 +2,7 @@
 
 ## Go Client
 
-The Go client is officially supported by the Pachyderm team.  It implements almost all of the functionality that is provided with the `pachctl` CLI tool, and, thus, you can easily integrated operations like `put file` into your applications.
+The Go client is officially supported by the Pachyderm team.  It implements almost all of the functionality that is provided with the `pachctl` CLI tool, and, thus, you can easily integrate operations like `put file` into your applications.
 
 For more info, check out the [godocs](https://godoc.org/github.com/pachyderm/pachyderm/src/client).
 
@@ -27,7 +27,7 @@ git checkout 21f8ed309495401e6fd79b3a9fd549582aed1b4c
 
 ## Python Client
 
-The Python client is officially supported by the Pachyderm team. It implements almost all of the functionality that is provided with the `pachctl` CLI tool, and, thus, you can easily integrated operations like `put file` into your applications.
+The Python client is officially supported by the Pachyderm team. It implements almost all of the functionality that is provided with the `pachctl` CLI tool, and, thus, you can easily integrate operations like `put file` into your applications.
 
 For more info, check out [the repo](http://github.com/pachyderm/python-pachyderm).
 
