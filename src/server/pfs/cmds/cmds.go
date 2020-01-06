@@ -16,6 +16,8 @@ import (
 
 	"github.com/pachyderm/pachyderm/src/server/pkg/ppsconsts"
 
+	glob "github.com/pachyderm/ohmyglob"
+
 	"golang.org/x/sync/errgroup"
 
 	"github.com/gogo/protobuf/jsonpb"
@@ -1046,23 +1048,31 @@ $ {{alias}} foo@master --history all`,
 	listFile.Flags().StringVar(&history, "history", "none", "Return revision history for files.")
 	commands = append(commands, cmdutil.CreateAlias(listFile, "list file"))
 
+	var groups bool
+	var replace string
 	globFile := &cobra.Command{
 		Use:   "{{alias}} <repo>@<branch-or-commit>:<pattern>",
 		Short: "Return files that match a glob pattern in a commit.",
 		Long:  "Return files that match a glob pattern in a commit (that is, match a glob pattern in a repo at the state represented by a commit). Glob patterns are documented [here](https://golang.org/pkg/path/filepath/#Match).",
 		Example: `
 # Return files in repo "foo" on branch "master" that start
-# with the character "A".  Note how the double quotation marks around the
+# with the character "A".  Note how the quotation marks around the
 # parameter are necessary because otherwise your shell might interpret the "*".
-$ {{alias}} "foo@master:A*"
+$ {{alias}} foo@master:'A*'
 
 # Return files in repo "foo" on branch "master" under directory "data".
-$ {{alias}} "foo@master:data/*"`,
+$ {{alias}} foo@master:'data/*'`,
 		Run: cmdutil.RunFixedArgs(1, func(args []string) error {
 			file, err := cmdutil.ParseFile(args[0])
 			if err != nil {
 				return err
 			}
+			// first, check that glob pattern is valid
+			g, err := glob.Compile(file.Path)
+			if err != nil {
+				return err
+			}
+
 			c, err := client.NewOnUserMachine("user")
 			if err != nil {
 				return err
@@ -1080,13 +1090,22 @@ $ {{alias}} "foo@master:data/*"`,
 				}
 				return nil
 			}
+
 			writer := tabwriter.NewWriter(os.Stdout, pretty.FileHeader)
 			for _, fileInfo := range fileInfos {
 				pretty.PrintFileInfo(writer, fileInfo, fullTimestamps, false)
+				if groups {
+					fmt.Fprintf(writer, "[%v]\n", strings.Join(g.Capture(fileInfo.File.Path), ","))
+				}
+				if len(replace) > 0 {
+					fmt.Fprintf(writer, "Replaced by: \"%v\"\n", g.Replace(fileInfo.File.Path, replace))
+				}
 			}
 			return writer.Flush()
 		}),
 	}
+	globFile.Flags().BoolVarP(&groups, "groups", "g", false, "Show glob capture groups.")
+	globFile.Flags().StringVar(&replace, "replace", "", "Show the replaced name of the file (what a join matches on).")
 	globFile.Flags().AddFlagSet(rawFlags)
 	globFile.Flags().AddFlagSet(fullTimestampsFlags)
 	commands = append(commands, cmdutil.CreateAlias(globFile, "glob file"))
