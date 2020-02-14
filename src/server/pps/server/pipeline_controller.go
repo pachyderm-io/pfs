@@ -110,7 +110,7 @@ func (a *apiServer) step(pachClient *client.APIClient, pipeline string, keyVer, 
 			}
 		}
 		// trigger another event--once pipeline is RUNNING, step() will scale it up
-		if op.pipelineInfo.Stopped {
+		if op.ptr.Stopped {
 			if err := op.setPipelineState(pps.PipelineState_PIPELINE_PAUSED); err != nil {
 				return err
 			}
@@ -125,7 +125,7 @@ func (a *apiServer) step(pachClient *client.APIClient, pipeline string, keyVer, 
 		}
 		op.startPipelineMonitor()
 
-		if op.pipelineInfo.Stopped {
+		if op.ptr.Stopped {
 			// StopPipeline has been called, but pipeline hasn't been paused yet
 			if err := op.scaleDownPipeline(); err != nil {
 				return err
@@ -141,7 +141,7 @@ func (a *apiServer) step(pachClient *client.APIClient, pipeline string, keyVer, 
 		}
 		op.startPipelineMonitor()
 
-		if op.ptr.State == pps.PipelineState_PIPELINE_PAUSED && !op.pipelineInfo.Stopped {
+		if op.ptr.State == pps.PipelineState_PIPELINE_PAUSED && !op.ptr.Stopped {
 			// StartPipeline has been called, but pipeline hasn't been started yet
 			if err := op.scaleUpPipeline(); err != nil {
 				return err

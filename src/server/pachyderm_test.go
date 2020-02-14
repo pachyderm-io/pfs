@@ -3006,18 +3006,21 @@ func TestUpdateStoppedPipeline(t *testing.T) {
 	dataRepo := tu.UniqueString("TestUpdateStoppedPipeline_data")
 	require.NoError(t, c.CreateRepo(dataRepo))
 	pipelineName := tu.UniqueString("pipeline")
-	require.NoError(t, c.CreatePipeline(
-		pipelineName,
-		"",
-		[]string{"bash"},
-		[]string{"cp /pfs/*/file /pfs/out/file"},
-		&pps.ParallelismSpec{
-			Constant: 1,
-		},
-		client.NewPFSInput(dataRepo, "/*"),
-		"",
-		false,
-	))
+
+	_, err := c.PpsAPIClient.CreatePipeline(context.Background(),
+		&pps.CreatePipelineRequest{
+			Pipeline: client.NewPipeline(pipelineName),
+			Transform: &pps.Transform{
+				Cmd:   []string{"bash"},
+				Stdin: []string{"cp /pfs/*/file /pfs/out/file"},
+			},
+			Input: client.NewPFSInput(dataRepo, "/*"),
+			// EnableStats: true,
+			ParallelismSpec: &pps.ParallelismSpec{
+				Constant: 1,
+			},
+		})
+	require.NoError(t, err)
 
 	commits, err := c.ListCommit(pipelineName, "master", "", 0)
 	require.NoError(t, err)
@@ -3038,11 +3041,19 @@ func TestUpdateStoppedPipeline(t *testing.T) {
 	commitInfos := collectCommitInfos(t, commitIter)
 	require.Equal(t, 1, len(commitInfos))
 
+	jis, err := c.ListJob(pipelineName, nil, nil, -1, false)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(jis))
+
+	commits, err = c.ListCommit(pipelineName, "master", "", 0)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(commits))
+
 	// Stop the pipeline (and confirm that it's stopped)
 	require.NoError(t, c.StopPipeline(pipelineName))
 	pipelineInfo, err := c.InspectPipeline(pipelineName)
 	require.NoError(t, err)
-	require.Equal(t, true, pipelineInfo.Stopped)
+	// require.Equal(t, true, pipelineInfo.Stopped)
 	require.NoError(t, backoff.Retry(func() error {
 		pipelineInfo, err = c.InspectPipeline(pipelineName)
 		if err != nil {
@@ -3060,18 +3071,22 @@ func TestUpdateStoppedPipeline(t *testing.T) {
 	require.Equal(t, 1, len(commits))
 
 	// Update shouldn't restart it (wait for version to increment)
-	require.NoError(t, c.CreatePipeline(
-		pipelineName,
-		"",
-		[]string{"bash"},
-		[]string{"cp /pfs/*/file /pfs/out/file"},
-		&pps.ParallelismSpec{
-			Constant: 1,
-		},
-		client.NewPFSInput(dataRepo, "/*"),
-		"",
-		true,
-	))
+	_, err = c.PpsAPIClient.CreatePipeline(context.Background(),
+		&pps.CreatePipelineRequest{
+			Pipeline: client.NewPipeline(pipelineName),
+			Transform: &pps.Transform{
+				Cmd:   []string{"bash"},
+				Stdin: []string{"cp /pfs/*/file /pfs/out/file"},
+			},
+			Input: client.NewPFSInput(dataRepo, "/*"),
+			// EnableStats: true,
+			ParallelismSpec: &pps.ParallelismSpec{
+				Constant: 1,
+			},
+			Update: true,
+		})
+	require.NoError(t, err)
+
 	time.Sleep(10 * time.Second)
 	require.NoError(t, backoff.Retry(func() error {
 		pipelineInfo, err = c.InspectPipeline(pipelineName)
@@ -3096,7 +3111,20 @@ func TestUpdateStoppedPipeline(t *testing.T) {
 	// Create a commit (to give the pipeline pending work), then start the pipeline
 	_, err = c.PutFile(dataRepo, "master", "file", strings.NewReader("bar"))
 	require.NoError(t, err)
+
 	require.NoError(t, c.StartPipeline(pipelineName))
+
+	// do another stop/start pipeline pair without anything in between, to make sure it doesn't create extra jobs
+	time.Sleep(10 * time.Second)
+	require.NoError(t, c.StopPipeline(pipelineName))
+	time.Sleep(10 * time.Second)
+	require.NoError(t, c.StartPipeline(pipelineName))
+	time.Sleep(30 * time.Second)
+
+	// make sure we have the expected number of jobs
+	jis, err = c.ListJob(pipelineName, nil, nil, -1, false)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(jis))
 
 	// Pipeline should start and create a job should succeed -- fix
 	// https://github.com/pachyderm/pachyderm/issues/3934)
@@ -3104,7 +3132,7 @@ func TestUpdateStoppedPipeline(t *testing.T) {
 		[]*pfs.Commit{client.NewCommit(dataRepo, "master")}, nil)
 	require.NoError(t, err)
 	commitInfos = collectCommitInfos(t, commitIter)
-	require.Equal(t, 1, len(commitInfos))
+	require.Equal(t, 2, len(commitInfos))
 	commits, err = c.ListCommit(pipelineName, "master", "", 0)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(commits))

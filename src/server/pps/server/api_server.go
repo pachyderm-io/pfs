@@ -2062,9 +2062,9 @@ func (a *apiServer) CreatePipeline(ctx context.Context, request *pps.CreatePipel
 				// Modify pipelineInfo (increment Version, and *preserve Stopped* so
 				// that updating a pipeline doesn't restart it)
 				pipelineInfo.Version = oldPipelineInfo.Version + 1
-				if oldPipelineInfo.Stopped {
+				if pipelinePtr.Stopped {
 					provenance = nil // CreateBranch() below shouldn't create new output
-					pipelineInfo.Stopped = true
+					pipelinePtr.Stopped = true
 				}
 				if !request.Reprocess {
 					pipelineInfo.Salt = oldPipelineInfo.Salt
@@ -2626,6 +2626,7 @@ func (a *apiServer) StartPipeline(ctx context.Context, request *pps.StartPipelin
 	func() { a.Log(request, nil, nil, 0) }()
 	defer func(start time.Time) { a.Log(request, response, retErr, time.Since(start)) }(time.Now())
 	pachClient := a.env.GetPachClient(ctx)
+	pipelineName := request.Pipeline.Name
 
 	// Get request.Pipeline's info
 	pipelineInfo, err := a.inspectPipeline(pachClient, request.Pipeline.Name)
@@ -2638,19 +2639,33 @@ func (a *apiServer) StartPipeline(ctx context.Context, request *pps.StartPipelin
 		return nil, err
 	}
 
+	_, err = col.NewSTM(pachClient.Ctx(), a.env.GetEtcdClient(), func(stm col.STM) error {
+		pipelines := a.pipelines.ReadWrite(stm)
+		pipelinePtr := &pps.EtcdPipelineInfo{}
+		if err := pipelines.Get(pipelineName, pipelinePtr); err != nil {
+			return err
+		}
+		pipelinePtr.Stopped = false
+		return pipelines.Put(pipelineName, pipelinePtr)
+	})
+	if isNotFoundErr(err) {
+		return nil, newErrPipelineNotFound(pipelineName)
+	}
+
 	// Remove 'Stopped' from the pipeline spec
-	pipelineInfo.Stopped = false
-	commit, err := a.makePipelineInfoCommit(pachClient, pipelineInfo)
-	if err != nil {
-		return nil, err
-	}
-	if a.updatePipelineSpecCommit(pachClient, request.Pipeline.Name, commit); err != nil {
-		return nil, err
-	}
+	// pipelineInfo.Stopped = false
+	// commit, err := a.makePipelineInfoCommit(pachClient, pipelineInfo)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if a.updatePipelineSpecCommit(pachClient, request.Pipeline.Name, commit); err != nil {
+	// 	return nil, err
+	// }
 
 	// Replace missing branch provenance (removed by StopPipeline)
 	provenance := append(branchProvenance(pipelineInfo.Input),
 		client.NewBranch(ppsconsts.SpecRepo, pipelineInfo.Pipeline.Name))
+	// provenance = branchProvenance(pipelineInfo.Input)
 	if err := pachClient.CreateBranch(
 		request.Pipeline.Name,
 		pipelineInfo.OutputBranch,
@@ -2667,6 +2682,7 @@ func (a *apiServer) StopPipeline(ctx context.Context, request *pps.StopPipelineR
 	func() { a.Log(request, nil, nil, 0) }()
 	defer func(start time.Time) { a.Log(request, response, retErr, time.Since(start)) }(time.Now())
 	pachClient := a.env.GetPachClient(ctx)
+	pipelineName := request.Pipeline.Name
 
 	// Get request.Pipeline's info
 	pipelineInfo, err := a.inspectPipeline(pachClient, request.Pipeline.Name)
@@ -2690,15 +2706,28 @@ func (a *apiServer) StopPipeline(ctx context.Context, request *pps.StopPipelineR
 		return nil, err
 	}
 
+	_, err = col.NewSTM(pachClient.Ctx(), a.env.GetEtcdClient(), func(stm col.STM) error {
+		pipelines := a.pipelines.ReadWrite(stm)
+		pipelinePtr := &pps.EtcdPipelineInfo{}
+		if err := pipelines.Get(pipelineName, pipelinePtr); err != nil {
+			return err
+		}
+		pipelinePtr.Stopped = true
+		return pipelines.Put(pipelineName, pipelinePtr)
+	})
+	if isNotFoundErr(err) {
+		return nil, newErrPipelineNotFound(pipelineName)
+	}
+
 	// Update PipelineInfo with new state
-	pipelineInfo.Stopped = true
-	commit, err := a.makePipelineInfoCommit(pachClient, pipelineInfo)
-	if err != nil {
-		return nil, err
-	}
-	if a.updatePipelineSpecCommit(pachClient, request.Pipeline.Name, commit); err != nil {
-		return nil, err
-	}
+	// pipelineInfo.Stopped = true
+	// commit, err := a.makePipelineInfoCommit(pachClient, pipelineInfo)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if a.updatePipelineSpecCommit(pachClient, request.Pipeline.Name, commit); err != nil {
+	// 	return nil, err
+	// }
 	return &types.Empty{}, nil
 }
 

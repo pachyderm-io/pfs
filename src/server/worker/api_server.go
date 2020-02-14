@@ -43,6 +43,7 @@ import (
 	"github.com/pachyderm/pachyderm/src/client/pkg/tracing"
 	"github.com/pachyderm/pachyderm/src/client/pkg/tracing/extended"
 	"github.com/pachyderm/pachyderm/src/client/pps"
+	pfsserver "github.com/pachyderm/pachyderm/src/server/pfs"
 	"github.com/pachyderm/pachyderm/src/server/pkg/backoff"
 	col "github.com/pachyderm/pachyderm/src/server/pkg/collection"
 	"github.com/pachyderm/pachyderm/src/server/pkg/errutil"
@@ -1515,7 +1516,6 @@ func (a *APIServer) merge(pachClient *client.APIClient, objClient obj.Client, st
 }
 
 func (a *APIServer) getParentCommitInfo(ctx context.Context, pachClient *client.APIClient, commit *pfs.Commit) (*pfs.CommitInfo, error) {
-	outputCommitID := commit.ID
 	commitInfo, err := pachClient.PfsAPIClient.InspectCommit(ctx,
 		&pfs.InspectCommitRequest{
 			Commit: commit,
@@ -1524,17 +1524,23 @@ func (a *APIServer) getParentCommitInfo(ctx context.Context, pachClient *client.
 		return nil, err
 	}
 	for commitInfo.ParentCommit != nil {
-		a.getWorkerLogger().Logf("blocking on parent commit %q before writing to output commit %q",
-			commitInfo.ParentCommit.ID, outputCommitID)
 		parentCommitInfo, err := pachClient.PfsAPIClient.InspectCommit(ctx,
 			&pfs.InspectCommitRequest{
-				Commit:     commitInfo.ParentCommit,
-				BlockState: pfs.CommitState_FINISHED,
+				Commit: commitInfo.ParentCommit,
 			})
 		if err != nil {
 			return nil, err
 		}
-		if parentCommitInfo.Trees != nil {
+		// If the parent commit isn't finished, then finish it and continue the traversal.
+		// If the parent commit is finished and has output, then return it.
+		if parentCommitInfo.Finished == nil {
+			if _, err := pachClient.PfsAPIClient.FinishCommit(pachClient.Ctx(), &pfs.FinishCommitRequest{
+				Commit: parentCommitInfo.Commit,
+				Empty:  true,
+			}); err != nil && !pfsserver.IsCommitFinishedErr(err) {
+				return nil, err
+			}
+		} else if parentCommitInfo.Trees != nil {
 			return parentCommitInfo, nil
 		}
 		commitInfo = parentCommitInfo

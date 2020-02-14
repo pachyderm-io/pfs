@@ -9,6 +9,7 @@
       "repo": "images"
     }
   },
+  "enable_stats": true,
   "transform": {
     "cmd": [ "python3", "/edges.py" ],
     "image": "pachyderm/opencv"

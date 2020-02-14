@@ -1477,6 +1477,9 @@ func (d *driver) finishCommit(txnCtx *txnenv.TransactionContext, commit *pfs.Com
 }
 
 func (d *driver) finishOutputCommit(txnCtx *txnenv.TransactionContext, commit *pfs.Commit, trees []*pfs.Object, datums *pfs.Object, size uint64) (retErr error) {
+	if commit == nil {
+		return fmt.Errorf("cannot finish a nil commit")
+	}
 	if err := d.checkIsAuthorizedInTransaction(txnCtx, commit.Repo, auth.Scope_WRITER); err != nil {
 		return err
 	}

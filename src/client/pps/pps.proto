@@ -362,6 +362,8 @@ message EtcdPipelineInfo {
   string auth_token = 5;
   JobState last_job_state = 6;
   uint64 parallelism = 7;
+  // IMPORTANT: THIS IS WEIRD
+  bool stopped = 8;
 }
 
 message PipelineInfo {
