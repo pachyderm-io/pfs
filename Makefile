@@ -15,7 +15,7 @@ RUN= # used by go tests to decide which tests to run (i.e. passed to -run)
 COMPILE_RUN_ARGS = -d -v /var/run/docker.sock:/var/run/docker.sock --privileged=true
 # Label it w the go version we bundle in:
 COMPILE_IMAGE = "pachyderm/compile:$(shell cat etc/compile/GO_VERSION)"
-export VERSION_ADDITIONAL = -$(shell git log --pretty=format:%H | head -n 1)
+export VERSION_ADDITIONAL = +$(shell git log --pretty=format:%H | head -n 1)
 LD_FLAGS = -X github.com/pachyderm/pachyderm/src/client/version.AdditionalVersion=$(VERSION_ADDITIONAL)
 export GC_FLAGS = "all=-trimpath=${PWD}"
 export DOCKER_BUILD_FLAGS
@@ -99,6 +99,11 @@ point-release:
 
 # Run via 'make VERSION_ADDITIONAL=rc2 release-custom' to specify a version string
 release-candidate:
+	@if [ "$(shell echo $(VERSION_ADDITIONAL) | head -c 1)" != "-" ]; \
+	then \
+	  echo "VERSION_ADDITIONAL must be specified and start with a \"-\" character. Eg make VERSION_ADDITIONAL=-rc2 release-custom"; \
+	  exit 1; \
+	fi
 	@make release-helper
 	@make release-pachctl-custom
 	@echo "Release completed"
@@ -518,6 +523,11 @@ test-worker-helper:
 clean: clean-launch clean-launch-kube
 
 doc-custom: install-doc release-version
+	@if [ -n "$(VERSION_ADDITIONAL)" ] && [ "$(shell echo $(VERSION_ADDITIONAL) | head -c 1)" != "-" ]; \
+	then \
+	  echo "If VERSION_ADDITIONAL is specified, it must start with a \"-\" character. Eg make VERSION_ADDITIONAL=-rc2 doc-custom"; \
+	  exit 1; \
+	fi
 	./etc/build/doc
 
 doc:

@@ -3,7 +3,7 @@
 # go compiler requires a relative directory or something?
 cd $(realpath $(dirname $0)/../..)
 
-VERSION_ADDITIONAL=-$(git log --pretty=format:%H | head -n 1)
+VERSION_ADDITIONAL=+$(git log --pretty=format:%H | head -n 1)
 LD_FLAGS="-X github.com/pachyderm/pachyderm/src/client/version.AdditionalVersion=${VERSION_ADDITIONAL}"
 GC_FLAGS="all=-trimpath=${PWD}"
 
