@@ -80,9 +80,9 @@ markdown_extensions:
   - pymdownx.caret
   - pymdownx.critic
   - pymdownx.details
-  - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+    #- pymdownx.emoji:
+    # emoji_index: !!python/name:materialx.emoji.twemoji
+    #  emoji_generator: !!python/name:materialx.emoji.to_svg
   - pymdownx.inlinehilite
   - pymdownx.keys
   - pymdownx.magiclink
@@ -387,6 +387,8 @@ nav:
         - General Troubleshooting: troubleshooting/general_troubleshooting.md
         - Deployment Troubleshooting: troubleshooting/deploy_troubleshooting.md
         - Pipeline Troubleshooting: troubleshooting/pipeline_troubleshooting.md
+    - Tutorials:
+        - Tutorials: tutorials/index.md
 
 # Google Analytics
 #google_analytics:

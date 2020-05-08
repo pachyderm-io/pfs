@@ -381,7 +381,8 @@ nav:
         - General Troubleshooting: troubleshooting/general_troubleshooting.md
         - Deployment Troubleshooting: troubleshooting/deploy_troubleshooting.md
         - Pipeline Troubleshooting: troubleshooting/pipeline_troubleshooting.md
-
+    - Tutorials:
+        - Tutorials: tutorials/index.md
 # Google Analytics
 google_analytics:
   - !!python/object/apply:os.getenv ["UA-158483597-1"]

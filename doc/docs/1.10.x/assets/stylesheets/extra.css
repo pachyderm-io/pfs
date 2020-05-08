@@ -27,6 +27,24 @@
   clear: both;
 }
 
+.images {
+  max-width: 100%;
+}
+
+@media screen and (max-width: 600px) {
+  .images {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin-bottom: 20px;
+  }
+}
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
 
 /* Responsive columns - one column layout (vertical) on small screens */
 @media screen and (max-width: 600px) {
