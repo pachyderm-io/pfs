@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/pachyderm/pachyderm/src/client/pkg/errors"
 	"github.com/pachyderm/pachyderm/src/client/pkg/pbutil"
 	"github.com/pachyderm/pachyderm/src/server/pkg/obj"
 	"github.com/pachyderm/pachyderm/src/server/pkg/storage/chunk"
@@ -72,16 +73,16 @@ func (r *Reader) setup() error {
 func topLevel(ctx context.Context, objC obj.Client, path string) (pbr pbutil.Reader, retErr error) {
 	objR, err := objC.Reader(ctx, path, 0, 0)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error wrapping object")
 	}
 	defer func() {
 		if err := objR.Close(); err != nil && retErr == nil {
-			retErr = err
+			retErr = errors.Wrap(err, "error closing object reader")
 		}
 	}()
 	buf := &bytes.Buffer{}
 	if _, err := io.Copy(buf, objR); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error copying")
 	}
 	return pbutil.NewReader(buf), nil
 }

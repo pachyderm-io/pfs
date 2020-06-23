@@ -6,6 +6,7 @@ import (
 	"unsafe"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/pachyderm/pachyderm/src/client/pkg/errors"
 )
 
 // Reader is io.Reader for proto.Message instead of []byte.
@@ -56,7 +57,7 @@ func (r *readWriter) Read(val proto.Message) error {
 	if err != nil {
 		return err
 	}
-	return proto.Unmarshal(buf, val)
+	return errors.WithStack(proto.Unmarshal(buf, val))
 }
 
 func (r *readWriter) WriteBytes(bytes []byte) (int64, error) {
@@ -72,7 +73,7 @@ func (r *readWriter) WriteBytes(bytes []byte) (int64, error) {
 func (r *readWriter) Write(val proto.Message) (int64, error) {
 	bytes, err := proto.Marshal(val)
 	if err != nil {
-		return 0, err
+		return 0, errors.WithStack(err)
 	}
 	return r.WriteBytes(bytes)
 }

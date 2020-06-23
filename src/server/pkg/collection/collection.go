@@ -200,10 +200,10 @@ func (c *readWriteCollection) Get(key string, val proto.Message) (retErr error) 
 		if IsErrNotFound(err) {
 			return ErrNotFound{c.prefix, key}
 		}
-		return err
+		return errors.Wrapf(err, "stm error during collection Get")
 	}
 	c.stm.SetSafePutCheck(c.Path(key), reflect.ValueOf(val).Pointer())
-	return proto.Unmarshal([]byte(valStr), val)
+	return errors.WithStack(proto.Unmarshal([]byte(valStr), val))
 }
 
 func cloneProtoMsg(original proto.Message) proto.Message {
@@ -323,7 +323,7 @@ func (c *readWriteCollection) PutTTL(key string, val proto.Message, ttl int64) e
 	}
 	bytes, err := proto.Marshal(val)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	return c.stm.Put(c.Path(key), string(bytes), ttl, ptr)
 }
@@ -495,7 +495,7 @@ func (c *readonlyCollection) get(key string, opts ...etcd.OpOption) (resp *etcd.
 		tracing.FinishAnySpan(span)
 	}()
 	resp, err := c.etcdClient.Get(ctx, key, opts...)
-	return resp, err
+	return resp, errors.WithStack(err)
 }
 
 func (c *readonlyCollection) Get(key string, val proto.Message) error {
@@ -511,7 +511,7 @@ func (c *readonlyCollection) Get(key string, val proto.Message) error {
 		return ErrNotFound{c.prefix, key}
 	}
 
-	return proto.Unmarshal(resp.Kvs[0].Value, val)
+	return errors.WithStack(proto.Unmarshal(resp.Kvs[0].Value, val))
 }
 
 func (c *readonlyCollection) GetByIndex(index *Index, indexVal interface{}, val proto.Message, opts *Options, f func(key string) error) error {
@@ -586,7 +586,7 @@ func (c *readonlyCollection) ListPrefix(prefix string, val proto.Message, opts *
 	}
 	return c.list(queryPrefix, &c.limit, opts, func(kv *mvccpb.KeyValue) error {
 		if err := proto.Unmarshal(kv.Value, val); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		return f(strings.TrimPrefix(string(kv.Key), queryPrefix))
 	})
@@ -604,7 +604,7 @@ func (c *readonlyCollection) List(val proto.Message, opts *Options, f func(key s
 	}
 	return c.list(c.prefix, &c.limit, opts, func(kv *mvccpb.KeyValue) error {
 		if err := proto.Unmarshal(kv.Value, val); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		return f(strings.TrimPrefix(string(kv.Key), c.prefix))
 	})
@@ -623,7 +623,7 @@ func (c *readonlyCollection) ListRev(val proto.Message, opts *Options, f func(ke
 	}
 	return c.list(c.prefix, &c.limit, opts, func(kv *mvccpb.KeyValue) error {
 		if err := proto.Unmarshal(kv.Value, val); err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		return f(strings.TrimPrefix(string(kv.Key), c.prefix), kv.CreateRevision)
 	})

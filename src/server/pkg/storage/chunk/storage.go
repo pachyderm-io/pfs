@@ -4,6 +4,7 @@ import (
 	"context"
 	"path"
 
+	"github.com/pachyderm/pachyderm/src/client/pkg/errors"
 	"github.com/pachyderm/pachyderm/src/server/pkg/obj"
 	"github.com/pachyderm/pachyderm/src/server/pkg/storage/gc"
 )
@@ -44,19 +45,28 @@ func (s *Storage) NewWriter(ctx context.Context, tmpID string, f WriterFunc, opt
 
 // List lists all of the chunks in object storage.
 func (s *Storage) List(ctx context.Context, f func(string) error) error {
-	return s.objClient.Walk(ctx, prefix, f)
+	var innerErr error
+	err := s.objClient.Walk(ctx, prefix, func(x string) error {
+		innerErr = f(x)
+		return innerErr
+	})
+	if err != innerErr {
+		err = errors.Wrapf(err, "error during walk")
+	}
+	return err
 }
 
 // DeleteAll deletes all of the chunks in object storage.
 func (s *Storage) DeleteAll(ctx context.Context) error {
 	return s.objClient.Walk(ctx, prefix, func(hash string) error {
-		return s.objClient.Delete(ctx, hash)
+		return s.Delete(ctx, hash)
 	})
 }
 
 // Delete deletes a chunk in object storage.
 func (s *Storage) Delete(ctx context.Context, hash string) error {
-	return s.objClient.Delete(ctx, path.Join(prefix, hash))
+	err := s.objClient.Delete(ctx, path.Join(prefix, hash))
+	return errors.Wrapf(err, "error deleting")
 }
 
 // CreateSemanticReference creates a semantic reference to a chunk.

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	units "github.com/docker/go-units"
+	"github.com/pachyderm/pachyderm/src/client/pkg/errors"
 	"github.com/pachyderm/pachyderm/src/server/pkg/obj"
 	"github.com/pachyderm/pachyderm/src/server/pkg/storage/chunk"
 	"github.com/pachyderm/pachyderm/src/server/pkg/storage/fileset/index"
@@ -111,7 +112,7 @@ func (s *Storage) NewMergeReader(ctx context.Context, fileSets []string, opts ..
 			rs = append(rs, s.NewReader(ctx, name, opts...))
 			return nil
 		}); err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "error walking filesets")
 		}
 	}
 	return newMergeReader(rs), nil
@@ -238,7 +239,7 @@ func (s *Storage) Delete(ctx context.Context, fileSet string) error {
 		if err := s.chunks.DeleteSemanticReference(ctx, name); err != nil {
 			return err
 		}
-		return s.objC.Delete(ctx, name)
+		return errors.Wrap(s.objC.Delete(ctx, name), "error from object client during delete")
 	})
 }
 

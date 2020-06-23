@@ -83,7 +83,7 @@ func (c *client) ReserveChunk(ctx context.Context, chunk, tmpID string) error {
 			`, chunk, tmpID).Scan(&flushChunk)
 		},
 	}
-	return retry(flushingDeletion, func() error {
+	err := retry(flushingDeletion, func() error {
 		if err := runTransaction(ctx, c.db, stmtFuncs); err != nil {
 			return err
 		}
@@ -92,6 +92,7 @@ func (c *client) ReserveChunk(ctx context.Context, chunk, tmpID string) error {
 		}
 		return nil
 	})
+	return errors.WithStack(err)
 }
 
 func (c *client) CreateReference(ctx context.Context, ref *Reference) (retErr error) {

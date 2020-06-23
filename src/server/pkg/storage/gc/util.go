@@ -8,6 +8,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/lib/pq"
+	"github.com/pachyderm/pachyderm/src/client/pkg/errors"
 	"github.com/pachyderm/pachyderm/src/server/pkg/backoff"
 	"github.com/pachyderm/pachyderm/src/server/pkg/obj"
 	"golang.org/x/sync/errgroup"
@@ -108,7 +109,7 @@ func runTransaction(ctx context.Context, db *gorm.DB, stmtFuncs []statementFunc)
 		if isRetriableError(err) {
 			continue
 		}
-		return err
+		return errors.Wrapf(err, "error running transaction")
 	}
 }
 

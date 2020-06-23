@@ -42,7 +42,7 @@ func (e *Event) Unmarshal(key *string, val proto.Message) error {
 		return err
 	}
 	*key = string(e.Key)
-	return proto.Unmarshal(e.Value, val)
+	return errors.WithStack(proto.Unmarshal(e.Value, val))
 }
 
 // Watcher ...
@@ -81,7 +81,7 @@ func NewWatcher(ctx context.Context, client *etcd.Client, trimPrefix, prefix str
 	}
 	resp, err := client.Get(ctx, prefix, getOptions...)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	nextRevision := resp.Header.Revision + 1
 	watchOptions := []etcd.OpOption{etcd.WithPrefix(), etcd.WithRev(nextRevision)}
@@ -133,7 +133,7 @@ func NewWatcher(ctx context.Context, client *etcd.Client, trimPrefix, prefix str
 			}
 			if !ok {
 				if err := etcdWatcher.Close(); err != nil {
-					return err
+					return errors.WithStack(err)
 				}
 				etcdWatcher = etcd.NewWatcher(client)
 				// use new "nextRevision"
@@ -147,7 +147,7 @@ func NewWatcher(ctx context.Context, client *etcd.Client, trimPrefix, prefix str
 				continue
 			}
 			if err := resp.Err(); err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 			for _, etcdEv := range resp.Events {
 				ev := &Event{

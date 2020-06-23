@@ -9,6 +9,7 @@ import (
 
 	"github.com/chmduquesne/rollinghash/buzhash64"
 	units "github.com/docker/go-units"
+	"github.com/pachyderm/pachyderm/src/client/pkg/errors"
 	"github.com/pachyderm/pachyderm/src/server/pkg/obj"
 	"github.com/pachyderm/pachyderm/src/server/pkg/storage/gc"
 	"github.com/pachyderm/pachyderm/src/server/pkg/storage/hash"
@@ -150,7 +151,7 @@ func (w *Writer) Write(data []byte) (int, error) {
 		w.roll(data)
 		return nil
 	}); err != nil {
-		return 0, err
+		return 0, errors.Wrapf(err, "error writing chunk")
 	}
 	return len(data), nil
 }
@@ -279,7 +280,7 @@ func (w *Writer) maybeUpload(chunk *Chunk, chunkBytes []byte) error {
 	}
 	objW, err := w.objC.Writer(w.ctx, path)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "error opening object writer")
 	}
 	defer objW.Close()
 	gzipW, err := gzip.NewWriterLevel(objW, gzip.BestSpeed)
@@ -427,7 +428,7 @@ func (w *Writer) flushDataReader(dr *DataReader) error {
 		w.Tag(tag.Id)
 		buf := &bytes.Buffer{}
 		if _, err := io.Copy(buf, r); err != nil {
-			return err
+			return errors.Wrapf(err, "error during copy")
 		}
 		w.roll(buf.Bytes())
 		return nil

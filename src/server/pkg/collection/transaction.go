@@ -117,7 +117,7 @@ func runSTM(s STM, apply func(STM) error, dryrun bool) (*v3.TxnResponse, error) 
 		outc <- out
 	}()
 	r := <-outc
-	return r.resp, r.err
+	return r.resp, errors.WithStack(r.err)
 }
 
 // stm implements repeatable-read software transactional memory over etcd
