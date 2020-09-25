@@ -175,7 +175,8 @@ def main(host: str, create_pipeline: str, create_run_in: str, force: bool):
             arguments={
                 "s3_endpoint": os.environ["S3_ENDPOINT"],
                 "input_bucket": "input",
-            }
+            },
+            namespace="anonymous"
         ).run_id
 
     if run_id != "":

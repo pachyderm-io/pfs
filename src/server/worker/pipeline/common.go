@@ -48,7 +48,7 @@ func RunUserCode(
 ) error {
 	return backoff.RetryUntilCancel(driver.PachClient().Ctx(), func() error {
 		// TODO: what about the user error handling code?
-		env := driver.UserCodeEnv(logger.JobID(), outputCommit, inputs)
+		env := driver.UserCodeEnv(logger.JobID(), "", outputCommit, inputs)
 		return driver.RunUserCode(logger, env, &pps.ProcessStats{}, nil)
 	}, backoff.NewInfiniteBackOff(), func(err error, d time.Duration) error {
 		logger.Logf("error in RunUserCode: %+v, retrying in: %+v", err, d)

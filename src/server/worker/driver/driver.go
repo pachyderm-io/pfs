@@ -111,7 +111,7 @@ type Driver interface {
 
 	// UserCodeEnv returns the set of environment variables to construct when
 	// launching the configured user process.
-	UserCodeEnv(string, *pfs.Commit, []*common.Input) []string
+	UserCodeEnv(string, string, *pfs.Commit, []*common.Input) []string
 
 	// RunUserCode links a specific scratch space for the active input/output
 	// data, then runs the pipeline's configured code. It uses a mutex to enforce
@@ -1244,6 +1244,7 @@ func (d *driver) UploadOutput(
 
 func (d *driver) UserCodeEnv(
 	jobID string,
+	datumID string,
 	outputCommit *pfs.Commit,
 	inputs []*common.Input,
 ) []string {
@@ -1269,7 +1270,7 @@ func (d *driver) UserCodeEnv(
 			result = append(
 				result,
 				fmt.Sprintf("S3_ENDPOINT=http://%s.%s:%s",
-					ppsutil.SidecarS3GatewayService(jobID),
+					ppsutil.SidecarS3GatewayService(jobID, datumID),
 					d.Namespace(),
 					os.Getenv("S3GATEWAY_PORT"),
 				),

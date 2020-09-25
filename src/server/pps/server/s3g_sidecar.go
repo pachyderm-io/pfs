@@ -120,7 +120,7 @@ type jobHandler interface {
 	OnCreate(ctx context.Context, jobInfo *pps.JobInfo)
 
 	// OnTerminate runs when a job ends. Should be idempotent.
-	OnTerminate(ctx context.Context, jobID string)
+	OnTerminate(ctx context.Context, jobInfo *pps.JobInfo)
 }
 
 func (s *sidecarS3G) serveS3Instances() {
@@ -242,7 +242,8 @@ func (s *s3InstanceCreatingJobHandler) OnCreate(ctx context.Context, jobInfo *pp
 	s.s.servers[jobID] = server
 }
 
-func (s *s3InstanceCreatingJobHandler) OnTerminate(jobCtx context.Context, jobID string) {
+func (s *s3InstanceCreatingJobHandler) OnTerminate(jobCtx context.Context, jobInfo *pps.JobInfo) {
+	jobID := jobInfo.Job.ID
 	s.s.serversMu.Lock()
 	defer s.s.serversMu.Unlock()
 	server, ok := s.s.servers[jobID]
@@ -295,7 +296,7 @@ func (s *k8sServiceCreatingJobHandler) OnCreate(ctx context.Context, jobInfo *pp
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   ppsutil.SidecarS3GatewayService(jobInfo.Job.ID),
+			Name:   ppsutil.SidecarS3GatewayService(jobInfo.Job.ID, datumID),
 			Labels: labels,
 		},
 		Spec: v1.ServiceSpec{
@@ -329,24 +330,24 @@ func (s *k8sServiceCreatingJobHandler) OnCreate(ctx context.Context, jobInfo *pp
 	}
 }
 
-func (s *k8sServiceCreatingJobHandler) OnTerminate(_ context.Context, jobID string) {
+func (s *k8sServiceCreatingJobHandler) OnTerminate(_ context.Context, jobInfo *pps.JobInfo) {
 	if !ppsutil.ContainsS3Inputs(s.s.pipelineInfo.Input) && !s.s.pipelineInfo.S3Out {
 		return // Nothing to delete; this isn't an s3 pipeline (shouldn't happen)
 	}
 
 	if err := backoff.RetryNotify(func() error {
 		err := s.s.apiServer.env.GetKubeClient().CoreV1().Services(s.s.apiServer.namespace).Delete(
-			ppsutil.SidecarS3GatewayService(jobID),
+			ppsutil.SidecarS3GatewayService(jobInfo.Job.ID, datumID),
 			&metav1.DeleteOptions{OrphanDependents: new(bool) /* false */})
 		if err != nil && strings.Contains(err.Error(), "not found") {
 			return nil // service already deleted
 		}
 		return err
 	}, backoff.NewExponentialBackOff(), func(err error, d time.Duration) error {
-		logrus.Errorf("error deleting kubernetes service for s3 %q gateway sidecar: %v; retrying in %v", jobID, err, d)
+		logrus.Errorf("error deleting kubernetes service for s3 %q gateway sidecar: %v; retrying in %v", jobInfo.Job.ID, err, d)
 		return nil
 	}); err != nil {
-		logrus.Errorf("permanent error deleting kubernetes service for %q s3 gateway sidecar: %v", jobID, err)
+		logrus.Errorf("permanent error deleting kubernetes service for %q s3 gateway sidecar: %v", jobInfo.Job.ID, err)
 	}
 }
 
@@ -464,5 +465,9 @@ func (h *handleJobsCtx) processJobEvent(jobCtx context.Context, t watch.EventTyp
 		return
 	}
 
-	h.h.OnCreate(jobCtx, jobInfo)
+	// 1. Read [datums object] for jobInfo
+	// Q: What is [datums object]?
+	// for _, datum := range ([datums object]) {
+	h.h.OnCreate(jobCtx, jobInfo /*, datum */)
+	// }
 }

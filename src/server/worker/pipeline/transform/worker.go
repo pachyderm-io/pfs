@@ -227,7 +227,7 @@ func uploadChunk(
 func checkS3Gateway(driver driver.Driver, logger logs.TaggedLogger) error {
 	return backoff.RetryNotify(func() error {
 		endpoint := fmt.Sprintf("http://%s:%s/",
-			ppsutil.SidecarS3GatewayService(logger.JobID()),
+			ppsutil.SidecarS3GatewayService(logger.JobID(), datumID),
 			os.Getenv("S3GATEWAY_PORT"),
 		)
 
@@ -445,7 +445,7 @@ func processDatum(
 				driver := driver.WithContext(ctx)
 
 				return status.withDatum(inputs, cancel, func() error {
-					env := driver.UserCodeEnv(logger.JobID(), outputCommit, inputs)
+					env := driver.UserCodeEnv(logger.JobID(), datumID, outputCommit, inputs)
 					if err := driver.RunUserCode(logger, env, processStats, driver.PipelineInfo().DatumTimeout); err != nil {
 						if driver.PipelineInfo().Transform.ErrCmd != nil && failures == driver.PipelineInfo().DatumTries-1 {
 							if err = driver.RunUserErrorHandlingCode(logger, env, processStats, driver.PipelineInfo().DatumTimeout); err != nil {

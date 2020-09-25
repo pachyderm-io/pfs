@@ -1,7 +1,12 @@
 pipeline:
   name: mnist
 transform:
-  image: pachyderm/mnist_pipeline:v1.0.1
+  # XXX the one in my (luke's) quay.io was built more
+  # recently, and so has kfp sdk 1.0.1 in it, which might
+  # be better at anonymously authenticating to kf 1.1
+  # Update: it's not, but might be better at other things,
+  # so leaving this in here.
+  image: quay.io/lukemarsden/mnist_pipeline:v1.0.2
   cmd: [ /app/pipeline.py ]
 s3_out: true  # Must be set
 input:

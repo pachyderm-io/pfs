@@ -288,6 +288,8 @@ message EtcdJobInfo {
   string reason = 12;
   google.protobuf.Timestamp started = 13;
   google.protobuf.Timestamp finished = 14;
+
+  repeated string datum_ids = 16 [(gogoproto.customname) = "DatumIDs"];
 }
 
 message JobInfo {
@@ -332,6 +334,7 @@ message JobInfo {
   SchedulingSpec scheduling_spec = 42;         // requires ListJobRequest.Full
   string pod_spec = 43;                        // requires ListJobRequest.Full
   string pod_patch = 44;                       // requires ListJobRequest.Full
+  repeated string datum_ids = 49 [(gogoproto.customname) = "DatumIDs"];
 }
 
 enum WorkerState {

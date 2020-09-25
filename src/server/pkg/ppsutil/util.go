@@ -357,8 +357,8 @@ func ContainsS3Inputs(in *pps.Input) bool {
 // ppsutil because both PPS (which creates the service, in the s3 gateway
 // sidecar server) and the worker (which passes the endpoint to the user code)
 // need to know it.
-func SidecarS3GatewayService(jobID string) string {
-	return "s3-" + jobID
+func SidecarS3GatewayService(jobID string, datumID string) string {
+	return fmt.Sprintf("s3-%s-%s", jobID, datumID)
 }
 
 // ErrorState returns true if s is an error state for a pipeline, that is, a

@@ -43,6 +43,7 @@ import (
 	"github.com/pachyderm/pachyderm/src/server/pkg/watch"
 	ppsServer "github.com/pachyderm/pachyderm/src/server/pps"
 	"github.com/pachyderm/pachyderm/src/server/pps/server/githook"
+	"github.com/pachyderm/pachyderm/src/server/worker/common"
 	workercommon "github.com/pachyderm/pachyderm/src/server/worker/common"
 	"github.com/pachyderm/pachyderm/src/server/worker/datum"
 	workerserver "github.com/pachyderm/pachyderm/src/server/worker/server"
@@ -550,6 +551,30 @@ func (a *apiServer) CreateJob(ctx context.Context, request *pps.CreateJobRequest
 		return nil, err
 	}
 
+	commitInfo, err := pachClient.PfsAPIClient.InspectCommit(ctx, pfs.InspectCommitRequest{
+		Commit:     request.OutputCommit,
+		BlockState: pfs.CommitState_STARTED,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pipelineInfo, err := pachClient.InspectPipeline(request.Pipeline.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	input := ppsutil.JobInput(pipelineInfo, commitInfo)
+	dit, err := datum.NewIterator(pachClient, input)
+	if err != nil {
+		return nil, err
+	}
+
+	datumIDs := []string{}
+	for i := 0; i < dit.Len(); i++ {
+		datumIDs = append(datumIDs, common.DatumID(dit.DatumN(i)))
+	}
+
 	job := client.NewJob(uuid.NewWithoutDashes())
 	if request.Stats == nil {
 		request.Stats = &pps.ProcessStats{}
@@ -569,6 +594,7 @@ func (a *apiServer) CreateJob(ctx context.Context, request *pps.CreateJobRequest
 			StatsCommit:   request.StatsCommit,
 			Started:       request.Started,
 			Finished:      request.Finished,
+			DatumIDs:      datumIDs,
 		}
 		return ppsutil.UpdateJobState(a.pipelines.ReadWrite(stm), a.jobs.ReadWrite(stm), jobPtr, request.State, request.Reason)
 	})
@@ -797,6 +823,7 @@ func (a *apiServer) jobInfoFromPtr(pachClient *client.APIClient, jobPtr *pps.Etc
 		Reason:        jobPtr.Reason,
 		Started:       jobPtr.Started,
 		Finished:      jobPtr.Finished,
+		DatumIDs:      jobPtr.DatumIDs,
 	}
 	commitInfo, err := pachClient.InspectCommit(jobPtr.OutputCommit.Repo.Name, jobPtr.OutputCommit.ID)
 	if err != nil {
