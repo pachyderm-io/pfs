@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -44,16 +45,16 @@ var (
 // TODO: would be nice to have these have a deterministic ID rather than based
 // off the subtask ID so we can shortcut processing if we get interrupted and
 // restarted
-func jobRecoveredDatumsTag(jobID string, subtaskID string) string {
-	return fmt.Sprintf("%s-recovered-%s", jobTagPrefix(jobID), subtaskID)
+func jobRecoveredDatumsTag(pipelineName string, jobID string, subtaskID string) string {
+	return filepath.Join(jobTagPrefix(pipelineName, jobID), fmt.Sprintf("recovered-%s", subtaskID))
 }
 
-func jobChunkStatsTag(jobID string, subtaskID string) string {
-	return fmt.Sprintf("%s-chunk-stats-%s", jobTagPrefix(jobID), subtaskID)
+func jobChunkStatsTag(pipelineName string, jobID string, subtaskID string) string {
+	return filepath.Join(jobTagPrefix(pipelineName, jobID), fmt.Sprintf("chunk-stats-%s", subtaskID))
 }
 
-func jobChunkTag(jobID string, subtaskID string) string {
-	return fmt.Sprintf("%s-chunk-%s", jobTagPrefix(jobID), subtaskID)
+func jobChunkTag(pipelineName string, jobID string, subtaskID string) string {
+	return filepath.Join(jobTagPrefix(pipelineName, jobID), fmt.Sprintf("chunk-%s", subtaskID))
 }
 
 func plusDuration(x *types.Duration, y *types.Duration) (*types.Duration, error) {
@@ -226,9 +227,9 @@ func uploadChunk(
 
 func checkS3Gateway(driver driver.Driver, logger logs.TaggedLogger) error {
 	return backoff.RetryNotify(func() error {
-		endpoint := fmt.Sprintf("http://%s:%s/",
+		endpoint := fmt.Sprintf("http://%s:%d/",
 			ppsutil.SidecarS3GatewayService(logger.JobID()),
-			os.Getenv("S3GATEWAY_PORT"),
+			driver.Env().S3GatewayPort,
 		)
 
 		_, err := (&http.Client{Timeout: 5 * time.Second}).Get(endpoint)
@@ -324,7 +325,7 @@ func handleDatumTask(driver driver.Driver, logger logs.TaggedLogger, data *Datum
 
 		if data.Stats.DatumsFailed == 0 && !driver.PipelineInfo().S3Out {
 			if len(recoveredDatums) > 0 {
-				recoveredDatumsTag := jobRecoveredDatumsTag(logger.JobID(), subtaskID)
+				recoveredDatumsTag := jobRecoveredDatumsTag(driver.PipelineInfo().Pipeline.Name, logger.JobID(), subtaskID)
 				if err := uploadRecoveredDatums(driver, logger, recoveredDatums, recoveredDatumsTag); err != nil {
 					return err
 				}
@@ -336,7 +337,7 @@ func handleDatumTask(driver driver.Driver, logger logs.TaggedLogger, data *Datum
 				return err
 			}
 
-			chunkTag := jobChunkTag(logger.JobID(), subtaskID)
+			chunkTag := jobChunkTag(driver.PipelineInfo().Pipeline.Name, logger.JobID(), subtaskID)
 			if err := uploadChunk(driver, logger, datumCache, chunkCache, chunkTag); err != nil {
 				return err
 			}
@@ -350,7 +351,7 @@ func handleDatumTask(driver driver.Driver, logger logs.TaggedLogger, data *Datum
 				return err
 			}
 
-			chunkStatsTag := jobChunkStatsTag(logger.JobID(), subtaskID)
+			chunkStatsTag := jobChunkStatsTag(driver.PipelineInfo().Pipeline.Name, logger.JobID(), subtaskID)
 			if err := uploadChunk(driver, logger, statsCache, chunkStatsCache, chunkStatsTag); err != nil {
 				return err
 			}

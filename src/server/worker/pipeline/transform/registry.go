@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -34,16 +35,32 @@ import (
 	"github.com/pachyderm/pachyderm/src/server/worker/pipeline/transform/chain"
 )
 
-func jobTagPrefix(jobID string) string {
-	return fmt.Sprintf("job-%s", jobID)
+const (
+	jobTagArtifactPrefix = "job-artifacts"
+)
+
+// All tags that begin with this prefix (and their associated objects) will be
+// cleaned up when the job ends. If any of these objects are leaked due to a
+// crash between finishing the job and removing the artifacts, they can be
+// removed using the `garbage-collect` command.
+func jobTagPrefix(pipelineName string, jobID string) string {
+	return filepath.Join(jobTagArtifactPrefix, fmt.Sprintf("pipeline-%s", pipelineName), fmt.Sprintf("job-%s", jobID))
 }
 
-func jobHashtreesTag(jobID string) string {
-	return fmt.Sprintf("%s-hashtrees", jobTagPrefix(jobID))
+// This generates a unique ID each time, as the datums present in a given chunk
+// may change based on parallel jobs. Therefore, this is not usable to reload
+// old datum chunks - this exists so that these tags will be removed when
+// cleaning job artifacts.
+func jobDatumsTag(pipelineName string, jobID string) string {
+	return filepath.Join(jobTagPrefix(pipelineName, jobID), fmt.Sprintf("datum-chunk-%s", uuid.NewWithoutDashes()))
 }
 
-func jobRecoveredDatumTagsTag(jobID string) string {
-	return fmt.Sprintf("%s-recovered", jobTagPrefix(jobID))
+func jobHashtreesTag(pipelineName string, jobID string) string {
+	return filepath.Join(jobTagPrefix(pipelineName, jobID), "hashtrees")
+}
+
+func jobRecoveredDatumTagsTag(pipelineName string, jobID string) string {
+	return filepath.Join(jobTagPrefix(pipelineName, jobID), "recovered")
 }
 
 type pendingJob struct {
@@ -249,11 +266,11 @@ func (reg *registry) succeedJob(
 		return err
 	}
 
-	if err := reg.cleanJobArtifacts(pj.ji.Job); err != nil {
+	if err := reg.jobChain.Succeed(pj); err != nil {
 		return err
 	}
 
-	return reg.jobChain.Succeed(pj)
+	return reg.cleanJobArtifacts(pj.ji.Job)
 }
 
 func (reg *registry) failJob(
@@ -324,25 +341,26 @@ func forEachTag(pachClient *client.APIClient, prefix string, cb func(tag *pfs.Ta
 }
 
 func (reg *registry) cleanJobArtifacts(job *pps.Job) error {
-	reg.logger.WithJob(job.ID).Logf("Cleaning job artifacts")
-	prefix := jobTagPrefix(job.ID)
-	tags := []*pfs.Tag{}
-	objects := []*pfs.Object{}
+	return reg.logger.WithJob(job.ID).LogStep("Cleaning job artifacts", func() error {
+		prefix := jobTagPrefix(reg.driver.PipelineInfo().Pipeline.Name, job.ID) + string(filepath.Separator)
+		tags := []*pfs.Tag{}
+		objects := []*pfs.Object{}
 
-	if err := forEachTag(reg.driver.PachClient(), prefix, func(tag *pfs.Tag, object *pfs.Object) error {
-		tags = append(tags, tag)
-		objects = append(objects, object)
-		return nil
-	}); err != nil {
+		if err := forEachTag(reg.driver.PachClient(), prefix, func(tag *pfs.Tag, object *pfs.Object) error {
+			tags = append(tags, tag)
+			objects = append(objects, object)
+			return nil
+		}); err != nil {
+			return err
+		}
+
+		_, err := reg.driver.PachClient().DeleteTags(
+			reg.driver.PachClient().Ctx(),
+			&pfs.DeleteTagsRequest{Tags: tags},
+		)
+
 		return err
-	}
-
-	_, err := reg.driver.PachClient().DeleteTags(
-		reg.driver.PachClient().Ctx(),
-		&pfs.DeleteTagsRequest{Tags: tags},
-	)
-
-	return err
+	})
 }
 
 func writeJobInfo(pachClient *client.APIClient, jobInfo *pps.JobInfo) error {
@@ -434,7 +452,7 @@ func (reg *registry) sendDatumTasks(ctx context.Context, pj *pendingJob, numDatu
 	// finishTask will finish the currently-writing object and append it to the
 	// subtasks, then reset all the relevant variables
 	finishTask := func() error {
-		putObjectWriter, err := driver.PachClient().PutObjectAsync([]*pfs.Tag{})
+		putObjectWriter, err := driver.PachClient().PutObjectAsync([]*pfs.Tag{{Name: jobDatumsTag(reg.driver.PipelineInfo().Pipeline.Name, pj.ji.Job.ID)}})
 		if err != nil {
 			return err
 		}
@@ -794,7 +812,7 @@ func (reg *registry) startJob(commitInfo *pfs.CommitInfo, statsCommit *pfs.Commi
 				}
 				return err
 			}, backoff.NewInfiniteBackOff(), func(err error, d time.Duration) error {
-				pj.logger.Logf("processJob error: %v, retring in %v", err, d)
+				pj.logger.Logf("processJob error: %v, retrying in %v", err, d)
 				for err != nil {
 					if st, ok := err.(errors.StackTracer); ok {
 						pj.logger.Logf("error stack: %+v", st.StackTrace())
@@ -1105,7 +1123,7 @@ func (pj *pendingJob) storeHashtreeInfos(chunks []*HashtreeInfo, stats []*Hashtr
 		return nil
 	}
 
-	_, _, err := pj.driver.PachClient().PutObject(buf, jobHashtreesTag(pj.ji.Job.ID))
+	_, _, err := pj.driver.PachClient().PutObject(buf, jobHashtreesTag(pj.driver.PipelineInfo().Pipeline.Name, pj.ji.Job.ID))
 	return err
 }
 
@@ -1122,7 +1140,7 @@ func (pj *pendingJob) storeRecoveredTags(recoveredTags []string) error {
 		return nil
 	}
 
-	_, _, err := pj.driver.PachClient().PutObject(buf, jobRecoveredDatumTagsTag(pj.ji.Job.ID))
+	_, _, err := pj.driver.PachClient().PutObject(buf, jobRecoveredDatumTagsTag(pj.driver.PipelineInfo().Pipeline.Name, pj.ji.Job.ID))
 	return err
 }
 
@@ -1131,7 +1149,7 @@ func (pj *pendingJob) initializeHashtrees() error {
 		// We are picking up an old job and don't have the hashtrees generated by
 		// the 'running' state, load them from object storage
 		buf := &bytes.Buffer{}
-		if err := pj.driver.PachClient().GetTag(jobHashtreesTag(pj.ji.Job.ID), buf); err != nil {
+		if err := pj.driver.PachClient().GetTag(jobHashtreesTag(pj.driver.PipelineInfo().Pipeline.Name, pj.ji.Job.ID), buf); err != nil {
 			return err
 		}
 		protoReader := pbutil.NewReader(buf)
@@ -1160,7 +1178,7 @@ func (pj *pendingJob) loadRecoveredDatums() (chain.DatumSet, error) {
 	// We are picking up an old job and don't have the recovered datums generated by
 	// the 'running' state, load them from object storage
 	buf := &bytes.Buffer{}
-	if err := pj.driver.PachClient().GetTag(jobRecoveredDatumTagsTag(pj.ji.Job.ID), buf); err != nil {
+	if err := pj.driver.PachClient().GetTag(jobRecoveredDatumTagsTag(pj.driver.PipelineInfo().Pipeline.Name, pj.ji.Job.ID), buf); err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			return datumSet, nil
 		}

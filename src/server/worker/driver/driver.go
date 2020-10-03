@@ -41,6 +41,7 @@ import (
 	"github.com/pachyderm/pachyderm/src/server/pkg/ppsconsts"
 	"github.com/pachyderm/pachyderm/src/server/pkg/ppsdb"
 	"github.com/pachyderm/pachyderm/src/server/pkg/ppsutil"
+	"github.com/pachyderm/pachyderm/src/server/pkg/serviceenv"
 	filesync "github.com/pachyderm/pachyderm/src/server/pkg/sync"
 	"github.com/pachyderm/pachyderm/src/server/pkg/uuid"
 	"github.com/pachyderm/pachyderm/src/server/pkg/work"
@@ -69,6 +70,8 @@ func workNamespace(pipelineInfo *pps.PipelineInfo) string {
 // interface can be used to mock out external calls to make unit-testing
 // simpler.
 type Driver interface {
+	Env() *serviceenv.ServiceEnv
+
 	Jobs() col.Collection
 	Pipelines() col.Collection
 
@@ -151,10 +154,9 @@ type Driver interface {
 }
 
 type driver struct {
+	env             *serviceenv.ServiceEnv
 	pipelineInfo    *pps.PipelineInfo
 	pachClient      *client.APIClient
-	etcdClient      *etcd.Client
-	etcdPrefix      string
 	activeDataMutex *sync.Mutex
 
 	jobs col.Collection
@@ -180,10 +182,6 @@ type driver struct {
 	// overridden by tests.
 	inputDir string
 
-	// The directory to store hashtrees in. This will be cleared when starting to
-	// avoid artifacts from previous runs.
-	hashtreeDir string
-
 	// These caches are used for storing and merging hashtrees from jobs until the
 	// job is complete
 	chunkCaches, chunkStatsCaches cache.WorkerCache
@@ -194,15 +192,13 @@ type driver struct {
 // the user code on the current worker node, as well as determining if
 // enterprise features are activated (for exporting stats).
 func NewDriver(
+	env *serviceenv.ServiceEnv,
 	pipelineInfo *pps.PipelineInfo,
 	pachClient *client.APIClient,
-	etcdClient *etcd.Client,
-	etcdPrefix string,
-	hashtreePath string,
 	rootPath string,
-	namespace string,
 ) (Driver, error) {
 
+	hashtreePath := env.StorageRoot
 	pfsPath := filepath.Join(rootPath, client.PPSInputPrefix)
 	chunkCachePath := filepath.Join(hashtreePath, "chunk")
 	chunkStatsCachePath := filepath.Join(hashtreePath, "chunkStats")
@@ -232,20 +228,17 @@ func NewDriver(
 	}
 
 	result := &driver{
+		env:              env,
 		pipelineInfo:     pipelineInfo,
 		pachClient:       pachClient,
-		etcdClient:       etcdClient,
-		etcdPrefix:       etcdPrefix,
 		activeDataMutex:  &sync.Mutex{},
-		jobs:             ppsdb.Jobs(etcdClient, etcdPrefix),
-		pipelines:        ppsdb.Pipelines(etcdClient, etcdPrefix),
+		jobs:             ppsdb.Jobs(env.GetEtcdClient(), env.EtcdPrefix),
+		pipelines:        ppsdb.Pipelines(env.GetEtcdClient(), env.EtcdPrefix),
 		numShards:        numShards,
 		rootDir:          rootPath,
 		inputDir:         pfsPath,
-		hashtreeDir:      hashtreePath,
 		chunkCaches:      cache.NewWorkerCache(chunkCachePath),
 		chunkStatsCaches: cache.NewWorkerCache(chunkStatsCachePath),
-		namespace:        namespace,
 	}
 
 	if pipelineInfo.Transform.User != "" {
@@ -363,6 +356,10 @@ func (d *driver) WithContext(ctx context.Context) Driver {
 	return result
 }
 
+func (d *driver) Env() *serviceenv.ServiceEnv {
+	return d.env
+}
+
 func (d *driver) Jobs() col.Collection {
 	return d.jobs
 }
@@ -372,11 +369,11 @@ func (d *driver) Pipelines() col.Collection {
 }
 
 func (d *driver) NewTaskWorker() *work.Worker {
-	return work.NewWorker(d.etcdClient, d.etcdPrefix, workNamespace(d.pipelineInfo))
+	return work.NewWorker(d.env.GetEtcdClient(), d.env.EtcdPrefix, workNamespace(d.pipelineInfo))
 }
 
 func (d *driver) NewTaskQueue() (*work.TaskQueue, error) {
-	return work.NewTaskQueue(d.PachClient().Ctx(), d.etcdClient, d.etcdPrefix, workNamespace(d.pipelineInfo))
+	return work.NewTaskQueue(d.PachClient().Ctx(), d.env.GetEtcdClient(), d.env.EtcdPrefix, workNamespace(d.pipelineInfo))
 }
 
 func (d *driver) ExpectedNumWorkers() (int64, error) {
@@ -400,7 +397,7 @@ func (d *driver) PipelineInfo() *pps.PipelineInfo {
 }
 
 func (d *driver) Namespace() string {
-	return d.namespace
+	return d.env.Namespace
 }
 
 func (d *driver) InputDir() string {
@@ -448,11 +445,11 @@ func withDatumCache(storageRoot string, cb func(*hashtree.MergeCache, *hashtree.
 }
 
 func (d *driver) WithDatumCache(cb func(*hashtree.MergeCache, *hashtree.MergeCache) error) (retErr error) {
-	return withDatumCache(d.hashtreeDir, cb)
+	return withDatumCache(d.env.StorageRoot, cb)
 }
 
 func (d *driver) NewSTM(cb func(col.STM) error) (*etcd.TxnResponse, error) {
-	return col.NewSTM(d.pachClient.Ctx(), d.etcdClient, cb)
+	return col.NewSTM(d.pachClient.Ctx(), d.env.GetEtcdClient(), cb)
 }
 
 func (d *driver) WithData(
@@ -1258,20 +1255,12 @@ func (d *driver) UserCodeEnv(
 		result = append(result, fmt.Sprintf("%s=%s", client.JobIDEnv, jobID))
 
 		if ppsutil.ContainsS3Inputs(d.PipelineInfo().Input) || d.PipelineInfo().S3Out {
-			// TODO(msteffen) Instead of reading S3GATEWAY_PORT directly, worker/main.go
-			// should pass its ServiceEnv to worker.NewAPIServer, which should store it
-			// in 'a'. However, requiring worker.APIServer to have a ServiceEnv would
-			// break the worker.APIServer initialization in newTestAPIServer (in
-			// worker/worker_test.go), which uses mock clients but has no good way to
-			// mock a ServiceEnv. Once we can create mock ServiceEnvs, we should store
-			// a ServiceEnv in worker.APIServer, rewrite newTestAPIServer and
-			// NewAPIServer, and then change this code.
 			result = append(
 				result,
 				fmt.Sprintf("S3_ENDPOINT=http://%s.%s:%s",
 					ppsutil.SidecarS3GatewayService(jobID),
-					d.Namespace(),
-					os.Getenv("S3GATEWAY_PORT"),
+					d.env.Namespace,
+					d.env.S3GatewayPort,
 				),
 			)
 		}

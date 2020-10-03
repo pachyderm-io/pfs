@@ -2,6 +2,7 @@ package localcache
 
 import (
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -16,6 +17,11 @@ type Cache struct {
 	root string
 	keys map[string]bool
 	mu   sync.Mutex
+}
+
+// keyToFilename encodes a key to a filename to allow characters (such as '/') in keys.
+func keyToFilename(key string) string {
+	return url.PathEscape(key)
 }
 
 // NewCache creates a new cache.
@@ -42,7 +48,7 @@ func (c *Cache) Has(key string) bool {
 func (c *Cache) Put(key string, value io.Reader) (retErr error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	path := filepath.Join(c.root, key)
+	path := filepath.Join(c.root, keyToFilename(key))
 	f, err := os.Create(path)
 	if err != nil {
 		return errors.EnsureStack(err)
@@ -72,7 +78,7 @@ func (c *Cache) Get(key string) (io.ReadCloser, error) {
 	if !c.keys[key] {
 		return nil, errors.Errorf("key %v not found in cache", key)
 	}
-	f, err := os.Open(filepath.Join(c.root, key))
+	f, err := os.Open(filepath.Join(c.root, keyToFilename(key)))
 	if err != nil {
 		return nil, errors.EnsureStack(err)
 	}
@@ -99,7 +105,7 @@ func (c *Cache) Delete(key string) error {
 		return nil
 	}
 	delete(c.keys, key)
-	return errors.EnsureStack(os.Remove(filepath.Join(c.root, key)))
+	return errors.EnsureStack(os.Remove(filepath.Join(c.root, keyToFilename(key))))
 }
 
 // Clear clears the cache.
@@ -110,7 +116,7 @@ func (c *Cache) Clear() error {
 		c.keys = make(map[string]bool)
 	}()
 	for key := range c.keys {
-		if err := os.Remove(filepath.Join(c.root, key)); err != nil {
+		if err := os.Remove(filepath.Join(c.root, keyToFilename(key))); err != nil {
 			return errors.EnsureStack(err)
 		}
 	}

@@ -14,6 +14,7 @@ import (
 	col "github.com/pachyderm/pachyderm/src/server/pkg/collection"
 	"github.com/pachyderm/pachyderm/src/server/pkg/hashtree"
 	"github.com/pachyderm/pachyderm/src/server/pkg/ppsconsts"
+	"github.com/pachyderm/pachyderm/src/server/pkg/serviceenv"
 	"github.com/pachyderm/pachyderm/src/server/pkg/testpachd"
 	"github.com/pachyderm/pachyderm/src/server/pkg/work"
 	"github.com/pachyderm/pachyderm/src/server/worker/cache"
@@ -28,7 +29,7 @@ func defaultPipelineInfo() *pps.PipelineInfo {
 		Pipeline:     client.NewPipeline(name),
 		OutputBranch: "master",
 		Transform: &pps.Transform{
-			Cmd:        []string{"cp", "inputRepo/*", "out"},
+			Cmd:        []string{"bash", "-c", "cp inputRepo/* out"},
 			WorkingDir: client.PPSInputPrefix,
 		},
 		ParallelismSpec: &pps.ParallelismSpec{
@@ -63,6 +64,9 @@ type testDriver struct {
 }
 
 // Fuck golang
+func (td *testDriver) Env() *serviceenv.ServiceEnv {
+	return td.inner.Env()
+}
 func (td *testDriver) Jobs() col.Collection {
 	return td.inner.Jobs()
 }
@@ -147,13 +151,10 @@ func withTestEnv(pipelineInfo *pps.PipelineInfo, cb func(*testEnv) error) error 
 		logger := logs.NewMockLogger()
 		workerDir := filepath.Join(realEnv.Directory, "worker")
 		driver, err := driver.NewDriver(
+			realEnv.ServiceEnv,
 			pipelineInfo,
 			realEnv.PachClient,
-			realEnv.EtcdClient,
-			"/pachyderm_test",
-			filepath.Join(workerDir, "hashtrees"),
 			workerDir,
-			"namespace",
 		)
 		if err != nil {
 			return err

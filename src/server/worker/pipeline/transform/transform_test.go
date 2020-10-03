@@ -46,11 +46,11 @@ func withWorkerSpawnerPair(pipelineInfo *pps.PipelineInfo, cb func(env *testEnv)
 			return err
 		}
 
-		if err := os.MkdirAll(env.LocalStorageDirectory, 0777); err != nil {
+		if err := os.MkdirAll(env.ServiceEnv.StorageRoot, 0777); err != nil {
 			return err
 		}
 		// TODO: this is global and complicates running tests in parallel
-		if err := os.Setenv(obj.PachRootEnvVar, env.LocalStorageDirectory); err != nil {
+		if err := os.Setenv(obj.PachRootEnvVar, env.ServiceEnv.StorageRoot); err != nil {
 			return err
 		}
 

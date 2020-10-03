@@ -22,8 +22,7 @@ import (
 type RealEnv struct {
 	MockEnv
 
-	LocalStorageDirectory    string
-	treeCache                *hashtree.Cache
+	ServiceEnv               *serviceenv.ServiceEnv
 	AuthServer               authserver.APIServer
 	PFSBlockServer           pfsserver.BlockAPIServer
 	PFSServer                pfsserver.APIServer
@@ -56,11 +55,11 @@ func WithRealEnv(cb func(*RealEnv) error, customConfig ...*serviceenv.PachdFullC
 	return WithMockEnv(func(mockEnv *MockEnv) (err error) {
 		realEnv := &RealEnv{MockEnv: *mockEnv}
 
-		defer func() {
-			if realEnv.treeCache != nil {
-				realEnv.treeCache.Close()
-			}
-		}()
+		treeCache, err := hashtree.NewCache(testingTreeCacheSize)
+		if err != nil {
+			return err
+		}
+		defer treeCache.Close()
 
 		config := serviceenv.NewConfiguration(&serviceenv.PachdFullConfiguration{})
 		if len(customConfig) > 0 {
@@ -74,12 +73,11 @@ func WithRealEnv(cb func(*RealEnv) error, customConfig ...*serviceenv.PachdFullC
 		config.EtcdHost = etcdClientURL.Hostname()
 		config.EtcdPort = etcdClientURL.Port()
 		config.PeerPort = uint16(realEnv.MockPachd.Addr.(*net.TCPAddr).Port)
-		servEnv := serviceenv.InitServiceEnv(config)
+		config.StorageRoot = path.Join(realEnv.Directory, "localStorage")
+		realEnv.ServiceEnv = serviceenv.InitServiceEnv(config)
 
-		realEnv.LocalStorageDirectory = path.Join(realEnv.Directory, "localStorage")
-		config.StorageRoot = realEnv.LocalStorageDirectory
 		realEnv.PFSBlockServer, err = pfsserver.NewBlockAPIServer(
-			realEnv.LocalStorageDirectory,
+			realEnv.ServiceEnv.StorageRoot,
 			localBlockServerCacheBytes,
 			pfsserver.LocalBackendEnvVar,
 			net.JoinHostPort(config.EtcdHost, config.EtcdPort),
@@ -89,20 +87,14 @@ func WithRealEnv(cb func(*RealEnv) error, customConfig ...*serviceenv.PachdFullC
 			return err
 		}
 
-		etcdPrefix := ""
-		realEnv.treeCache, err = hashtree.NewCache(testingTreeCacheSize)
-		if err != nil {
-			return err
-		}
-
 		txnEnv := &txnenv.TransactionEnv{}
 
 		realEnv.PFSServer, err = pfsserver.NewAPIServer(
-			servEnv,
+			realEnv.ServiceEnv,
 			txnEnv,
-			etcdPrefix,
-			realEnv.treeCache,
-			realEnv.LocalStorageDirectory,
+			realEnv.ServiceEnv.EtcdPrefix,
+			treeCache,
+			realEnv.ServiceEnv.StorageRoot,
 			64*1024*1024,
 		)
 		if err != nil {
@@ -111,14 +103,14 @@ func WithRealEnv(cb func(*RealEnv) error, customConfig ...*serviceenv.PachdFullC
 
 		realEnv.AuthServer = &authtesting.InactiveAPIServer{}
 
-		realEnv.TransactionServer, err = txnserver.NewAPIServer(servEnv, txnEnv, etcdPrefix)
+		realEnv.TransactionServer, err = txnserver.NewAPIServer(realEnv.ServiceEnv, txnEnv, realEnv.ServiceEnv.EtcdPrefix)
 		if err != nil {
 			return err
 		}
 
 		realEnv.MockPPSTransactionServer = NewMockPPSTransactionServer()
 
-		txnEnv.Initialize(servEnv, realEnv.TransactionServer, realEnv.AuthServer, realEnv.PFSServer, &realEnv.MockPPSTransactionServer.api)
+		txnEnv.Initialize(realEnv.ServiceEnv, realEnv.TransactionServer, realEnv.AuthServer, realEnv.PFSServer, &realEnv.MockPPSTransactionServer.api)
 
 		linkServers(&realEnv.MockPachd.Object, realEnv.PFSBlockServer)
 		linkServers(&realEnv.MockPachd.PFS, realEnv.PFSServer)
