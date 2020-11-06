@@ -28,6 +28,7 @@ import (
 	"github.com/pachyderm/pachyderm/src/client/pkg/errors"
 	"github.com/pachyderm/pachyderm/src/client/pkg/grpcutil"
 	pfsserver "github.com/pachyderm/pachyderm/src/server/pfs"
+	"github.com/pachyderm/pachyderm/src/server/pfs/pretty"
 	"github.com/pachyderm/pachyderm/src/server/pkg/ancestry"
 	col "github.com/pachyderm/pachyderm/src/server/pkg/collection"
 	"github.com/pachyderm/pachyderm/src/server/pkg/errutil"
@@ -3018,9 +3019,22 @@ func (d *driver) putFiles(pachClient *client.APIClient, s *putFileServer) error 
 	var putFilePaths []string
 	var putFileRecords []*pfs.PutFileRecords
 	var mu sync.Mutex
-	oneOff, repo, branch, err := d.forEachPutFile(pachClient, s, func(req *pfs.PutFileRequest, r io.Reader) error {
-		log.Debugf("Writing to %v@%v:/%v", req.File.Commit.Repo.Name, req.File.Commit.ID, req.File.Path)
-		records, err := d.putFile(pachClient, req.File, req.Delimiter, req.TargetFileDatums,
+	oneOff, repo, branch, err := d.forEachPutFile(pachClient, s, func(req *pfs.PutFileRequest, r io.Reader) (retErr error) {
+		log.Debugf("pfs.API.PutFile writing to:%s", pretty.CompactPrintFile(req.File))
+		start := time.Now()
+		var records *pfs.PutFileRecords
+		defer func() {
+			var bytes int64
+			for _, r := range records.Records {
+				bytes += r.SizeBytes
+			}
+			dur := time.Now().Sub(start)
+			rate := float64(bytes) / dur.Seconds()
+			log.Debugf("pfs.API.PutFile wrote to:%s,%db,dur:%v(%.2fb/s),err:%v",
+				pretty.CompactPrintFile(req.File), bytes, dur, rate, retErr)
+		}()
+		var err error
+		records, err = d.putFile(pachClient, req.File, req.Delimiter, req.TargetFileDatums,
 			req.TargetFileBytes, req.HeaderRecords, req.OverwriteIndex, req.Delete, r)
 		if err != nil {
 			return err

@@ -26,7 +26,7 @@ export -f get_images
 
 ## If the caller provided a tag, build and use that
 export PACH_VERSION=local
-KUBE_VERSION=v1.18.0
+KUBE_VERSION=v1.19.3
 MINIKUBE_FLAGS=("--kubernetes-version=${KUBE_VERSION}")
 eval "set -- $( getopt -l "tag:,cpus:,memory:" "--" "${0}" "${@:-}" )"
 while true; do
