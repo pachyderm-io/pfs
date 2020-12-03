@@ -217,7 +217,7 @@ func Cmds() []*cobra.Command {
 		Short: "Updates a context.",
 		Long: "Updates an existing context config from a given name (or the " +
 			"currently-active context, if no name is given).",
-		Use: "context [context]",
+		Use: "{{alias}} [<context>]",
 		Run: cmdutil.RunBoundedArgs(0, 1, func(args []string) (retErr error) {
 			cfg, err := config.Read(false)
 			if err != nil {
@@ -340,6 +340,7 @@ func Cmds() []*cobra.Command {
 		}),
 	}
 	commands = append(commands, cmdutil.CreateAlias(listContext, "config list context"))
+	commands = append(commands, cmdutil.CreateAlias(listContext, "config list contexts"))
 
 	configDocs := &cobra.Command{
 		Short: "Manages the pachyderm config.",

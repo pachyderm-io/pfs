@@ -82,6 +82,7 @@ transaction' or cancelled with 'delete transaction'.`,
 	listTransaction.Flags().AddFlagSet(rawFlags)
 	listTransaction.Flags().AddFlagSet(fullTimestampsFlags)
 	commands = append(commands, cmdutil.CreateAlias(listTransaction, "list transaction"))
+	commands = append(commands, cmdutil.Hide(cmdutil.CreateAlias(listTransaction, "list transactions")))
 
 	startTransaction := &cobra.Command{
 		Short: "Start a new transaction.",

@@ -317,6 +317,18 @@ func (r *RepeatedStringArg) Type() string {
 	return "[]string"
 }
 
+// Hide marks all runnable subcommands as hidden and returns it
+// for method chaining.
+func Hide(cmd *cobra.Command) *cobra.Command {
+	if cmd.Run != nil {
+		cmd.Hidden = true
+	}
+	for _, subcmd := range cmd.Commands() {
+		Hide(subcmd)
+	}
+	return cmd
+}
+
 // CreateAlias generates a nested command tree for the invocation specified,
 // which should be space-delimited as on the command-line.  The 'Use' field of
 // 'cmd' should specify '{{alias}}' instead of the command name as that will be

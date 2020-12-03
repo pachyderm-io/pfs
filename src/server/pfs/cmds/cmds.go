@@ -194,6 +194,7 @@ or type (e.g. csv, binary, images, etc).`,
 	listRepo.Flags().AddFlagSet(rawFlags)
 	listRepo.Flags().AddFlagSet(fullTimestampsFlags)
 	commands = append(commands, cmdutil.CreateAlias(listRepo, "list repo"))
+	commands = append(commands, cmdutil.Hide(cmdutil.CreateAlias(listRepo, "list repos")))
 
 	var force bool
 	var all bool
@@ -435,6 +436,7 @@ $ {{alias}} foo@master --from XXX`,
 	listCommit.Flags().AddFlagSet(fullTimestampsFlags)
 	shell.RegisterCompletionFunc(listCommit, shell.RepoCompletion)
 	commands = append(commands, cmdutil.CreateAlias(listCommit, "list commit"))
+	commands = append(commands, cmdutil.Hide(cmdutil.CreateAlias(listCommit, "list commits")))
 
 	printCommitIter := func(commitIter client.CommitInfoIterator) error {
 		if raw {
@@ -507,6 +509,7 @@ $ {{alias}} foo@XXX -r bar -r baz`,
 	flushCommit.Flags().AddFlagSet(fullTimestampsFlags)
 	shell.RegisterCompletionFunc(flushCommit, shell.BranchCompletion)
 	commands = append(commands, cmdutil.CreateAlias(flushCommit, "flush commit"))
+	commands = append(commands, cmdutil.Hide(cmdutil.CreateAlias(flushCommit, "flush commits")))
 
 	var newCommits bool
 	var pipeline string
@@ -567,6 +570,7 @@ $ {{alias}} test@master --new`,
 	subscribeCommit.Flags().AddFlagSet(fullTimestampsFlags)
 	shell.RegisterCompletionFunc(subscribeCommit, shell.BranchCompletion)
 	commands = append(commands, cmdutil.CreateAlias(subscribeCommit, "subscribe commit"))
+	commands = append(commands, cmdutil.Hide(cmdutil.CreateAlias(subscribeCommit, "subscribe commits")))
 
 	deleteCommit := &cobra.Command{
 		Use:   "{{alias}} <repo>@<branch-or-commit>",
@@ -717,6 +721,7 @@ Any pachctl command that can take a Commit ID, can take a branch name instead.`,
 	listBranch.Flags().AddFlagSet(rawFlags)
 	shell.RegisterCompletionFunc(listBranch, shell.RepoCompletion)
 	commands = append(commands, cmdutil.CreateAlias(listBranch, "list branch"))
+	commands = append(commands, cmdutil.Hide(cmdutil.CreateAlias(listBranch, "list branches")))
 
 	deleteBranch := &cobra.Command{
 		Use:   "{{alias}} <repo>@<branch-or-commit>",
@@ -930,6 +935,7 @@ $ {{alias}} repo@branch -i http://host/path`,
 			return nil, shell.SameFlag(flag)
 		})
 	commands = append(commands, cmdutil.CreateAlias(putFile, "put file"))
+	commands = append(commands, cmdutil.Hide(cmdutil.CreateAlias(putFile, "put files")))
 
 	copyFile := &cobra.Command{
 		Use:   "{{alias}} <src-repo>@<src-branch-or-commit>:<src-path> <dst-repo>@<dst-branch-or-commit>:<dst-path>",
@@ -960,6 +966,7 @@ $ {{alias}} repo@branch -i http://host/path`,
 	copyFile.Flags().BoolVarP(&overwrite, "overwrite", "o", false, "Overwrite the existing content of the file, either from previous commits or previous calls to 'put file' within this commit.")
 	shell.RegisterCompletionFunc(copyFile, shell.FileCompletion)
 	commands = append(commands, cmdutil.CreateAlias(copyFile, "copy file"))
+	commands = append(commands, cmdutil.Hide(cmdutil.CreateAlias(copyFile, "copy files")))
 
 	var outputPath string
 	getFile := &cobra.Command{
@@ -1014,6 +1021,7 @@ $ {{alias}} foo@master^2:XXX`,
 	getFile.Flags().IntVarP(&parallelism, "parallelism", "p", DefaultParallelism, "The maximum number of files that can be downloaded in parallel")
 	shell.RegisterCompletionFunc(getFile, shell.FileCompletion)
 	commands = append(commands, cmdutil.CreateAlias(getFile, "get file"))
+	commands = append(commands, cmdutil.Hide(cmdutil.CreateAlias(getFile, "get files")))
 
 	inspectFile := &cobra.Command{
 		Use:   "{{alias}} <repo>@<branch-or-commit>:<path/in/pfs>",
@@ -1109,6 +1117,7 @@ $ {{alias}} foo@master --history all`,
 	listFile.Flags().StringVar(&history, "history", "none", "Return revision history for files.")
 	shell.RegisterCompletionFunc(listFile, shell.FileCompletion)
 	commands = append(commands, cmdutil.CreateAlias(listFile, "list file"))
+	commands = append(commands, cmdutil.Hide(cmdutil.CreateAlias(listFile, "list files")))
 
 	globFile := &cobra.Command{
 		Use:   "{{alias}} <repo>@<branch-or-commit>:<pattern>",
@@ -1155,6 +1164,7 @@ $ {{alias}} "foo@master:data/*"`,
 	globFile.Flags().AddFlagSet(fullTimestampsFlags)
 	shell.RegisterCompletionFunc(globFile, shell.FileCompletion)
 	commands = append(commands, cmdutil.CreateAlias(globFile, "glob file"))
+	commands = append(commands, cmdutil.Hide(cmdutil.CreateAlias(globFile, "glob files")))
 
 	var shallow bool
 	var nameOnly bool
@@ -1259,6 +1269,7 @@ $ {{alias}} foo@master:path1 bar@master:path2`,
 	diffFile.Flags().AddFlagSet(noPagerFlags)
 	shell.RegisterCompletionFunc(diffFile, shell.FileCompletion)
 	commands = append(commands, cmdutil.CreateAlias(diffFile, "diff file"))
+	commands = append(commands, cmdutil.Hide(cmdutil.CreateAlias(diffFile, "diff files")))
 
 	deleteFile := &cobra.Command{
 		Use:   "{{alias}} <repo>@<branch-or-commit>:<path/in/pfs>",
@@ -1280,6 +1291,7 @@ $ {{alias}} foo@master:path1 bar@master:path2`,
 	}
 	shell.RegisterCompletionFunc(deleteFile, shell.FileCompletion)
 	commands = append(commands, cmdutil.CreateAlias(deleteFile, "delete file"))
+	commands = append(commands, cmdutil.Hide(cmdutil.CreateAlias(deleteFile, "delete files")))
 
 	objectDocs := &cobra.Command{
 		Short: "Docs for objects.",
