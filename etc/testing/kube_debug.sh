@@ -1,19 +1,29 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 echo "=== TEST FAILED OR TIMED OUT, DUMPING DEBUG INFO ==="
-kubectl get all --all-namespaces
 
 # TODO: Extend this to show kubectl describe output for failed pods, this will
 # probably show why things are hanging.
 
-kubectl version
-kubectl get all --namespace kafka
-kubectl describe pod -l app=pachd
-kubectl describe pod -l suite=pachyderm,app=etcd
-kubectl logs -l app=pachd | tail -n 100
-sudo dmesg | tail -n 20
-{ minikube logs | tail -n 20; } || true
-top -b -n 1 | head -n 20
-df -h
+cmds=(
+  'kubectl get all --all-namespaces'
+  'kubectl version'
+  'kubectl get all --all-namespaces'
+  'kubectl describe pod -l suite=pachyderm,app=pachd'
+  'kubectl describe pod -l suite=pachyderm,app=etcd'
+  # Set --tail b/c by default 'kubectl logs' only outputs 10 lines if -l is set
+  'kubectl logs --tail=100 -l suite=pachyderm,app=pachd'
+  'kubectl logs --tail=100 -l suite=pachyderm,app=pachd --previous # if pachd restarted'
+  'sudo dmesg | tail -n 40'
+  '{ minikube logs | tail -n 40; } || true'
+  'top -b -n 1 | head -n 40'
+  'df -h'
+)
+for c in "${cmds[@]}"; do
+  echo "======================================================================"
+  echo "${c}"
+  echo "----------------------------------------------------------------------"
+  eval "${c}"
+done

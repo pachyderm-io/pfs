@@ -992,9 +992,9 @@ func TestPipelineBuildRunCron(t *testing.T) {
 		t.Skip("Skipping integration tests in short mode")
 	}
 
-	// build a cron pipeline successfully
-	require.NoError(t, tu.BashCmd(`
-		pachctl create pipeline <<EOF
+	// test both json and yaml parsing of cron specs
+	for _, spec := range []string{
+		tu.Dedent(`
 		{
 		  "pipeline": {
 		    "name": "crontest"
@@ -1013,14 +1013,40 @@ func TestPipelineBuildRunCron(t *testing.T) {
 		    "cmd":["echo", "tick"]
 		  },
 		  "enable_stats": true
-		  }
-		EOF
-	`).Run())
+		}
+		`), tu.Dedent(`
+		pipeline:
+		  name: crontest
+		input:
+		  cron:
+		    name: tick
+		    spec: "*/1 * * * *"
+		    overwrite: true
+		transform:
+		  build:
+		    language: go
+		  cmd:
+		    - echo
+		    - tick
+		enable_stats: true
+	`)} {
+		// Clear cluster
+		require.NoError(t, tu.BashCmd(`
+		yes | pachctl delete all
+		pachctl garbage-collect
+		`).Run())
 
-	// and make sure you can use `run cron` on it
-	require.NoError(t, tu.BashCmd(`
+		// build a cron pipeline successfully
+		require.NoError(t, tu.BashCmd(`
+		pachctl create pipeline <<EOF
+		{{.spec}}
+		EOF`, "spec", spec).Run())
+
+		// and make sure you can use `run cron` on it
+		require.NoError(t, tu.BashCmd(`
 		pachctl run cron crontest
 	`).Run())
+	}
 }
 
 func TestWarningLatestTag(t *testing.T) {

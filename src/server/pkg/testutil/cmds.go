@@ -10,7 +10,11 @@ import (
 	"unicode"
 )
 
-// dedent is a helper function that trims repeated, leading spaces from several
+func notSpace(r rune) bool {
+	return !unicode.IsSpace(r)
+}
+
+// Dedent is a helper function that trims repeated, leading spaces from several
 // lines of text. This is useful for long, inline commands that are indented to
 // match the surrounding code but should be interpreted without the space:
 // e.g.:
@@ -30,11 +34,7 @@ import (
 // >      This is a test
 // >      EOF  # doesn't terminate heredoc b/c of space
 // such that the heredoc doesn't end properly
-func dedent(cmd string) string {
-	notSpace := func(r rune) bool {
-		return !unicode.IsSpace(r)
-	}
-
+func Dedent(cmd string) string {
 	prefix := "-" // non-space character indicates no prefix has been established
 	s := bufio.NewScanner(strings.NewReader(cmd))
 	var dedentedCmd bytes.Buffer
@@ -111,7 +111,7 @@ which match >/dev/null || {
 	buf.WriteRune('\n')
 
 	// do the substitution
-	template.Must(template.New("").Parse(dedent(cmd))).Execute(buf, subsMap)
+	template.Must(template.New("").Parse(Dedent(cmd))).Execute(buf, subsMap)
 	res := exec.Command("/bin/bash")
 	res.Stderr = os.Stderr
 	// useful for debugging, but makes travis too noisy:
