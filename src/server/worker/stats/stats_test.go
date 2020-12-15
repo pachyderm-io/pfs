@@ -23,6 +23,7 @@ import (
 )
 
 func TestPrometheusStats(t *testing.T) {
+	t.Skip("Would need to set up Prometheus")
 	c := tu.GetPachClient(t)
 	defer require.NoError(t, c.DeleteAll())
 	require.NoError(t, tu.ActivateEnterprise(t, c))
