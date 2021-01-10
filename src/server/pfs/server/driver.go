@@ -4473,7 +4473,15 @@ func (d *driver) deleteAll(txnCtx *txnenv.TransactionContext) error {
 		return err
 	}
 	for _, repoInfo := range repoInfos.RepoInfo {
-		if err := d.deleteRepo(txnCtx, repoInfo.Repo, true); err != nil && !auth.IsErrNotAuthorized(err) {
+		// split this between transactions because we're likely to run into etcd limits otherwise
+		if err := d.txnEnv.WithWriteContext(context.Background(), func(tc *txnenv.TransactionContext) error {
+			// try to delete without breaking pachyderm first, in case something goes wrong
+			if err := d.deleteRepo(tc, repoInfo.Repo, true); err != nil && !auth.IsErrNotAuthorized(err) {
+				logrus.Warn("could not delete repo while preserving pachyderm invariants: ", err)
+			}
+			return nil
+
+		}); err != nil {
 			return err
 		}
 	}
