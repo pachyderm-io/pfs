@@ -1352,10 +1352,27 @@ func (a *apiServer) getDatum(pachClient *client.APIClient, repo string, commit *
 	if err != nil {
 		return nil, err
 	}
-	if len(fileInfos) != 1 {
+	var fileInfo *pfs.FileInfo
+	switch {
+	case len(fileInfos) > 1:
+		logrus.Warnf("multiple (%d) job files for datum (%v)", len(fileInfos), datumID)
+		var latestInfo *pfs.FileInfo
+		var latestTime *time.Time
+		for _, finfo := range fileInfos {
+			tproto := finfo.Committed
+			t := time.Unix(tproto.Seconds, int64(tproto.Nanos))
+			if latestTime == nil || t.After(*latestTime) {
+				latestInfo = finfo
+				latestTime = &t
+			}
+		}
+		fileInfo = latestInfo
+	case len(fileInfos) < 1:
 		return nil, errors.Errorf("couldn't find job file")
+	default:
+		fileInfo = fileInfos[0]
 	}
-	if strings.Split(fileInfos[0].File.Path, ":")[1] != jobID {
+	if strings.Split(fileInfo.File.Path, ":")[1] != jobID {
 		datumInfo.State = pps.DatumState_SKIPPED
 	}
 
