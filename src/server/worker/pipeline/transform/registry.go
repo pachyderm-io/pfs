@@ -360,6 +360,15 @@ func (reg *registry) initializeJobChain(commitInfo *pfs.CommitInfo) error {
 					salt: reg.driver.PipelineInfo().Salt,
 				},
 			)
+		} else if reg.driver.PipelineInfo().EnableStats {
+			reg.jobChain = chain.NewDeprecatedJobWithStatsChain(
+				&hasher{
+					name: reg.driver.PipelineInfo().Pipeline.Name,
+					salt: reg.driver.PipelineInfo().Salt,
+				},
+				baseDatums,
+				baseDatums, // TODO: pass in stats datum set
+			)
 		} else {
 			reg.jobChain = chain.NewJobChain(
 				&hasher{
@@ -1202,7 +1211,7 @@ func (reg *registry) makeMergeSubtasks(pj *pendingJob, commitInfo *pfs.CommitInf
 	// TODO: this is risky - there's no check that the parent the jobChain is
 	// thinking of is the same one we find.  Add some extra guarantees here if we can.
 	var parentHashtrees []*pfs.Object
-	if pj.jdit.AdditiveOnly() {
+	if pj.jdit.AdditiveOnly() && !stats {
 		parentCommitInfo, err := reg.getParentCommitInfo(commitInfo)
 		if err != nil {
 			return nil, err

@@ -1352,10 +1352,16 @@ func (a *apiServer) getDatum(pachClient *client.APIClient, repo string, commit *
 	if err != nil {
 		return nil, err
 	}
-	if len(fileInfos) != 1 {
+	var fileInfo *pfs.FileInfo
+	switch {
+	case len(fileInfos) > 1:
+		return nil, errors.Errorf("multiple (%d) job files for datum (%v)", len(fileInfos), datumID)
+	case len(fileInfos) < 1:
 		return nil, errors.Errorf("couldn't find job file")
+	default:
+		fileInfo = fileInfos[0]
 	}
-	if strings.Split(fileInfos[0].File.Path, ":")[1] != jobID {
+	if strings.Split(fileInfo.File.Path, ":")[1] != jobID {
 		datumInfo.State = pps.DatumState_SKIPPED
 	}
 
