@@ -1378,6 +1378,13 @@ func putFileHelper(c *client.APIClient, pfc client.PutFileClient,
 		path = strings.TrimPrefix(path, "../")
 	}
 
+	//force windows style paths to unix style
+	path = strings.ReplaceAll(path, `\`, `/`)
+	//remove leading forward slash
+	if path[0] == '/' {
+		path = strings.Replace(path, "/", "", 1)
+	}
+
 	if _, ok := filesPut.LoadOrStore(path, nil); ok {
 		return errors.Errorf("multiple files put with the path %s, aborting, "+
 			"some files may already have been put and should be cleaned up with "+
