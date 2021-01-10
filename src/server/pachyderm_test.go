@@ -10304,6 +10304,59 @@ func TestDontReadStdin(t *testing.T) {
 	}
 }
 
+// Regression: stats commits would not close when there were no input datums.
+// For more info, see github.com/pachyderm/pachyderm/issues/3337
+func TestCloseStatsCommitWithNoInputDatums(t *testing.T) {
+	c := tu.GetPachClient(t)
+	defer require.NoError(t, c.DeleteAll())
+
+	dataRepo := tu.UniqueString("TestSimplePipeline_data")
+	require.NoError(t, c.CreateRepo(dataRepo))
+
+	pipeline := tu.UniqueString("TestSimplePipeline")
+
+	_, err := c.PpsAPIClient.CreatePipeline(
+		c.Ctx(),
+		&pps.CreatePipelineRequest{
+			Pipeline: client.NewPipeline(pipeline),
+			Transform: &pps.Transform{
+				Cmd:   []string{"bash"},
+				Stdin: []string{"sleep 1"},
+			},
+			Input:        client.NewPFSInput(dataRepo, "/*"),
+			OutputBranch: "",
+			Update:       false,
+			EnableStats:  true,
+		},
+	)
+	require.NoError(t, err)
+
+	commit, err := c.StartCommit(dataRepo, "master")
+	require.NoError(t, err)
+	require.NoError(t, c.FinishCommit(dataRepo, commit.ID))
+
+	// If the error exists, the stats commit will never close, and this will
+	// timeout
+	commitIter, err := c.FlushCommit([]*pfs.Commit{commit}, nil)
+	require.NoError(t, err)
+
+	for {
+		_, err := commitIter.Next()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		require.NoError(t, err)
+	}
+
+	// Make sure the job succeeded as well
+	jobs, err := c.ListJob(pipeline, nil, nil, -1, true)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(jobs))
+	jobInfo, err := c.InspectJob(jobs[0].Job.ID, true)
+	require.NoError(t, err)
+	require.Equal(t, pps.JobState_JOB_SUCCESS, jobInfo.State)
+}
+
 func TestStatsDeleteAll(t *testing.T) {
 	if os.Getenv("RUN_BAD_TESTS") == "" {
 		t.Skip("Skipping because RUN_BAD_TESTS was empty")

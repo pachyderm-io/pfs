@@ -80,7 +80,7 @@ func withTestEnv(cb func(*testEnv)) error {
 		}
 		d = d.WithContext(env.Context)
 		env.driver = d.(*driver)
-		env.driver.pipelineInfo.Transform.WorkingDir = env.Directory
+		env.driver.pipelineInfo.Transform.WorkingDir = "/" // Default Docker wd
 
 		cb(env)
 

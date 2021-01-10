@@ -928,7 +928,9 @@ func (d *driver) reportDeferredUserCodeStats(
 	logger logs.TaggedLogger,
 ) {
 	duration := time.Since(start)
-	procStats.ProcessTime = types.DurationProto(duration)
+	if procStats != nil {
+		procStats.ProcessTime = types.DurationProto(duration)
+	}
 
 	if d.exportStats {
 		state := "errored"

@@ -1,6 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
+# -x is set below
 set -euo pipefail
+
+TIMEOUT="120s"
+if [ "$#" -eq 1 ]; then
+  TIMEOUT="${1}"
+elif [ "$#" -gt 1 ]; then
+  echo "Too many parameters, expected 1, got $#"
+  echo "Usage: $0 <TIMEOUT>"
+  exit 1
+fi
 
 command -v match || {
   here="$(dirname "${0}")"
@@ -27,7 +37,7 @@ echo "$ENT_ACT_CODE" | pachctl enterprise activate && echo
 set -x
 
 # Make sure the pachyderm client can connect, write data, and create pipelines
-go test -v -count=1 ./src/server -run TestSimplePipeline
+go test -v -count=1 ./src/server -run TestSimplePipeline -timeout "${TIMEOUT}"
 
 # Make sure that config's pachd_address isn't disfigured by pachctl cmds that
 # modify the pachctl config (bug fix)
