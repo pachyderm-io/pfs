@@ -605,7 +605,7 @@ func standardDeployCmds() []*cobra.Command {
 			}
 			if !dryRun || createContext {
 				if contextName == "" {
-					contextName = "gcs"
+					contextName = "gcp"
 				}
 				if err := contextCreate(contextName, namespace, serverCert); err != nil {
 					return err
