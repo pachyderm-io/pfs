@@ -61,7 +61,7 @@ Wikipedia/Main_Page.html   file                71.34 KiB
 
 The `map` pipeline counts the number of occurrences of each word it encounters for each of the scraped webpages.  While this task can very well be accomplished in bash, we will demonstrate how to use custom code in Pachyderm by using a [Go program](map/map.go).
 
-In this case, you don't have to build a custom Docker image yourself with this compiled program. We have pushed a public image to Docker Hub, `pachyderm/wordcount-map`, which is referenced in the [map.json](map.json) pipeline specification.
+In this case, you don't have to build a custom Docker image yourself with this compiled program. We have pushed a public image to Docker Hub, `pachyderm/wordcount-map`, which is referenced in the [map/map.json](map.json) pipeline specification.
 
 Let's create the `map` pipeline: 
 
