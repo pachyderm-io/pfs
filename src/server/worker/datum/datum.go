@@ -41,7 +41,7 @@ const (
 // AppendFileTarClient is the standard interface for a client that implements AppendFileTar.
 type AppendFileTarClient interface {
 	// AppendFileTar puts a tar stream.
-	AppendFileTar(overwrite bool, r io.Reader, datum ...string) error
+	AppendFileTar(r io.Reader, opts ...client.AppendFileOption) error
 }
 
 const defaultDatumsPerSet = 10
@@ -336,7 +336,7 @@ func (d *Datum) upload(aftc AppendFileTarClient, storageRoot string, cb ...func(
 	if _, err := f.Seek(0, 0); err != nil {
 		return err
 	}
-	return aftc.AppendFileTar(false, f, d.ID)
+	return aftc.AppendFileTar(f, client.WithTag(d.ID))
 }
 
 // TODO: I think these types would be unecessary if the dependencies were shuffled around a bit.

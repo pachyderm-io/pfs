@@ -281,16 +281,16 @@ func (d *driver) listFile(pachClient *client.APIClient, file *pfs.File, full boo
 	fs = d.storage.NewIndexResolver(fs)
 	fs = fileset.NewDirInserter(fs)
 	fs = fileset.NewIndexFilter(fs, func(idx *index.Index) bool {
-		if idx.Path == "/" {
+		// Check for directory match (don't return directory in list)
+		if idx.Path == fileset.Clean(name, true) {
 			return false
 		}
+		// Check for file match.
 		if idx.Path == name {
 			return true
 		}
-		if idx.Path == name+"/" {
-			return false
-		}
-		return strings.HasPrefix(idx.Path, name)
+		// Check for sub directory / file match.
+		return strings.HasPrefix(idx.Path, fileset.Clean(name, true))
 	})
 	s := NewSource(commit, fs, true)
 	return s.Iterate(ctx, func(fi *pfs.FileInfo, _ fileset.File) error {
@@ -451,11 +451,11 @@ func (d *driver) createFileset(server pfs.API_CreateFilesetServer) (string, erro
 					var err error
 					switch mod.AppendFile.Source.(type) {
 					case *pfs.AppendFile_RawFileSource:
-						_, err = appendFileRaw(uw, server, mod.AppendFile)
+						_, err = appendFileRaw(newAppendFunc(uw, mod.AppendFile), server, mod.AppendFile)
 					case *pfs.AppendFile_TarFileSource:
-						_, err = appendFileTar(uw, server, mod.AppendFile)
+						_, err = appendFileTar(newAppendFunc(uw, mod.AppendFile), server, mod.AppendFile)
 					case *pfs.AppendFile_UrlFileSource:
-						_, err = appendFileURL(server.Context(), uw, mod.AppendFile)
+						_, err = appendFileURL(server.Context(), newAppendFunc(uw, mod.AppendFile), mod.AppendFile)
 					}
 					if err != nil {
 						return err

@@ -315,39 +315,9 @@ message AppendFile {
     TarFileSource tar_file_source = 4;
     URLFileSource url_file_source = 5;
   }
-// TODO:
-//  Delimiter delimiter = 7;
-//  // TargetFileDatums specifies the target number of datums in each written
-//  // file it may be lower if data does not split evenly, but will never be
-//  // higher, unless the value is 0.
-//  int64 target_file_datums = 8;
-//  // TargetFileBytes specifies the target number of bytes in each written
-//  // file, files may have more or fewer bytes than the target.
-//  int64 target_file_bytes = 9;
-//  // header_records is an option for splitting data when 'delimiter' is not NONE
-//  // (or SQL). It specifies the number of records that are converted to a
-//  // header and applied to all file shards.
-//  //
-//  // This is particularly useful for CSV files, where the first row often
-//  // contains column titles; if 'header_records' is set to one in that case,
-//  // the first row will be associated with the directory that contains the rest
-//  // of the split-up csv rows as files, and if any data is retrieved from that
-//  // directory by GetFile, it will appear to begin with that first row of
-//  // column labels (including in pipeline workers).
-//  //
-//  // Note that SQL files have their own logic for determining headers (their
-//  // header is not a number of records, but a collection of SQL commands that
-//  // create the relevant tables and such). This way, SQL files retrieved by
-//  // GetFile can be passed to psql, and they will set up the appropriate tables
-//  // before inserting the records in the files that were retrieved.
-//  int64 header_records = 11;
-//  // overwrite_index is the object index where the write starts from.  All
-//  // existing objects starting from the index are deleted.
-//  OverwriteIndex overwrite_index = 10;
-//  // delete indicates that the file should be deleted, this is redundant with
-//  // DeleteFile, but is necessary because it allows you to send file deletes
-//  // atomically with other PutFile operations.
-//  bool delete = 12;
+  Delimiter delimiter = 6;
+  int64 target_file_datums = 7;
+  int64 target_file_bytes = 8;
 }
 
 message RawFileSource {

@@ -331,11 +331,11 @@ func (a *apiServer) ModifyFile(server pfs.API_ModifyFileServer) (retErr error) {
 					var err error
 					switch mod.AppendFile.Source.(type) {
 					case *pfs.AppendFile_RawFileSource:
-						n, err = appendFileRaw(uw, server, mod.AppendFile)
+						n, err = appendFileRaw(newAppendFunc(uw, mod.AppendFile), server, mod.AppendFile)
 					case *pfs.AppendFile_TarFileSource:
-						n, err = appendFileTar(uw, server, mod.AppendFile)
+						n, err = appendFileTar(newAppendFunc(uw, mod.AppendFile), server, mod.AppendFile)
 					case *pfs.AppendFile_UrlFileSource:
-						n, err = appendFileURL(server.Context(), uw, mod.AppendFile)
+						n, err = appendFileURL(server.Context(), newAppendFunc(uw, mod.AppendFile), mod.AppendFile)
 					}
 					bytesRead += n
 					if err != nil {
@@ -354,17 +354,45 @@ func (a *apiServer) ModifyFile(server pfs.API_ModifyFileServer) (retErr error) {
 	})
 }
 
+type appendFunc func(p string, r io.Reader) error
+
+func newAppendFunc(uw *fileset.UnorderedWriter, req *pfs.AppendFile) appendFunc {
+	return func(p string, r io.Reader) error {
+		if req.Delimiter != pfs.Delimiter_NONE {
+			return fileset.SplitFile(p, r, convertDelimiter(req.Delimiter), req.TargetFileDatums, req.TargetFileBytes, func(p string, r io.Reader) error {
+				return uw.Append(p, req.Overwrite, r, req.Tag)
+			})
+		}
+		return uw.Append(p, req.Overwrite, r, req.Tag)
+	}
+}
+
+func convertDelimiter(delimiter pfs.Delimiter) fileset.SplitType {
+	switch delimiter {
+	case pfs.Delimiter_LINE:
+		return fileset.LINE
+	case pfs.Delimiter_JSON:
+		return fileset.JSON
+	case pfs.Delimiter_SQL:
+		return fileset.SQL
+	case pfs.Delimiter_CSV:
+		return fileset.CSV
+	default:
+		panic("unrecognized delimiter type")
+	}
+}
+
 type modifyFileSource interface {
 	Recv() (*pfs.ModifyFileRequest, error)
 }
 
-func appendFileRaw(uw *fileset.UnorderedWriter, server modifyFileSource, req *pfs.AppendFile) (int64, error) {
+func appendFileRaw(appendFunc appendFunc, server modifyFileSource, req *pfs.AppendFile) (int64, error) {
 	src := req.Source.(*pfs.AppendFile_RawFileSource).RawFileSource
 	rfsr := &rawFileSourceReader{
 		server: server,
 		r:      bytes.NewReader(src.Data),
 	}
-	err := uw.Append(src.Path, req.Overwrite, rfsr, req.Tag)
+	err := appendFunc(src.Path, rfsr)
 	return rfsr.bytesRead, err
 }
 
@@ -391,7 +419,7 @@ func (rfsr *rawFileSourceReader) Read(data []byte) (int, error) {
 	return n, err
 }
 
-func appendFileTar(uw *fileset.UnorderedWriter, server modifyFileSource, req *pfs.AppendFile) (int64, error) {
+func appendFileTar(appendFunc appendFunc, server modifyFileSource, req *pfs.AppendFile) (int64, error) {
 	src := req.Source.(*pfs.AppendFile_TarFileSource).TarFileSource
 	tfsr := &tarFileSourceReader{
 		server: server,
@@ -409,7 +437,7 @@ func appendFileTar(uw *fileset.UnorderedWriter, server modifyFileSource, req *pf
 		if hdr.Typeflag == tar.TypeDir {
 			continue
 		}
-		if err := uw.Append(hdr.Name, req.Overwrite, tr, req.Tag); err != nil {
+		if err := appendFunc(hdr.Name, tr); err != nil {
 			return tfsr.bytesRead, err
 		}
 	}
@@ -437,7 +465,7 @@ func (tfsr *tarFileSourceReader) Read(data []byte) (int, error) {
 }
 
 // TODO: Collect and return bytes read and figure out parallel download (task chain in chunk package might be helpful).
-func appendFileURL(ctx context.Context, uw *fileset.UnorderedWriter, req *pfs.AppendFile) (_ int64, retErr error) {
+func appendFileURL(ctx context.Context, appendFunc appendFunc, req *pfs.AppendFile) (_ int64, retErr error) {
 	src := req.Source.(*pfs.AppendFile_UrlFileSource).UrlFileSource
 	url, err := url.Parse(src.URL)
 	if err != nil {
@@ -458,7 +486,7 @@ func appendFileURL(ctx context.Context, uw *fileset.UnorderedWriter, req *pfs.Ap
 				retErr = err
 			}
 		}()
-		return 0, uw.Append(src.Path, req.Overwrite, resp.Body, req.Tag)
+		return 0, appendFunc(src.Path, resp.Body)
 	default:
 		url, err := obj.ParseURL(src.URL)
 		if err != nil {
@@ -480,7 +508,7 @@ func appendFileURL(ctx context.Context, uw *fileset.UnorderedWriter, req *pfs.Ap
 						retErr = err
 					}
 				}()
-				return uw.Append(filepath.Join(src.Path, strings.TrimPrefix(name, path)), req.Overwrite, r, req.Tag)
+				return appendFunc(filepath.Join(src.Path, strings.TrimPrefix(name, path)), r)
 			})
 		}
 		r, err := objClient.Reader(ctx, url.Object, 0, 0)
@@ -492,7 +520,7 @@ func appendFileURL(ctx context.Context, uw *fileset.UnorderedWriter, req *pfs.Ap
 				retErr = err
 			}
 		}()
-		return 0, uw.Append(src.Path, req.Overwrite, r, req.Tag)
+		return 0, appendFunc(src.Path, r)
 	}
 }
 

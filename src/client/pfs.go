@@ -574,6 +574,10 @@ type PutFileClient interface {
 	// overwrite the entire file, specify an index of 0.
 	PutFileOverwrite(repo, commit, path string, r io.Reader) error
 
+	// PutFileSplit writes a file to PFS from a reader.
+	// delimiter is used to tell PFS how to break the input into files.
+	PutFileSplit(repo, commit, path string, delimiter pfs.Delimiter, targetFileDatums int64, targetFileBytes int64, overwrite bool, r io.Reader) error
+
 	// PutFileURL puts a file using the content found at a URL.
 	// The URL is sent to the server which performs the request.
 	// recursive allows for recursive scraping of some types URLs. For example on s3:// urls.
@@ -609,15 +613,30 @@ func (pfc *putFileClient) PutFileWriter(repo, commit, path string) (io.WriteClos
 
 // PutFile puts a file into PFS.
 func (pfc *putFileClient) PutFile(repo, commit, path string, r io.Reader) error {
-	return pfc.c.AppendFile(repo, commit, path, false, r)
+	return pfc.c.AppendFile(repo, commit, path, r)
 }
 
 func (pfc *putFileClient) PutFileOverwrite(repo, commit, path string, r io.Reader) error {
-	return pfc.c.AppendFile(repo, commit, path, true, r)
+	return pfc.c.AppendFile(repo, commit, path, r, WithOverwrite())
+}
+
+func (pfc *putFileClient) PutFileSplit(repo, commit, path string, delimiter pfs.Delimiter, targetFileDatums int64, targetFileBytes int64, overwrite bool, r io.Reader) error {
+	var opts []AppendFileOption
+	if delimiter != pfs.Delimiter_NONE {
+		opts = append(opts, WithSplit(delimiter, targetFileDatums, targetFileBytes))
+	}
+	if overwrite {
+		opts = append(opts, WithOverwrite())
+	}
+	return pfc.c.AppendFile(repo, commit, path, r, opts...)
 }
 
 func (pfc *putFileClient) PutFileURL(repo, commit, path, url string, recursive, overwrite bool) error {
-	return pfc.c.AppendFileURL(repo, commit, path, url, recursive, overwrite)
+	var opts []AppendFileOption
+	if overwrite {
+		opts = append(opts, WithOverwrite())
+	}
+	return pfc.c.AppendFileURL(repo, commit, path, url, recursive, opts...)
 }
 
 func (pfc *putFileClient) DeleteFile(repo, commit, path string) error {
@@ -658,6 +677,15 @@ func (c APIClient) PutFileOverwrite(repoName string, commitID string, path strin
 		return err
 	}
 	return pfc.PutFileOverwrite(repoName, commitID, path, reader)
+}
+
+// PutFileSplit is like PutFile but splits the file based on a delimiter and target datums / bytes per file.
+func (c APIClient) PutFileSplit(repoName string, commitID string, path string, delimiter pfs.Delimiter, targetFileDatums int64, targetFileBytes int64, overwrite bool, reader io.Reader) error {
+	pfc, err := c.NewPutFileClient()
+	if err != nil {
+		return err
+	}
+	return pfc.PutFileSplit(repoName, commitID, path, delimiter, targetFileDatums, targetFileBytes, overwrite, reader)
 }
 
 // PutFileURL puts a file using the content found at a URL.

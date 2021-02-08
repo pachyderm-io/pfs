@@ -2,6 +2,7 @@ package testing
 
 import (
 	"archive/tar"
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -28,6 +29,7 @@ import (
 	"github.com/pachyderm/pachyderm/v2/src/internal/errors"
 	"github.com/pachyderm/pachyderm/v2/src/internal/obj"
 	"github.com/pachyderm/pachyderm/v2/src/internal/require"
+	"github.com/pachyderm/pachyderm/v2/src/internal/sql"
 	"github.com/pachyderm/pachyderm/v2/src/internal/tarutil"
 	"github.com/pachyderm/pachyderm/v2/src/internal/testpachd"
 	tu "github.com/pachyderm/pachyderm/v2/src/internal/testutil"
@@ -2813,9 +2815,9 @@ func TestSetBranchTwice(t *testing.T) {
 //
 //		commit1, err := env.PachClient.StartCommit(repo1, "master")
 //		require.NoError(t, err)
-//		_, err = env.PachClient.PutFile(repo1, commit1.ID, "foo", strings.NewReader("foo\n"))
+//		require.NoError(t, env.PachClient.PutFile(repo1, commit1.ID, "foo", strings.NewReader("foo\n")))
 //		require.NoError(t, err)
-//		_, err = env.PachClient.PutFile(repo1, commit1.ID, "dir/bar", strings.NewReader("bar\n"))
+//		require.NoError(t, env.PachClient.PutFile(repo1, commit1.ID, "dir/bar", strings.NewReader("bar\n")))
 //		require.NoError(t, err)
 //		require.NoError(t, env.PachClient.FinishCommit(repo1, commit1.ID))
 //
@@ -3178,245 +3180,227 @@ func TestFlushNonExistentCommit(t *testing.T) {
 	}))
 }
 
-// TODO: Make work with V2?
-//func TestPutFileSplit(t *testing.T) {
-//	t.Parallel()
-//	db := dbutil.NewTestDB(t)
-//	require.NoError(t, testpachd.WithRealEnv(db, func(env *testpachd.RealEnv) error {
-//		if testing.Short() {
-//			t.Skip("Skipping integration tests in short mode")
-//		}
-//
-//		// create repos
-//		repo := tu.UniqueString("TestPutFileSplit")
-//		require.NoError(t, env.PachClient.CreateRepo(repo))
-//		commit, err := env.PachClient.StartCommit(repo, "master")
-//		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, commit.ID, "none", pfs.Delimiter_NONE, 0, 0, 0, false, strings.NewReader("foo\nbar\nbuz\n"))
-//		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, commit.ID, "line", pfs.Delimiter_LINE, 0, 0, 0, false, strings.NewReader("foo\nbar\nbuz\n"))
-//		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, commit.ID, "line", pfs.Delimiter_LINE, 0, 0, 0, false, strings.NewReader("foo\nbar\nbuz\n"))
-//		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, commit.ID, "line2", pfs.Delimiter_LINE, 2, 0, 0, false, strings.NewReader("foo\nbar\nbuz\nfiz\n"))
-//		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, commit.ID, "line3", pfs.Delimiter_LINE, 0, 8, 0, false, strings.NewReader("foo\nbar\nbuz\nfiz\n"))
-//		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, commit.ID, "json", pfs.Delimiter_JSON, 0, 0, 0, false, strings.NewReader("{}{}{}{}{}{}{}{}{}{}"))
-//		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, commit.ID, "json", pfs.Delimiter_JSON, 0, 0, 0, false, strings.NewReader("{}{}{}{}{}{}{}{}{}{}"))
-//		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, commit.ID, "json2", pfs.Delimiter_JSON, 2, 0, 0, false, strings.NewReader("{}{}{}{}"))
-//		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, commit.ID, "json3", pfs.Delimiter_JSON, 0, 4, 0, false, strings.NewReader("{}{}{}{}"))
-//		require.NoError(t, err)
-//
-//		files, err := env.PachClient.ListFileAll(repo, commit.ID, "line2")
-//		require.NoError(t, err)
-//		require.Equal(t, 2, len(files))
-//		for _, fileInfo := range files {
-//			require.Equal(t, uint64(8), fileInfo.SizeBytes)
-//		}
-//
-//		require.NoError(t, env.PachClient.FinishCommit(repo, commit.ID))
-//		commit2, err := env.PachClient.StartCommit(repo, "master")
-//		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, commit2.ID, "line", pfs.Delimiter_LINE, 0, 0, 0, false, strings.NewReader("foo\nbar\nbuz\n"))
-//		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, commit2.ID, "json", pfs.Delimiter_JSON, 0, 0, 0, false, strings.NewReader("{}{}{}{}{}{}{}{}{}{}"))
-//		require.NoError(t, err)
-//
-//		files, err = env.PachClient.ListFileAll(repo, commit2.ID, "line")
-//		require.NoError(t, err)
-//		require.Equal(t, 9, len(files))
-//		for _, fileInfo := range files {
-//			require.Equal(t, uint64(4), fileInfo.SizeBytes)
-//		}
-//
-//		require.NoError(t, env.PachClient.FinishCommit(repo, commit2.ID))
-//		fileInfo, err := env.PachClient.InspectFile(repo, commit.ID, "none")
-//		require.NoError(t, err)
-//		require.Equal(t, pfs.FileType_FILE, fileInfo.FileType)
-//		files, err = env.PachClient.ListFileAll(repo, commit.ID, "line")
-//		require.NoError(t, err)
-//		require.Equal(t, 6, len(files))
-//		for _, fileInfo := range files {
-//			require.Equal(t, uint64(4), fileInfo.SizeBytes)
-//		}
-//		files, err = env.PachClient.ListFileAll(repo, commit2.ID, "line")
-//		require.NoError(t, err)
-//		require.Equal(t, 9, len(files))
-//		for _, fileInfo := range files {
-//			require.Equal(t, uint64(4), fileInfo.SizeBytes)
-//		}
-//		files, err = env.PachClient.ListFileAll(repo, commit.ID, "line2")
-//		require.NoError(t, err)
-//		require.Equal(t, 2, len(files))
-//		for _, fileInfo := range files {
-//			require.Equal(t, uint64(8), fileInfo.SizeBytes)
-//		}
-//		files, err = env.PachClient.ListFileAll(repo, commit.ID, "line3")
-//		require.NoError(t, err)
-//		require.Equal(t, 2, len(files))
-//		for _, fileInfo := range files {
-//			require.Equal(t, uint64(8), fileInfo.SizeBytes)
-//		}
-//		files, err = env.PachClient.ListFileAll(repo, commit.ID, "json")
-//		require.NoError(t, err)
-//		require.Equal(t, 20, len(files))
-//		for _, fileInfo := range files {
-//			require.Equal(t, uint64(2), fileInfo.SizeBytes)
-//		}
-//		files, err = env.PachClient.ListFileAll(repo, commit2.ID, "json")
-//		require.NoError(t, err)
-//		require.Equal(t, 30, len(files))
-//		for _, fileInfo := range files {
-//			require.Equal(t, uint64(2), fileInfo.SizeBytes)
-//		}
-//		files, err = env.PachClient.ListFileAll(repo, commit.ID, "json2")
-//		require.NoError(t, err)
-//		require.Equal(t, 2, len(files))
-//		for _, fileInfo := range files {
-//			require.Equal(t, uint64(4), fileInfo.SizeBytes)
-//		}
-//		files, err = env.PachClient.ListFileAll(repo, commit.ID, "json3")
-//		require.NoError(t, err)
-//		require.Equal(t, 2, len(files))
-//		for _, fileInfo := range files {
-//			require.Equal(t, uint64(4), fileInfo.SizeBytes)
-//		}
-//
-//		return nil
-//	}))
-//}
-//
-//func TestPutFileSplitBig(t *testing.T) {
-//	if os.Getenv("RUN_BAD_TESTS") == "" {
-//		t.Skip("Skipping because RUN_BAD_TESTS was empty")
-//	}
-//	t.Parallel()
-//	db := dbutil.NewTestDB(t)
-//	require.NoError(t, testpachd.WithRealEnv(db, func(env *testpachd.RealEnv) error {
-//		if testing.Short() {
-//			t.Skip("Skipping integration tests in short mode")
-//		}
-//
-//		// create repos
-//		repo := tu.UniqueString("TestPutFileSplitBig")
-//		require.NoError(t, env.PachClient.CreateRepo(repo))
-//		commit, err := env.PachClient.StartCommit(repo, "master")
-//		require.NoError(t, err)
-//		w, err := env.PachClient.PutFileSplitWriter(repo, commit.ID, "line", pfs.Delimiter_LINE, 0, 0, 0, false)
-//		require.NoError(t, err)
-//		for i := 0; i < 1000; i++ {
-//			_, err = w.Write([]byte("foo\n"))
-//			require.NoError(t, err)
-//		}
-//		require.NoError(t, w.Close())
-//		require.NoError(t, env.PachClient.FinishCommit(repo, commit.ID))
-//		files, err := env.PachClient.ListFileAll(repo, commit.ID, "line")
-//		require.NoError(t, err)
-//		require.Equal(t, 1000, len(files))
-//		for _, fileInfo := range files {
-//			require.Equal(t, uint64(4), fileInfo.SizeBytes)
-//		}
-//
-//		return nil
-//	}))
-//}
-//
-//func TestPutFileSplitCSV(t *testing.T) {
-//	t.Parallel()
-//	db := dbutil.NewTestDB(t)
-//	require.NoError(t, testpachd.WithRealEnv(db, func(env *testpachd.RealEnv) error {
-//		// create repos
-//		repo := tu.UniqueString("TestPutFileSplitCSV")
-//		require.NoError(t, env.PachClient.CreateRepo(repo))
-//		_, err := env.PachClient.PutFileSplit(repo, "master", "data", pfs.Delimiter_CSV, 0, 0, 0, false,
-//			// Weird, but this is actually two lines ("is\na" is quoted, so one cell)
-//			strings.NewReader("this,is,a,test\n"+
-//				"\"\"\"this\"\"\",\"is\nonly\",\"a,test\"\n"))
-//		require.NoError(t, err)
-//		fileInfos, err := env.PachClient.ListFileAll(repo, "master", "/data")
-//		require.NoError(t, err)
-//		require.Equal(t, 2, len(fileInfos))
-//		var contents bytes.Buffer
-//		env.PachClient.GetFile(repo, "master", "/data/0000000000000000", &contents)
-//		require.Equal(t, "this,is,a,test\n", contents.String())
-//		contents.Reset()
-//		env.PachClient.GetFile(repo, "master", "/data/0000000000000001", &contents)
-//		require.Equal(t, "\"\"\"this\"\"\",\"is\nonly\",\"a,test\"\n", contents.String())
-//
-//		return nil
-//	}))
-//}
-//
-//func TestPutFileSplitSQL(t *testing.T) {
-//	t.Parallel()
-//	db := dbutil.NewTestDB(t)
-//	require.NoError(t, testpachd.WithRealEnv(db, func(env *testpachd.RealEnv) error {
-//		// create repos
-//		repo := tu.UniqueString("TestPutFileSplitSQL")
-//		require.NoError(t, env.PachClient.CreateRepo(repo))
-//
-//		_, err := env.PachClient.PutFileSplit(repo, "master", "/sql", pfs.Delimiter_SQL, 0, 0, 0,
-//			false, strings.NewReader(tu.TestPGDump))
-//		require.NoError(t, err)
-//		fileInfos, err := env.PachClient.ListFileAll(repo, "master", "/sql")
-//		require.NoError(t, err)
-//		require.Equal(t, 5, len(fileInfos))
-//
-//		// Get one of the SQL records & validate it
-//		var contents bytes.Buffer
-//		env.PachClient.GetFile(repo, "master", "/sql/0000000000000000", &contents)
-//		// Validate that the recieved pgdump file creates the cars table
-//		require.Matches(t, "CREATE TABLE public\\.cars", contents.String())
-//		// Validate the SQL header more generally by passing the output of GetFile
-//		// back through the SQL library & confirm that it parses correctly but only
-//		// has one row
-//		pgReader := sql.NewPGDumpReader(bufio.NewReader(bytes.NewReader(contents.Bytes())))
-//		record, err := pgReader.ReadRow()
-//		require.NoError(t, err)
-//		require.Equal(t, "Tesla\tRoadster\t2008\tliterally a rocket\n", string(record))
-//		_, err = pgReader.ReadRow()
-//		require.YesError(t, err)
-//		require.True(t, errors.Is(err, io.EOF))
-//
-//		// Create a new commit that overwrites all existing data & puts it back with
-//		// --header-records=1
-//		commit, err := env.PachClient.StartCommit(repo, "master")
-//		require.NoError(t, err)
-//		require.NoError(t, env.PachClient.DeleteFile(repo, commit.ID, "/sql"))
-//		_, err = env.PachClient.PutFileSplit(repo, commit.ID, "/sql", pfs.Delimiter_SQL, 0, 0, 1,
-//			false, strings.NewReader(tu.TestPGDump))
-//		require.NoError(t, err)
-//		require.NoError(t, env.PachClient.FinishCommit(repo, commit.ID))
-//		fileInfos, err = env.PachClient.ListFileAll(repo, "master", "/sql")
-//		require.NoError(t, err)
-//		require.Equal(t, 4, len(fileInfos))
-//
-//		// Get one of the SQL records & validate it
-//		contents.Reset()
-//		env.PachClient.GetFile(repo, "master", "/sql/0000000000000003", &contents)
-//		// Validate a that the recieved pgdump file creates the cars table
-//		require.Matches(t, "CREATE TABLE public\\.cars", contents.String())
-//		// Validate the SQL header more generally by passing the output of GetFile
-//		// back through the SQL library & confirm that it parses correctly but only
-//		// has one row
-//		pgReader = sql.NewPGDumpReader(bufio.NewReader(strings.NewReader(contents.String())))
-//		record, err = pgReader.ReadRow()
-//		require.NoError(t, err)
-//		require.Equal(t, "Tesla\tRoadster\t2008\tliterally a rocket\n", string(record))
-//		record, err = pgReader.ReadRow()
-//		require.NoError(t, err)
-//		require.Equal(t, "Toyota\tCorolla\t2005\tgreatest car ever made\n", string(record))
-//		_, err = pgReader.ReadRow()
-//		require.YesError(t, err)
-//		require.True(t, errors.Is(err, io.EOF))
-//
-//		return nil
-//	}))
-//}
+func TestPutFileSplit1(t *testing.T) {
+	t.Parallel()
+	db := dbutil.NewTestDB(t)
+	require.NoError(t, testpachd.WithRealEnv(db, func(env *testpachd.RealEnv) error {
+		if testing.Short() {
+			t.Skip("Skipping integration tests in short mode")
+		}
+
+		// create repos
+		repo := tu.UniqueString("TestPutFileSplit")
+		require.NoError(t, env.PachClient.CreateRepo(repo))
+		commit, err := env.PachClient.StartCommit(repo, "master")
+		require.NoError(t, err)
+		require.NoError(t, env.PachClient.PutFileSplit(repo, commit.ID, "none", pfs.Delimiter_NONE, 0, 0, false, strings.NewReader("foo\nbar\nbuz\n")))
+		require.NoError(t, env.PachClient.PutFileSplit(repo, commit.ID, "line", pfs.Delimiter_LINE, 1, 0, false, strings.NewReader("foo\nbar\nbuz\n")))
+		require.NoError(t, env.PachClient.PutFileSplit(repo, commit.ID, "line", pfs.Delimiter_LINE, 1, 0, false, strings.NewReader("foo\nbar\nbuz\n")))
+		require.NoError(t, env.PachClient.PutFileSplit(repo, commit.ID, "line2", pfs.Delimiter_LINE, 2, 0, false, strings.NewReader("foo\nbar\nbuz\nfiz\n")))
+		require.NoError(t, env.PachClient.PutFileSplit(repo, commit.ID, "line3", pfs.Delimiter_LINE, 0, 8, false, strings.NewReader("foo\nbar\nbuz\nfiz\n")))
+		require.NoError(t, env.PachClient.PutFileSplit(repo, commit.ID, "json", pfs.Delimiter_JSON, 1, 0, false, strings.NewReader("{}{}{}{}{}{}{}{}{}{}")))
+		require.NoError(t, env.PachClient.PutFileSplit(repo, commit.ID, "json", pfs.Delimiter_JSON, 1, 0, false, strings.NewReader("{}{}{}{}{}{}{}{}{}{}")))
+		require.NoError(t, env.PachClient.PutFileSplit(repo, commit.ID, "json2", pfs.Delimiter_JSON, 2, 0, false, strings.NewReader("{}{}{}{}")))
+		require.NoError(t, env.PachClient.PutFileSplit(repo, commit.ID, "json3", pfs.Delimiter_JSON, 0, 4, false, strings.NewReader("{}{}{}{}")))
+		require.NoError(t, env.PachClient.FinishCommit(repo, commit.ID))
+
+		files, err := env.PachClient.ListFileAll(repo, commit.ID, "line2")
+		require.NoError(t, err)
+		require.Equal(t, 2, len(files))
+		for _, fileInfo := range files {
+			require.Equal(t, uint64(8), fileInfo.SizeBytes)
+		}
+
+		commit2, err := env.PachClient.StartCommit(repo, "master")
+		require.NoError(t, err)
+		require.NoError(t, env.PachClient.PutFileSplit(repo, commit2.ID, "line", pfs.Delimiter_LINE, 1, 0, false, strings.NewReader("foo\nbar\nbuz\n")))
+		require.NoError(t, env.PachClient.PutFileSplit(repo, commit2.ID, "json", pfs.Delimiter_JSON, 1, 0, false, strings.NewReader("{}{}{}{}{}{}{}{}{}{}")))
+		require.NoError(t, env.PachClient.FinishCommit(repo, commit2.ID))
+
+		files, err = env.PachClient.ListFileAll(repo, commit2.ID, "line")
+		require.NoError(t, err)
+		for _, fileInfo := range files {
+			fmt.Println(fileInfo.File.Path)
+		}
+		require.Equal(t, 9, len(files))
+		for _, fileInfo := range files {
+			require.Equal(t, uint64(4), fileInfo.SizeBytes)
+		}
+
+		fileInfo, err := env.PachClient.InspectFile(repo, commit.ID, "none")
+		require.NoError(t, err)
+		require.Equal(t, pfs.FileType_FILE, fileInfo.FileType)
+		files, err = env.PachClient.ListFileAll(repo, commit.ID, "line")
+		require.NoError(t, err)
+		require.Equal(t, 6, len(files))
+		for _, fileInfo := range files {
+			require.Equal(t, uint64(4), fileInfo.SizeBytes)
+		}
+		files, err = env.PachClient.ListFileAll(repo, commit2.ID, "line")
+		require.NoError(t, err)
+		require.Equal(t, 9, len(files))
+		for _, fileInfo := range files {
+			require.Equal(t, uint64(4), fileInfo.SizeBytes)
+		}
+		files, err = env.PachClient.ListFileAll(repo, commit.ID, "line2")
+		require.NoError(t, err)
+		require.Equal(t, 2, len(files))
+		for _, fileInfo := range files {
+			require.Equal(t, uint64(8), fileInfo.SizeBytes)
+		}
+		files, err = env.PachClient.ListFileAll(repo, commit.ID, "line3")
+		require.NoError(t, err)
+		require.Equal(t, 2, len(files))
+		for _, fileInfo := range files {
+			require.Equal(t, uint64(8), fileInfo.SizeBytes)
+		}
+		files, err = env.PachClient.ListFileAll(repo, commit.ID, "json")
+		require.NoError(t, err)
+		require.Equal(t, 20, len(files))
+		for _, fileInfo := range files {
+			require.Equal(t, uint64(2), fileInfo.SizeBytes)
+		}
+		files, err = env.PachClient.ListFileAll(repo, commit2.ID, "json")
+		require.NoError(t, err)
+		require.Equal(t, 30, len(files))
+		for _, fileInfo := range files {
+			require.Equal(t, uint64(2), fileInfo.SizeBytes)
+		}
+		files, err = env.PachClient.ListFileAll(repo, commit.ID, "json2")
+		require.NoError(t, err)
+		require.Equal(t, 2, len(files))
+		for _, fileInfo := range files {
+			require.Equal(t, uint64(4), fileInfo.SizeBytes)
+		}
+		files, err = env.PachClient.ListFileAll(repo, commit.ID, "json3")
+		require.NoError(t, err)
+		require.Equal(t, 2, len(files))
+		for _, fileInfo := range files {
+			require.Equal(t, uint64(4), fileInfo.SizeBytes)
+		}
+
+		return nil
+	}))
+}
+
+func TestPutFileSplitBig(t *testing.T) {
+	t.Parallel()
+	db := dbutil.NewTestDB(t)
+	require.NoError(t, testpachd.WithRealEnv(db, func(env *testpachd.RealEnv) error {
+		if testing.Short() {
+			t.Skip("Skipping integration tests in short mode")
+		}
+
+		// create repos
+		repo := tu.UniqueString("TestPutFileSplitBig")
+		require.NoError(t, env.PachClient.CreateRepo(repo))
+		commit, err := env.PachClient.StartCommit(repo, "master")
+		require.NoError(t, err)
+		buf := &bytes.Buffer{}
+		for i := 0; i < 1000; i++ {
+			_, err = buf.Write([]byte("foo\n"))
+			require.NoError(t, err)
+		}
+		require.NoError(t, env.PachClient.PutFileSplit(repo, commit.ID, "line", pfs.Delimiter_LINE, 0, 0, false, buf))
+		require.NoError(t, env.PachClient.FinishCommit(repo, commit.ID))
+		files, err := env.PachClient.ListFileAll(repo, commit.ID, "line")
+		require.NoError(t, err)
+		require.Equal(t, 1000, len(files))
+		for _, fileInfo := range files {
+			require.Equal(t, uint64(4), fileInfo.SizeBytes)
+		}
+
+		return nil
+	}))
+}
+
+func TestPutFileSplitCSV(t *testing.T) {
+	t.Parallel()
+	db := dbutil.NewTestDB(t)
+	require.NoError(t, testpachd.WithRealEnv(db, func(env *testpachd.RealEnv) error {
+		// create repos
+		repo := tu.UniqueString("TestPutFileSplitCSV")
+		require.NoError(t, env.PachClient.CreateRepo(repo))
+		require.NoError(t, env.PachClient.PutFileSplit(repo, "master", "data", pfs.Delimiter_CSV, 0, 0, false,
+			// Weird, but this is actually two lines ("is\na" is quoted, so one cell)
+			strings.NewReader("this,is,a,test\n"+
+				"\"\"\"this\"\"\",\"is\nonly\",\"a,test\"\n")))
+		fileInfos, err := env.PachClient.ListFileAll(repo, "master", "/data")
+		require.NoError(t, err)
+		require.Equal(t, 2, len(fileInfos))
+		var contents bytes.Buffer
+		env.PachClient.GetFile(repo, "master", "/data/0000000000000000", &contents)
+		require.Equal(t, "this,is,a,test\n", contents.String())
+		contents.Reset()
+		env.PachClient.GetFile(repo, "master", "/data/0000000000000001", &contents)
+		require.Equal(t, "\"\"\"this\"\"\",\"is\nonly\",\"a,test\"\n", contents.String())
+
+		return nil
+	}))
+}
+
+func TestPutFileSplitSQL(t *testing.T) {
+	t.Parallel()
+	db := dbutil.NewTestDB(t)
+	require.NoError(t, testpachd.WithRealEnv(db, func(env *testpachd.RealEnv) error {
+		// create repos
+		repo := tu.UniqueString("TestPutFileSplitSQL")
+		require.NoError(t, env.PachClient.CreateRepo(repo))
+
+		require.NoError(t, env.PachClient.PutFileSplit(repo, "master", "/sql", pfs.Delimiter_SQL, 0, 0, false, strings.NewReader(tu.TestPGDump)))
+		fileInfos, err := env.PachClient.ListFileAll(repo, "master", "/sql")
+		require.NoError(t, err)
+		require.Equal(t, 5, len(fileInfos))
+
+		// Get one of the SQL records & validate it
+		var contents bytes.Buffer
+		env.PachClient.GetFile(repo, "master", "/sql/0000000000000000", &contents)
+		// Validate that the recieved pgdump file creates the cars table
+		require.Matches(t, "CREATE TABLE public\\.cars", contents.String())
+		// Validate the SQL header more generally by passing the output of GetFile
+		// back through the SQL library & confirm that it parses correctly but only
+		// has one row
+		pgReader := sql.NewPGDumpReader(bufio.NewReader(bytes.NewReader(contents.Bytes())))
+		record, err := pgReader.ReadRow()
+		require.NoError(t, err)
+		require.Equal(t, "Tesla\tRoadster\t2008\tliterally a rocket\n", string(record))
+		_, err = pgReader.ReadRow()
+		require.YesError(t, err)
+		require.True(t, errors.Is(err, io.EOF))
+
+		// Create a new commit that overwrites all existing data & puts it back with
+		// --header-records=1
+		commit, err := env.PachClient.StartCommit(repo, "master")
+		require.NoError(t, err)
+		require.NoError(t, env.PachClient.DeleteFile(repo, commit.ID, "/sql"))
+		require.NoError(t, env.PachClient.PutFileSplit(repo, commit.ID, "/sql", pfs.Delimiter_SQL, 0, 0, false, strings.NewReader(tu.TestPGDump)))
+		require.NoError(t, env.PachClient.FinishCommit(repo, commit.ID))
+		fileInfos, err = env.PachClient.ListFileAll(repo, "master", "/sql")
+		require.NoError(t, err)
+		require.Equal(t, 4, len(fileInfos))
+
+		// Get one of the SQL records & validate it
+		contents.Reset()
+		env.PachClient.GetFile(repo, "master", "/sql/0000000000000003", &contents)
+		// Validate a that the recieved pgdump file creates the cars table
+		require.Matches(t, "CREATE TABLE public\\.cars", contents.String())
+		// Validate the SQL header more generally by passing the output of GetFile
+		// back through the SQL library & confirm that it parses correctly but only
+		// has one row
+		pgReader = sql.NewPGDumpReader(bufio.NewReader(strings.NewReader(contents.String())))
+		record, err = pgReader.ReadRow()
+		require.NoError(t, err)
+		require.Equal(t, "Tesla\tRoadster\t2008\tliterally a rocket\n", string(record))
+		record, err = pgReader.ReadRow()
+		require.NoError(t, err)
+		require.Equal(t, "Toyota\tCorolla\t2005\tgreatest car ever made\n", string(record))
+		_, err = pgReader.ReadRow()
+		require.YesError(t, err)
+		require.True(t, errors.Is(err, io.EOF))
+
+		return nil
+	}))
+}
 
 func TestDiffFile(t *testing.T) {
 	t.Parallel()
@@ -3743,20 +3727,20 @@ func TestApplyWriteOrder(t *testing.T) {
 //		// Write foo
 //		_, err := env.PachClient.StartCommit(repo, "master")
 //		require.NoError(t, err)
-//		_, err = env.PachClient.PutFile(repo, "master", "file1", strings.NewReader("foo"))
+//		require.NoError(t, env.PachClient.PutFile(repo, "master", "file1", strings.NewReader("foo")))
 //		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, "master", "file2", pfs.Delimiter_LINE, 0, 0, 0, false, strings.NewReader("foo\nbar\nbuz\n"))
+//		require.NoError(t, env.PachClient.PutFileSplit(repo, "master", "file2", pfs.Delimiter_LINE, 0, 0, 0, false, strings.NewReader("foo\nbar\nbuz\n")))
 //		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, "master", "file3", pfs.Delimiter_LINE, 0, 0, 0, false, strings.NewReader("foo\nbar\nbuz\n"))
+//		require.NoError(t, env.PachClient.PutFileSplit(repo, "master", "file3", pfs.Delimiter_LINE, 0, 0, 0, false, strings.NewReader("foo\nbar\nbuz\n")))
 //		require.NoError(t, err)
 //		require.NoError(t, env.PachClient.FinishCommit(repo, "master"))
 //		_, err = env.PachClient.StartCommit(repo, "master")
 //		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileOverwrite(repo, "master", "file1", strings.NewReader("bar"))
+//		require.NoError(t, env.PachClient.PutFileOverwrite(repo, "master", "file1", strings.NewReader("bar")))
 //		require.NoError(t, err)
 //		require.NoError(t, env.PachClient.PutFileOverwrite(repo, "master", "file2", strings.NewReader("buzz")))
 //		require.NoError(t, err)
-//		_, err = env.PachClient.PutFileSplit(repo, "master", "file3", pfs.Delimiter_LINE, 0, 0, 0, true, strings.NewReader("0\n1\n2\n"))
+//		require.NoError(t, env.PachClient.PutFileSplit(repo, "master", "file3", pfs.Delimiter_LINE, 0, 0, 0, true, strings.NewReader("0\n1\n2\n")))
 //		require.NoError(t, err)
 //		require.NoError(t, env.PachClient.FinishCommit(repo, "master"))
 //		var buffer bytes.Buffer
@@ -5355,7 +5339,7 @@ func TestPutFileOutputRepo(t *testing.T) {
 //		require.NoError(t, env.PachClient.CreateRepo(repo))
 //		numCommits := 10
 //		for i := 0; i < numCommits; i++ {
-//			_, err = env.PachClient.PutFile(repo, "master", "file", strings.NewReader("foo\n"))
+//			require.NoError(t, env.PachClient.PutFile(repo, "master", "file", strings.NewReader("foo\n")))
 //			require.NoError(t, err)
 //		}
 //		fileInfos, err := env.PachClient.ListFileHistory(repo, "master", "file", -1)
@@ -5370,9 +5354,9 @@ func TestPutFileOutputRepo(t *testing.T) {
 //
 //		require.NoError(t, env.PachClient.DeleteFile(repo, "master", "file"))
 //		for i := 0; i < numCommits; i++ {
-//			_, err = env.PachClient.PutFile(repo, "master", "file", strings.NewReader("foo\n"))
+//			require.NoError(t, env.PachClient.PutFile(repo, "master", "file", strings.NewReader("foo\n")))
 //			require.NoError(t, err)
-//			_, err = env.PachClient.PutFile(repo, "master", "unrelated", strings.NewReader("foo\n"))
+//			require.NoError(t, env.PachClient.PutFile(repo, "master", "unrelated", strings.NewReader("foo\n")))
 //			require.NoError(t, err)
 //		}
 //		fileInfos, err = env.PachClient.ListFileHistory(repo, "master", "file", -1)
@@ -6491,7 +6475,7 @@ func TestRegressionOrphanedFile(t *testing.T) {
 			"file1.txt": tarutil.NewMemFile("file1.txt", data),
 			"file2.txt": tarutil.NewMemFile("file2.txt", data),
 		}
-		require.NoError(t, fsclient.AppendFileTar(false, spec.makeTarStream()))
+		require.NoError(t, fsclient.AppendFileTar(spec.makeTarStream()))
 		resp, err := fsclient.Close()
 		require.NoError(t, err)
 		t.Logf("tmp fileset id: %s", resp.FilesetId)
@@ -6534,7 +6518,7 @@ func TestCompaction(t *testing.T) {
 				}
 				fsSpec[hdr.Name] = file
 			}
-			if err := env.PachClient.AppendFileTar(repo, commit1.ID, false, fsSpec.makeTarStream()); err != nil {
+			if err := env.PachClient.AppendFileTar(repo, commit1.ID, fsSpec.makeTarStream()); err != nil {
 				return err
 			}
 			runtime.GC()

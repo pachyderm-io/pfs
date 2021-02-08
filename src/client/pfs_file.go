@@ -12,36 +12,36 @@ import (
 )
 
 // AppendFile appends a file.
-func (c APIClient) AppendFile(repo, commit, path string, overwrite bool, r io.Reader, tag ...string) error {
+func (c APIClient) AppendFile(repo, commit, path string, r io.Reader, opts ...AppendFileOption) error {
 	mfc, err := c.NewModifyFileClient(repo, commit)
 	if err != nil {
 		return err
 	}
-	if err := mfc.AppendFile(path, overwrite, r, tag...); err != nil {
+	if err := mfc.AppendFile(path, r, opts...); err != nil {
 		return err
 	}
 	return mfc.Close()
 }
 
 // AppendFileTar appends a set of files from a tar stream.
-func (c APIClient) AppendFileTar(repo, commit string, overwrite bool, r io.Reader, tag ...string) error {
+func (c APIClient) AppendFileTar(repo, commit string, r io.Reader, opts ...AppendFileOption) error {
 	mfc, err := c.NewModifyFileClient(repo, commit)
 	if err != nil {
 		return err
 	}
-	if err := mfc.AppendFileTar(overwrite, r, tag...); err != nil {
+	if err := mfc.AppendFileTar(r, opts...); err != nil {
 		return err
 	}
 	return mfc.Close()
 }
 
 // AppendFileURL appends a file from a URL.
-func (c APIClient) AppendFileURL(repo, commit, path, url string, recursive, overwrite bool, tag ...string) error {
+func (c APIClient) AppendFileURL(repo, commit, path, url string, recursive bool, opts ...AppendFileOption) error {
 	mfc, err := c.NewModifyFileClient(repo, commit)
 	if err != nil {
 		return err
 	}
-	if err := mfc.AppendFileURL(path, url, recursive, overwrite, tag...); err != nil {
+	if err := mfc.AppendFileURL(path, url, recursive, opts...); err != nil {
 		return err
 	}
 	return mfc.Close()
@@ -121,21 +121,17 @@ type modifyFileCore struct {
 }
 
 // AppendFile appends a file.
-func (mfc *modifyFileCore) AppendFile(path string, overwrite bool, r io.Reader, tag ...string) error {
+func (mfc *modifyFileCore) AppendFile(path string, r io.Reader, opts ...AppendFileOption) error {
 	return mfc.maybeError(func() error {
 		af := &pfs.AppendFile{
-			Overwrite: overwrite,
 			Source: &pfs.AppendFile_RawFileSource{
 				RawFileSource: &pfs.RawFileSource{
 					Path: path,
 				},
 			},
 		}
-		if len(tag) > 0 {
-			if len(tag) > 1 {
-				return errors.Errorf("AppendFile called with %v tags, expected 0 or 1", len(tag))
-			}
-			af.Tag = tag[0]
+		for _, opt := range opts {
+			opt(af)
 		}
 		if err := mfc.sendAppendFile(af); err != nil {
 			return err
@@ -183,19 +179,15 @@ func (mfc *modifyFileCore) sendAppendFile(req *pfs.AppendFile) error {
 }
 
 // AppendFileTar appends a set of files from a tar stream.
-func (mfc *modifyFileCore) AppendFileTar(overwrite bool, r io.Reader, tag ...string) error {
+func (mfc *modifyFileCore) AppendFileTar(r io.Reader, opts ...AppendFileOption) error {
 	return mfc.maybeError(func() error {
 		af := &pfs.AppendFile{
-			Overwrite: overwrite,
 			Source: &pfs.AppendFile_TarFileSource{
 				TarFileSource: &pfs.TarFileSource{},
 			},
 		}
-		if len(tag) > 0 {
-			if len(tag) > 1 {
-				return errors.Errorf("AppendFileTar called with %v tags, expected 0 or 1", len(tag))
-			}
-			af.Tag = tag[0]
+		for _, opt := range opts {
+			opt(af)
 		}
 		if err := mfc.sendAppendFile(af); err != nil {
 			return err
@@ -213,10 +205,9 @@ func (mfc *modifyFileCore) AppendFileTar(overwrite bool, r io.Reader, tag ...str
 	})
 }
 
-func (mfc *modifyFileCore) AppendFileURL(path, url string, recursive, overwrite bool, tag ...string) error {
+func (mfc *modifyFileCore) AppendFileURL(path, url string, recursive bool, opts ...AppendFileOption) error {
 	return mfc.maybeError(func() error {
 		af := &pfs.AppendFile{
-			Overwrite: overwrite,
 			Source: &pfs.AppendFile_UrlFileSource{
 				UrlFileSource: &pfs.URLFileSource{
 					Path:      path,
@@ -225,11 +216,8 @@ func (mfc *modifyFileCore) AppendFileURL(path, url string, recursive, overwrite 
 				},
 			},
 		}
-		if len(tag) > 0 {
-			if len(tag) > 1 {
-				return errors.Errorf("AppendFileURL called with %v tags, expected 0 or 1", len(tag))
-			}
-			af.Tag = tag[0]
+		for _, opt := range opts {
+			opt(af)
 		}
 		return mfc.sendAppendFile(af)
 	})
