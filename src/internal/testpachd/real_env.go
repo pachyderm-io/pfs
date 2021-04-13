@@ -6,11 +6,12 @@ import (
 	"net/url"
 	"path"
 
-	units "github.com/docker/go-units"
-	"github.com/jmoiron/sqlx"
 	"github.com/pachyderm/pachyderm/v2/src/internal/clusterstate"
 	"github.com/pachyderm/pachyderm/v2/src/internal/migrations"
 	"github.com/pachyderm/pachyderm/v2/src/internal/serviceenv"
+
+	units "github.com/docker/go-units"
+	"github.com/jmoiron/sqlx"
 	txnenv "github.com/pachyderm/pachyderm/v2/src/internal/transactionenv"
 	authserver "github.com/pachyderm/pachyderm/v2/src/server/auth/server"
 	authtesting "github.com/pachyderm/pachyderm/v2/src/server/auth/testing"
@@ -39,19 +40,17 @@ type RealEnv struct {
 func WithRealEnv(db *sqlx.DB, cb func(*RealEnv) error, customConfig ...*serviceenv.PachdFullConfiguration) error {
 	return WithMockEnv(func(mockEnv *MockEnv) (err error) {
 		realEnv := &RealEnv{MockEnv: *mockEnv}
-		config := serviceenv.NewConfiguration(NewDefaultConfig())
 		if len(customConfig) > 0 {
-			config = serviceenv.NewConfiguration(customConfig[0])
+			*realEnv.Config() = *serviceenv.NewConfiguration(customConfig[0])
 		}
 
-		etcdClientURL, err := url.Parse(realEnv.EtcdClient.Endpoints()[0])
+		etcdClientURL, err := url.Parse(realEnv.GetEtcdClient().Endpoints()[0])
 		if err != nil {
 			return err
 		}
-		config.EtcdHost = etcdClientURL.Hostname()
-		config.EtcdPort = etcdClientURL.Port()
-		config.PeerPort = uint16(realEnv.MockPachd.Addr.(*net.TCPAddr).Port)
-		servEnv := serviceenv.InitServiceEnv(config)
+		realEnv.Config().EtcdHost = etcdClientURL.Hostname()
+		realEnv.Config().EtcdPort = etcdClientURL.Port()
+		realEnv.Config().PeerPort = uint16(realEnv.mockPachd.Addr.(*net.TCPAddr).Port)
 
 		if err := migrations.ApplyMigrations(context.Background(), db, migrations.Env{}, clusterstate.DesiredClusterState); err != nil {
 			return err
@@ -61,14 +60,14 @@ func WithRealEnv(db *sqlx.DB, cb func(*RealEnv) error, customConfig ...*servicee
 		}
 
 		realEnv.LocalStorageDirectory = path.Join(realEnv.Directory, "localStorage")
-		config.StorageRoot = realEnv.LocalStorageDirectory
+		realEnv.Config().StorageRoot = realEnv.LocalStorageDirectory
 
 		etcdPrefix := ""
 
 		txnEnv := &txnenv.TransactionEnv{}
 
 		realEnv.PFSServer, err = pfsserver.NewAPIServer(
-			servEnv,
+			realEnv,
 			txnEnv,
 			etcdPrefix,
 			db,
@@ -79,18 +78,18 @@ func WithRealEnv(db *sqlx.DB, cb func(*RealEnv) error, customConfig ...*servicee
 
 		realEnv.AuthServer = &authtesting.InactiveAPIServer{}
 
-		realEnv.TransactionServer, err = txnserver.NewAPIServer(servEnv, txnEnv, etcdPrefix)
+		realEnv.TransactionServer, err = txnserver.NewAPIServer(realEnv, txnEnv, etcdPrefix)
 		if err != nil {
 			return err
 		}
 
 		realEnv.MockPPSTransactionServer = NewMockPPSTransactionServer()
 
-		txnEnv.Initialize(servEnv, realEnv.TransactionServer, realEnv.AuthServer, realEnv.PFSServer, &realEnv.MockPPSTransactionServer.api)
+		txnEnv.Initialize(realEnv, realEnv.TransactionServer, realEnv.AuthServer, realEnv.PFSServer, &realEnv.MockPPSTransactionServer.api)
 
-		linkServers(&realEnv.MockPachd.PFS, realEnv.PFSServer)
-		linkServers(&realEnv.MockPachd.Auth, realEnv.AuthServer)
-		linkServers(&realEnv.MockPachd.Transaction, realEnv.TransactionServer)
+		linkServers(&realEnv.mockPachd.PFS, realEnv.PFSServer)
+		linkServers(&realEnv.mockPachd.Auth, realEnv.AuthServer)
+		linkServers(&realEnv.mockPachd.Transaction, realEnv.TransactionServer)
 
 		return cb(realEnv)
 	})

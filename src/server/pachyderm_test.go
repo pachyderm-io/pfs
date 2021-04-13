@@ -8335,12 +8335,9 @@ func TestCancelManyJobs(t *testing.T) {
 	// Create 10 input commits, to spawn 10 jobs
 	var commits [10]*pfs.Commit
 	var err error
-	commits[0], err = c.StartCommit(repo, "master")
-	require.NoError(t, err)
-	require.NoError(t, c.PutFile(repo, commits[0].ID, "file", strings.NewReader("foo"), client.WithAppendPutFile()))
-	require.NoError(t, c.FinishCommit(repo, commits[0].ID))
-	for i := 1; i < 10; i++ {
+	for i := 0; i < 10; i++ {
 		commits[i], err = c.StartCommit(repo, "master")
+		require.NoError(t, c.PutFile(repo, commits[i].ID, "file", strings.NewReader("foo"), client.WithAppendPutFile()))
 		require.NoError(t, err)
 		require.NoError(t, c.FinishCommit(repo, commits[i].ID))
 	}

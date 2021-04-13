@@ -13,19 +13,50 @@ import (
 	"github.com/coreos/etcd/embed"
 	etcdwal "github.com/coreos/etcd/wal"
 	"github.com/coreos/pkg/capnslog"
+	"github.com/jmoiron/sqlx"
 	"golang.org/x/sync/errgroup"
+	kube "k8s.io/client-go/kubernetes"
 
+	loki "github.com/grafana/loki/pkg/logcli/client"
 	"github.com/pachyderm/pachyderm/v2/src/client"
+	"github.com/pachyderm/pachyderm/v2/src/internal/serviceenv"
 )
 
 // Env contains the basic setup for running end-to-end pachyderm tests entirely
-// locally within the test process. It provides a temporary directory for
-// storing data, and an embedded etcd server with a connected client.
+// locally within the test process. It implements the serviceenv.ServiceEnv
+// interface for initializing API servers with in-process etcd and pachd
+// instances, and provides a temporary directory for storing data.
 type Env struct {
-	Context    context.Context
-	Directory  string
-	Etcd       *embed.Etcd
-	EtcdClient *etcd.Client
+	Context   context.Context
+	Directory string
+
+	config     serviceenv.Configuration
+	etcd       *embed.Etcd
+	etcdClient *etcd.Client
+}
+
+func (e *Env) Config() *serviceenv.Configuration {
+	return &e.config
+}
+
+func (e *Env) GetPachClient(ctx context.Context) *client.APIClient {
+	panic("testetcd/env does not support GetPachClient")
+}
+
+func (e *Env) GetEtcdClient() *etcd.Client {
+	return e.etcdClient
+}
+
+func (e *Env) GetKubeClient() *kube.Clientset {
+	panic("test env does not support GetKubeClient")
+}
+
+func (e *Env) GetLokiClient() (*loki.Client, error) {
+	panic("test env does not support GetKubeClient")
+}
+
+func (e *Env) GetDBClient() *sqlx.DB {
+	panic("test env does not support GetDBClient")
 }
 
 // WithEnv constructs a default Env for testing during the lifetime of
@@ -50,12 +81,12 @@ func WithEnv(cb func(*Env) error) (err error) {
 			return e
 		}
 
-		if env.EtcdClient != nil {
-			saveErr(env.EtcdClient.Close())
+		if env.etcdClient != nil {
+			saveErr(env.etcdClient.Close())
 		}
 
-		if env.Etcd != nil {
-			env.Etcd.Close()
+		if env.etcd != nil {
+			env.etcd.Close()
 		}
 
 		saveErr(os.RemoveAll(env.Directory))
@@ -122,7 +153,7 @@ func WithEnv(cb func(*Env) error) (err error) {
 	// a failed start
 	capnslog.SetGlobalLogLevel(capnslog.CRITICAL)
 
-	env.Etcd, err = embed.StartEtcd(etcdConfig)
+	env.etcd, err = embed.StartEtcd(etcdConfig)
 	if err != nil {
 		return err
 	}
@@ -130,10 +161,10 @@ func WithEnv(cb func(*Env) error) (err error) {
 	capnslog.SetGlobalLogLevel(capnslog.CRITICAL)
 
 	eg.Go(func() error {
-		return errorWait(ctx, env.Etcd.Err())
+		return errorWait(ctx, env.etcd.Err())
 	})
 
-	env.EtcdClient, err = etcd.New(etcd.Config{
+	env.etcdClient, err = etcd.New(etcd.Config{
 		Context:     env.Context,
 		Endpoints:   []string{clientURL.String()},
 		DialOptions: client.DefaultDialOptions(),

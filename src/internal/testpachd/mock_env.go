@@ -3,10 +3,10 @@ package testpachd
 import (
 	"context"
 
-	"golang.org/x/sync/errgroup"
-
 	"github.com/pachyderm/pachyderm/v2/src/client"
 	"github.com/pachyderm/pachyderm/v2/src/internal/testetcd"
+
+	"golang.org/x/sync/errgroup"
 )
 
 // MockEnv contains the basic setup for running end-to-end pachyderm tests
@@ -15,8 +15,12 @@ import (
 // a local mock pachd instance which allows a test to hook into any pachd calls.
 type MockEnv struct {
 	testetcd.Env
-	MockPachd  *MockPachd
-	PachClient *client.APIClient
+	mockPachd  *MockPachd
+	pachClient *client.APIClient
+}
+
+func (e *MockEnv) GetPachClient(ctx context.Context) *client.APIClient {
+	return e.pachClient.WithCtx(ctx)
 }
 
 // WithMockEnv sets up a MockEnv structure, passes it to the provided callback,
@@ -42,27 +46,27 @@ func WithMockEnv(cb func(*MockEnv) error) error {
 				return e
 			}
 
-			if mockEnv.PachClient != nil {
-				saveErr(mockEnv.PachClient.Close())
+			if mockEnv.pachClient != nil {
+				saveErr(mockEnv.pachClient.Close())
 			}
 
-			if mockEnv.MockPachd != nil {
-				saveErr(mockEnv.MockPachd.Close())
+			if mockEnv.mockPachd != nil {
+				saveErr(mockEnv.mockPachd.Close())
 			}
 
 			cancel()
 			saveErr(eg.Wait())
 		}()
 
-		mockEnv.MockPachd, err = NewMockPachd(mockEnv.Context)
+		mockEnv.mockPachd, err = NewMockPachd(mockEnv.Context)
 		if err != nil {
 			return err
 		}
 
 		eg.Go(func() error {
-			return errorWait(ctx, mockEnv.MockPachd.Err())
+			return errorWait(ctx, mockEnv.mockPachd.Err())
 		})
-		mockEnv.PachClient, err = client.NewFromAddress(mockEnv.MockPachd.Addr.String())
+		mockEnv.pachClient, err = client.NewFromAddress(mockEnv.mockPachd.Addr.String())
 		if err != nil {
 			return err
 		}
