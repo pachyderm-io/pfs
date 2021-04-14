@@ -6797,6 +6797,151 @@ func TestPipelineWithStats(t *testing.T) {
 	require.Equal(t, pps.DatumState_SUCCESS, datum.State)
 }
 
+func TestPipelineWithStatsError(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration tests in short mode")
+	}
+
+	c := tu.GetPachClient(t)
+	require.NoError(t, c.DeleteAll())
+
+	dataRepo := tu.UniqueString("TestPipelineWithStats_data")
+	require.NoError(t, c.CreateRepo(dataRepo))
+
+	halfFiles := 10
+	totalFiles := 20
+	commit1, err := c.StartCommit(dataRepo, "master")
+	require.NoError(t, err)
+	for i := 0; i < halfFiles; i++ {
+		_, err = c.PutFile(dataRepo, commit1.ID, fmt.Sprintf("file-%d", i), strings.NewReader(strings.Repeat("foo\n", 100)))
+		require.NoError(t, err)
+	}
+	for i := 0; i < halfFiles; i++ {
+		_, err = c.PutFile(dataRepo, commit1.ID, fmt.Sprintf("exit-%d", i), strings.NewReader(strings.Repeat("bar\n", 100)))
+		require.NoError(t, err)
+	}
+	require.NoError(t, c.FinishCommit(dataRepo, commit1.ID))
+
+	pipeline := tu.UniqueString("pipeline")
+	_, err = c.PpsAPIClient.CreatePipeline(context.Background(),
+		&pps.CreatePipelineRequest{
+			Pipeline: client.NewPipeline(pipeline),
+			Transform: &pps.Transform{
+				Cmd: []string{"bash"},
+				Stdin: []string{
+					fmt.Sprintf("for f in /pfs/%s/*; do", dataRepo),
+					"	if [[ $f =~ exit ]] ; then",
+					"		exit 1",
+					"	else",
+					"		cp $f /pfs/out",
+					"	fi",
+					"done",
+				},
+			},
+			Input:       client.NewPFSInput(dataRepo, "/*"),
+			EnableStats: true,
+			ParallelismSpec: &pps.ParallelismSpec{
+				Constant: 4,
+			},
+		})
+	require.NoError(t, err)
+
+	commitIter, err := c.FlushCommit([]*pfs.Commit{commit1}, nil)
+	require.NoError(t, err)
+	commitInfos := collectCommitInfos(t, commitIter)
+	require.Equal(t, 2, len(commitInfos))
+
+	jobs, err := c.ListJob(pipeline, nil, nil, -1, true)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(jobs))
+	job1 := jobs[0]
+
+	// Check we can list datums before job completion
+	resp, err := c.ListDatum(job1.Job.ID, 0, 0)
+	require.NoError(t, err)
+	require.Equal(t, totalFiles, len(resp.DatumInfos))
+	require.Equal(t, 1, len(resp.DatumInfos[0].Data))
+
+	// Check we can list datums before job completion w pagination
+	resp, err = c.ListDatum(job1.Job.ID, 5, 0)
+	require.NoError(t, err)
+	require.Equal(t, 5, len(resp.DatumInfos))
+	require.Equal(t, int64(totalFiles/5), resp.TotalPages)
+	require.Equal(t, int64(0), resp.Page)
+
+	// Block on the job being complete before we call ListDatum again so we're
+	// sure the datums have actually been processed.
+	_, err = c.InspectJob(job1.Job.ID, true)
+	require.NoError(t, err)
+	require.Equal(t, pps.JobState_JOB_FAILURE, job1.State)
+
+	resp, err = c.ListDatum(job1.Job.ID, 0, 0)
+	require.NoError(t, err)
+	require.Equal(t, totalFiles, len(resp.DatumInfos))
+	require.Equal(t, 1, len(resp.DatumInfos[0].Data))
+
+	// Get the list of 'job files' from the stats branch
+	erroredJobFiles := []string{}
+	require.NoError(t, c.ListFileF(pipeline, "stats", "/*/job:*", 0, func(fi *pfs.FileInfo) error {
+		erroredJobFiles = append(erroredJobFiles, fi.File.Path)
+		require.True(t, strings.Contains(fi.File.Path, job1.Job.ID))
+		return nil
+	}))
+	require.Equal(t, totalFiles, len(erroredJobFiles))
+
+	// Update the pipeline to not error
+	_, err = c.PpsAPIClient.CreatePipeline(context.Background(),
+		&pps.CreatePipelineRequest{
+			Pipeline: client.NewPipeline(pipeline),
+			Transform: &pps.Transform{
+				Cmd: []string{"bash"},
+				Stdin: []string{
+					fmt.Sprintf("cp /pfs/%s/* /pfs/out/", dataRepo),
+				},
+			},
+			Input:       client.NewPFSInput(dataRepo, "/*"),
+			EnableStats: true,
+			ParallelismSpec: &pps.ParallelismSpec{
+				Constant: 4,
+			},
+			Update: true,
+		})
+	require.NoError(t, err)
+
+	commit2, err := c.InspectCommit(pipeline, "master")
+	require.NoError(t, err)
+
+	_, err = c.FlushCommitAll([]*pfs.Commit{commit2.Commit}, nil)
+	require.NoError(t, err)
+
+	jobs, err = c.ListJob(pipeline, nil, commit2.Commit, 0, false)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(jobs))
+	job2 := jobs[0]
+
+	require.NotEqual(t, job1, job2)
+
+	// make sure we can list datums after the fact
+	resp, err = c.ListDatum(job2.Job.ID, 0, 0)
+	require.NoError(t, err)
+	require.Equal(t, totalFiles, len(resp.DatumInfos))
+	require.Equal(t, 1, len(resp.DatumInfos[0].Data))
+
+	// job1 processed skipped datums, while job2 only touched the failed ones
+	var newCount, oldCount int
+	require.NoError(t, c.ListFileF(pipeline, "stats", "/*/job:*", 0, func(fi *pfs.FileInfo) error {
+		if strings.Contains(fi.File.Path, job1.Job.ID) {
+			oldCount++
+		} else {
+			require.True(t, strings.Contains(fi.File.Path, job2.Job.ID))
+			newCount++
+		}
+		return nil
+	}))
+	require.Equal(t, halfFiles, oldCount)
+	require.Equal(t, halfFiles, newCount)
+}
+
 func TestPipelineWithStatsToggle(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration tests in short mode")

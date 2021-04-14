@@ -1357,28 +1357,58 @@ func (a *apiServer) getDatum(pachClient *client.APIClient, repo string, commit *
 	if err != nil {
 		return nil, err
 	}
-	if len(fileInfos) != 1 {
+	if len(fileInfos) == 0 {
 		return nil, errors.Errorf("couldn't find job file")
 	}
-	if strings.Split(fileInfos[0].File.Path, ":")[1] != jobID {
+	skipped := true
+	for _, info := range fileInfos {
+		if strings.Split(info.File.Path, ":")[1] == jobID {
+			skipped = false
+			break
+		}
+	}
+	if skipped {
 		datumInfo.State = pps.DatumState_SKIPPED
 	}
+	// If this stats commit contains output from multiple jobs, we need to diff against the parent.
+	// Alternatively, if this was a skipped datum, the files might be several versions of the same
+	// file concatenated, so we should still diff.
+	needDiff := len(fileInfos) > 1 || skipped
+
+	var buffer bytes.Buffer
 
 	// Check if failed
-	stateFile := &pfs.File{
-		Commit: commit,
-		Path:   fmt.Sprintf("/%v/failure", datumID),
-	}
-	_, err = pfsClient.InspectFile(ctx, &pfs.InspectFileRequest{File: stateFile})
-	if err == nil {
-		datumInfo.State = pps.DatumState_FAILED
-	} else if !isNotFoundErr(err) {
-		return nil, err
+	if skipped {
+		// can't be both skipped and failed, do nothing
+	} else if needDiff {
+		// in the combined stats case, it's possible this was the job that succeeded on a previously failed datum,
+		// in which case '/failure' will be present but identical to the parent
+		if err := limitedDiff(pachClient, commit, &buffer, fmt.Sprintf("/%v/failure", datumID)); err == nil && buffer.Len() > 0 {
+			datumInfo.State = pps.DatumState_FAILED
+		} else if err != nil && !isNotFoundErr(err) {
+			return nil, err
+		}
+	} else {
+		stateFile := &pfs.File{
+			Commit: commit,
+			Path:   fmt.Sprintf("/%v/failure", datumID),
+		}
+		_, err = pfsClient.InspectFile(ctx, &pfs.InspectFileRequest{File: stateFile})
+		if err == nil {
+			datumInfo.State = pps.DatumState_FAILED
+		} else if !isNotFoundErr(err) {
+			return nil, err
+		}
 	}
 
+	buffer.Reset()
 	// Populate stats
-	var buffer bytes.Buffer
-	if err := pachClient.GetFile(commit.Repo.Name, commit.ID, fmt.Sprintf("/%v/stats", datumID), 0, 0, &buffer); err != nil {
+	if needDiff {
+		err = limitedDiff(pachClient, commit, &buffer, fmt.Sprintf("/%v/stats", datumID))
+	} else {
+		err = pachClient.GetFile(commit.Repo.Name, commit.ID, fmt.Sprintf("/%v/stats", datumID), 0, 0, &buffer)
+	}
+	if err != nil {
 		return nil, err
 	}
 	stats := &pps.ProcessStats{}
@@ -1387,20 +1417,30 @@ func (a *apiServer) getDatum(pachClient *client.APIClient, repo string, commit *
 		return nil, err
 	}
 	datumInfo.Stats = stats
-	buffer.Reset()
-	if err := pachClient.GetFile(commit.Repo.Name, commit.ID, fmt.Sprintf("/%v/index", datumID), 0, 0, &buffer); err != nil {
-		return nil, err
-	}
-	i, err := strconv.Atoi(buffer.String())
-	if err != nil {
-		return nil, err
-	}
-	if i >= dit.Len() {
-		return nil, errors.Errorf("index %d out of range", i)
-	}
-	inputs := dit.DatumN(i)
-	for _, input := range inputs {
-		datumInfo.Data = append(datumInfo.Data, input.FileInfo)
+
+	// don't retrieve datum info for skipped datums,
+	// there's no reason to expect the saved datum index to still be correct
+	if !skipped {
+		buffer.Reset()
+		if needDiff {
+			err = limitedDiff(pachClient, commit, &buffer, fmt.Sprintf("/%v/index", datumID))
+		} else {
+			err = pachClient.GetFile(commit.Repo.Name, commit.ID, fmt.Sprintf("/%v/index", datumID), 0, 0, &buffer)
+		}
+		if err != nil {
+			return nil, err
+		}
+		i, err := strconv.Atoi(buffer.String())
+		if err != nil {
+			return nil, err
+		}
+		if i >= dit.Len() {
+			return nil, errors.Errorf("index %d out of range", i)
+		}
+		inputs := dit.DatumN(i)
+		for _, input := range inputs {
+			datumInfo.Data = append(datumInfo.Data, input.FileInfo)
+		}
 	}
 	datumInfo.PfsState = &pfs.File{
 		Commit: commit,
@@ -1408,6 +1448,72 @@ func (a *apiServer) getDatum(pachClient *client.APIClient, repo string, commit *
 	}
 
 	return datumInfo, nil
+}
+
+// limitedDiff performs a very limited diff between a single file in a comment against the parent,
+// attempting to resolve erroneously merged stats commits. It errors if the parent's version is not
+// a prefix or suffix of the child's one, based on BlockRefs
+func limitedDiff(pachClient *client.APIClient, commit *pfs.Commit, buffer *bytes.Buffer, file string) error {
+	ctx := pachClient.Ctx()
+	pfsClient := pachClient.PfsAPIClient
+
+	parent := client.NewCommit(commit.Repo.Name, commit.ID+"^")
+
+	testFile := &pfs.File{
+		Commit: parent,
+		Path:   file,
+	}
+	var err error
+	var old, new *pfs.FileInfo
+	if old, err = pfsClient.InspectFile(ctx, &pfs.InspectFileRequest{File: testFile}); err != nil {
+		if isNotFoundErr(err) {
+			// there is no old file to diff against, so just retrieve the whole (new) file
+			return pachClient.GetFile(commit.Repo.Name, commit.ID, file, 0, 0, buffer)
+		}
+		return err
+	}
+	testFile.Commit = commit
+	if new, err = pfsClient.InspectFile(ctx, &pfs.InspectFileRequest{File: testFile}); err != nil {
+		return err
+	}
+
+	newBlockCount := len(new.BlockRefs) - len(old.BlockRefs)
+	if newBlockCount < 0 {
+		return fmt.Errorf("couldn't resolve combined stats file %s", file)
+	}
+
+	var retrieveSuffix bool
+	// check if the new blockref sequence ends with the old one,
+	// in which case we should retrieve a byte prefix
+	for i, oldBlock := range old.BlockRefs {
+		newBlock := new.BlockRefs[i+newBlockCount]
+		if newBlock.Block.Hash != oldBlock.Block.Hash ||
+			newBlock.Range.Lower != oldBlock.Range.Lower ||
+			newBlock.Range.Upper != oldBlock.Range.Upper {
+			retrieveSuffix = true
+			break
+		}
+	}
+	if retrieveSuffix {
+		// otherwise, make sure the new blockref sequence just appended to the old one
+		for i, oldBlock := range old.BlockRefs {
+			newBlock := new.BlockRefs[i]
+			if newBlock.Block.Hash != oldBlock.Block.Hash ||
+				newBlock.Range.Lower != oldBlock.Range.Lower ||
+				newBlock.Range.Upper != oldBlock.Range.Upper {
+				return fmt.Errorf("couldn't resolve combined stats file %s", file)
+			}
+		}
+	}
+	// new file is definitely a prefix or suffix
+	if new.SizeBytes == old.SizeBytes {
+		return nil // we don't need to read the file at all, buffer is already empty
+	}
+	var startOffset int64
+	if retrieveSuffix {
+		startOffset = int64(old.SizeBytes)
+	}
+	return pachClient.GetFile(commit.Repo.Name, commit.ID, file, startOffset, int64(new.SizeBytes-old.SizeBytes), buffer)
 }
 
 // InspectDatum implements the protobuf pps.InspectDatum RPC
