@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pachyderm/pachyderm/src/client"
+	"github.com/pachyderm/pachyderm/src/server/pkg/serviceenv"
 
 	"github.com/pachyderm/s2"
 	"github.com/sirupsen/logrus"
@@ -35,9 +36,13 @@ const (
 var defaultUser = s2.User{ID: "00000000000000000000000000000000", DisplayName: "pachyderm"}
 
 type controller struct {
+	// app environment -- clients to other services, env vars, etc
+	env *serviceenv.ServiceEnv
+
+	// custom logger
 	logger *logrus.Entry
 
-	// Name of the PFS repo holding multipart content
+	// name of the PFS repo holding multipart content
 	repo string
 
 	// the maximum number of allowed parts that can be associated with any
@@ -45,17 +50,12 @@ type controller struct {
 	maxAllowedParts int
 
 	driver Driver
-
-	clientFactory ClientFactory
 }
 
 // requestPachClient uses the clientFactory to construct a request-scoped
 // pachyderm client
 func (c *controller) requestClient(r *http.Request) (*client.APIClient, error) {
-	pc, err := c.clientFactory()
-	if err != nil {
-		return nil, err
-	}
+	pc := c.env.GetPachClient(r.Context())
 
 	vars := mux.Vars(r)
 	if vars["s3gAuth"] != "disabled" {
@@ -90,17 +90,17 @@ func (c *controller) requestClient(r *http.Request) (*client.APIClient, error) {
 // Note: In `s3cmd`, you must set the access key and secret key, even though
 // this API will ignore them - otherwise, you'll get an opaque config error:
 // https://github.com/s3tools/s3cmd/issues/845#issuecomment-464885959
-func Server(port uint16, driver Driver, clientFactory ClientFactory) (*http.Server, error) {
+func Server(env *serviceenv.ServiceEnv, driver Driver) (*http.Server, error) {
 	logger := logrus.WithFields(logrus.Fields{
 		"source": "s3gateway",
 	})
 
 	c := &controller{
+		env:             env,
 		logger:          logger,
 		repo:            multipartRepo,
 		maxAllowedParts: maxAllowedParts,
 		driver:          driver,
-		clientFactory:   clientFactory,
 	}
 
 	s3Server := s2.NewS2(logger, maxRequestBodyLength, readBodyTimeout)
@@ -112,7 +112,7 @@ func Server(port uint16, driver Driver, clientFactory ClientFactory) (*http.Serv
 	router := s3Server.Router()
 
 	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", port),
+		Addr:         fmt.Sprintf(":%d", env.S3GatewayPort),
 		ReadTimeout:  requestTimeout,
 		WriteTimeout: requestTimeout,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -17,6 +17,7 @@ import (
 	minio "github.com/minio/minio-go/v6"
 	"github.com/pachyderm/pachyderm/src/client"
 	"github.com/pachyderm/pachyderm/src/client/pkg/require"
+	"github.com/pachyderm/pachyderm/src/server/pkg/serviceenv"
 )
 
 func getObject(t *testing.T, minioClient *minio.Client, bucket, file string) (string, error) {
@@ -132,7 +133,11 @@ func fileHash(t *testing.T, name string) (int64, []byte) {
 }
 
 func testRunner(t *testing.T, group string, driver Driver, runner func(t *testing.T, pachClient *client.APIClient, minioClient *minio.Client)) {
-	server, err := Server(0, driver, client.NewForTest)
+	env := serviceenv.InitPachOnlyTestEnv(t, &serviceenv.Configuration{
+		GlobalConfiguration: &serviceenv.GlobalConfiguration{
+			S3GatewayPort: 0,
+		}})
+	server, err := Server(env, driver)
 	require.NoError(t, err)
 	listener, err := net.Listen("tcp", ":0")
 	require.NoError(t, err)

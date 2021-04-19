@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"path"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -208,18 +207,13 @@ func (s *s3InstanceCreatingJobHandler) OnCreate(ctx context.Context, jobInfo *pp
 	// more than one job in s.servers). When parallel jobs are implemented, the
 	// servers in s.servers won't actually serve anymore, and instead parent
 	// server will forward requests based on the request hostname
-	port := s.s.apiServer.env.S3GatewayPort
-	strport := strconv.FormatInt(int64(port), 10)
 	var server *http.Server
 	err := backoff.RetryNotify(func() error {
 		var err error
-		server, err = s3.Server(port, driver, func() (*client.APIClient, error) {
-			return s.s.apiServer.env.GetPachClient(s.s.pachClient.Ctx()), nil // clones s.pachClient
-		})
+		server, err = s3.Server(s.s.apiServer.env, driver)
 		if err != nil {
 			return errors.Wrapf(err, "couldn't initialize s3 gateway server")
 		}
-		server.Addr = ":" + strport
 		return nil
 	}, backoff.NewExponentialBackOff(), func(err error, d time.Duration) error {
 		logrus.Errorf("error creating sidecar s3 gateway handler for %q: %v; retrying in %v", jobID, err, d)

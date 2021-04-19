@@ -5,6 +5,7 @@ import (
 	"math"
 	"net"
 	"os"
+	"testing"
 	"time"
 
 	"github.com/pachyderm/pachyderm/src/client"
@@ -96,6 +97,19 @@ func InitServiceEnv(config *Configuration) *ServiceEnv {
 func InitWithKube(config *Configuration) *ServiceEnv {
 	env := InitServiceEnv(config)
 	env.kubeEg.Go(env.initKubeClient)
+	return env // env is not ready yet
+}
+
+// InitPachOnlyTestEnv is like InitPachOnlyEnv, but initializes a pachd client
+// for tests (using client.NewForTest())
+func InitPachOnlyTestEnv(t *testing.T, config *Configuration) *ServiceEnv {
+	env := &ServiceEnv{Configuration: config}
+
+	var err error
+	env.pachClient, err = client.NewForTest()
+	if err != nil {
+		t.Fatalf("could not intialize pach client for test: %v", err)
+	}
 	return env // env is not ready yet
 }
 
