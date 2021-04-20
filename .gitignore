@@ -61,3 +61,5 @@ src/cmd/ppsd/ppsd
 *.pyc
 __pycache__
 
+# typescript language server logs
+/.log

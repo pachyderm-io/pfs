@@ -1,0 +1,7 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "target": "es5",
+        "types": ["k6"]
+    }
+}
