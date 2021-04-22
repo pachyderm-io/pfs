@@ -12,7 +12,6 @@ import (
 
 	adminclient "github.com/pachyderm/pachyderm/v2/src/admin"
 	authclient "github.com/pachyderm/pachyderm/v2/src/auth"
-	"github.com/pachyderm/pachyderm/v2/src/client"
 	debugclient "github.com/pachyderm/pachyderm/v2/src/debug"
 	eprsclient "github.com/pachyderm/pachyderm/v2/src/enterprise"
 	healthclient "github.com/pachyderm/pachyderm/v2/src/health"
@@ -140,7 +139,6 @@ func RunLocal() (retErr error) {
 			authInterceptor.InterceptStream,
 		),
 	)
-
 	if err != nil {
 		return err
 	}
@@ -203,9 +201,6 @@ func RunLocal() (retErr error) {
 				identityStorageProvider,
 				true,
 			)
-			if err != nil {
-				return err
-			}
 			identityclient.RegisterAPIServer(externalServer.Server, idAPIServer)
 			return nil
 		}); err != nil {
@@ -402,6 +397,17 @@ func RunLocal() (retErr error) {
 		}); err != nil {
 			return err
 		}
+		if err := logGRPCServerSetup("License API", func() error {
+			licenseAPIServer, err := licenseserver.New(
+				env, path.Join(env.Config().EtcdPrefix, env.Config().EnterpriseEtcdPrefix))
+			if err != nil {
+				return err
+			}
+			licenseclient.RegisterAPIServer(internalServer.Server, licenseAPIServer)
+			return nil
+		}); err != nil {
+			return err
+		}
 		if err := logGRPCServerSetup("Enterprise API", func() error {
 			enterpriseAPIServer, err := eprsserver.NewEnterpriseServer(
 				env, path.Join(env.Config().EtcdPrefix, env.Config().EnterpriseEtcdPrefix))
@@ -454,40 +460,37 @@ func RunLocal() (retErr error) {
 	go waitForError("Internal Pachd GRPC Server", errChan, true, func() error {
 		return internalServer.Wait()
 	})
-	// TODO: Make http server work with V2.
-	//go waitForError("HTTP Server", errChan, requireNoncriticalServers, func() error {
-	//	httpServer, err := pach_http.NewHTTPServer(address)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	server := http.Server{
-	//		Addr:    fmt.Sprintf(":%v", env.HTTPPort),
-	//		Handler: httpServer,
-	//	}
+	go waitForError("HTTP Server", errChan, requireNoncriticalServers, func() error {
+		httpServer, err := pach_http.NewHTTPServer(address)
+		if err != nil {
+			return err
+		}
+		server := http.Server{
+			Addr:    fmt.Sprintf(":%v", env.Config().HTTPPort),
+			Handler: httpServer,
+		}
 
-	//	certPath, keyPath, err := tls.GetCertPaths()
-	//	if err != nil {
-	//		log.Warnf("pfs-over-HTTP - TLS disabled: %v", err)
-	//		return server.ListenAndServe()
-	//	}
+		certPath, keyPath, err := tls.GetCertPaths()
+		if err != nil {
+			log.Warnf("pfs-over-HTTP - TLS disabled: %v", err)
+			return server.ListenAndServe()
+		}
 
-	//	cLoader := tls.NewCertLoader(certPath, keyPath, tls.CertCheckFrequency)
-	//	err = cLoader.LoadAndStart()
-	//	if err != nil {
-	//		return errors.Wrapf(err, "couldn't load TLS cert for pfs-over-http: %v", err)
-	//	}
+		cLoader := tls.NewCertLoader(certPath, keyPath, tls.CertCheckFrequency)
+		err = cLoader.LoadAndStart()
+		if err != nil {
+			return errors.Wrapf(err, "couldn't load TLS cert for pfs-over-http: %v", err)
+		}
 
-	//	server.TLSConfig = &gotls.Config{GetCertificate: cLoader.GetCertificate}
+		server.TLSConfig = &gotls.Config{GetCertificate: cLoader.GetCertificate}
 
-	//	return server.ListenAndServeTLS(certPath, keyPath)
-	//})
+		return server.ListenAndServeTLS(certPath, keyPath)
+	})
 	go waitForError("Githook Server", errChan, requireNoncriticalServers, func() error {
 		return githook.RunGitHookServer(address, etcdAddress, path.Join(env.Config().EtcdPrefix, env.Config().PPSEtcdPrefix))
 	})
 	go waitForError("S3 Server", errChan, requireNoncriticalServers, func() error {
-		server, err := s3.Server(env.Config().S3GatewayPort, s3.NewMasterDriver(), func() (*client.APIClient, error) {
-			return client.NewFromAddress(fmt.Sprintf("localhost:%d", env.Config().PeerPort))
-		})
+		server, err := s3.Server(env, s3.NewMasterDriver())
 		if err != nil {
 			return err
 		}
