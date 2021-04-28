@@ -10,16 +10,10 @@ import (
 
 func (c *controller) SecretKey(r *http.Request, accessKey string, region *string) (*string, error) {
 	c.logger.Debugf("SecretKey: %+v", region)
-
-	pc, err := c.clientFactory()
-	if err != nil {
-		return nil, errors.Wrapf(err, "could not create a pach client for auth")
-	}
+	pc := c.env.GetPachClient(r.Context())
 	pc.SetAuthToken(accessKey)
 
-	// WhoAmI will simultaneously check that auth is enabled, and that the
-	// user is who they say they are
-	_, err = pc.WhoAmI(pc.Ctx(), &auth.WhoAmIRequest{})
+	_, err := pc.WhoAmI(pc.Ctx(), &auth.WhoAmIRequest{})
 	if err != nil {
 		// Some S3 clients (like minio) require the use of authenticated
 		// requests, so in the case that auth is not enabled on pachyderm,
@@ -40,11 +34,7 @@ func (c *controller) SecretKey(r *http.Request, accessKey string, region *string
 
 func (c *controller) CustomAuth(r *http.Request) (bool, error) {
 	c.logger.Debug("CustomAuth")
-
-	pc, err := c.clientFactory()
-	if err != nil {
-		return false, errors.Wrapf(err, "could not create a pach client for auth")
-	}
+	pc := c.env.GetPachClient(r.Context())
 
 	active, err := pc.IsAuthActive()
 	if err != nil {

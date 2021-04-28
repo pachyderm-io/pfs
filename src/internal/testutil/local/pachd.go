@@ -12,7 +12,6 @@ import (
 
 	adminclient "github.com/pachyderm/pachyderm/v2/src/admin"
 	authclient "github.com/pachyderm/pachyderm/v2/src/auth"
-	"github.com/pachyderm/pachyderm/v2/src/client"
 	debugclient "github.com/pachyderm/pachyderm/v2/src/debug"
 	eprsclient "github.com/pachyderm/pachyderm/v2/src/enterprise"
 	healthclient "github.com/pachyderm/pachyderm/v2/src/health"
@@ -436,9 +435,7 @@ func RunLocal() (retErr error) {
 		return githook.RunGitHookServer(address, etcdAddress, path.Join(env.Config().EtcdPrefix, env.Config().PPSEtcdPrefix))
 	})
 	go waitForError("S3 Server", errChan, requireNoncriticalServers, func() error {
-		server, err := s3.Server(env.Config().S3GatewayPort, s3.NewMasterDriver(), func() (*client.APIClient, error) {
-			return client.NewFromAddress(fmt.Sprintf("localhost:%d", env.Config().PeerPort))
-		})
+		server, err := s3.Server(env, s3.NewMasterDriver())
 		if err != nil {
 			return err
 		}
