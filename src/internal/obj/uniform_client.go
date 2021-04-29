@@ -29,31 +29,31 @@ func (uc *uniformClient) Put(ctx context.Context, name string, r io.Reader) (ret
 	return uc.c.Put(ctx, name, r)
 }
 
-func (cc *uniformClient) Get(ctx context.Context, name string, w io.Writer) (retErr error) {
+func (uc *uniformClient) Get(ctx context.Context, name string, w io.Writer) (retErr error) {
 	defer func() {
 		retErr = errors.EnsureStack(retErr)
 	}()
 	name = strings.Trim(name, "/")
-	return cc.c.Get(ctx, name, w)
+	return uc.c.Get(ctx, name, w)
 }
 
-func (cc *uniformClient) Delete(ctx context.Context, name string) (retErr error) {
+func (uc *uniformClient) Delete(ctx context.Context, name string) (retErr error) {
 	defer func() {
 		retErr = errors.EnsureStack(retErr)
 	}()
 	name = strings.Trim(name, "/")
-	err := cc.c.Delete(ctx, name)
+	err := uc.c.Delete(ctx, name)
 	if pacherr.IsNotExist(err) {
 		err = nil
 	}
 	return err
 }
 
-func (cc *uniformClient) Walk(ctx context.Context, prefix string, fn func(name string) error) (retErr error) {
+func (uc *uniformClient) Walk(ctx context.Context, prefix string, fn func(name string) error) (retErr error) {
 	defer func() {
 		retErr = errors.EnsureStack(retErr)
 	}()
-	return cc.c.Walk(ctx, prefix, fn)
+	return uc.c.Walk(ctx, prefix, fn)
 }
 
 func (uc *uniformClient) Exists(ctx context.Context, p string) (_ bool, retErr error) {

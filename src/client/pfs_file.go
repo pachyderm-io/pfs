@@ -110,6 +110,7 @@ func (c APIClient) NewModifyFileClient(repo, commit string) (_ *ModifyFileClient
 	}, nil
 }
 
+// ModifyFileClient is the default implementation of the ModifyFile interface.
 type ModifyFileClient struct {
 	client pfs.API_ModifyFileClient
 	modifyFileCore

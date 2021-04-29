@@ -49,8 +49,17 @@ type Storage struct {
 	filesetSem                   *semaphore.Weighted
 }
 
+// CompactionConfig configures pachd's compaction behavior
 type CompactionConfig struct {
-	FixedDelay, LevelFactor int64
+	// FixedDelay is the minimum number of primitive FileSets that are allowed to
+	// accumulate in a Composite FileSet before the Composite FileSet is
+	// compacted.
+	FixedDelay int64
+
+	// LevelFactor is minimum ratio that is permitted to occur between each layer
+	// of a composite FileSet and its child before compaction is triggered (if
+	// size(layer N)/size(layer N+1) < factor, then compaction is triggered).
+	LevelFactor int64
 }
 
 // NewStorage creates a new Storage.

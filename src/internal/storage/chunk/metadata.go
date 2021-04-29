@@ -86,7 +86,8 @@ type postgresKeyStore struct {
 	db *sqlx.DB
 }
 
-func NewPostgresKeyStore(db *sqlx.DB) *postgresKeyStore {
+// NewPostgresKeyStore constructs a Postgres-backed KeyStore
+func NewPostgresKeyStore(db *sqlx.DB) KeyStore {
 	return &postgresKeyStore{
 		db: db,
 	}

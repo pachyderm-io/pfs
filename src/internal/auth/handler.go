@@ -10,6 +10,10 @@ import (
 // an authHandler can optionally return a username string that will be cached in the request's context
 type authHandler func(*client.APIClient, string) (string, error)
 
+// ContextKey is a key that the auth interceptor uses to inject and retrieve
+// values from the golang context attached to an RPC (currently just the
+// identity of the caller, cached in the context under 'WhoAmI', so that each
+// RPC only needs to determine the caller's identity once)
 type ContextKey string
 
 const whoAmIResultKey = ContextKey("WhoAmI")
@@ -65,6 +69,7 @@ func clusterPermissions(permissions ...auth.Permission) authHandler {
 	}
 }
 
+// GetWhoAmI retrieves the caller's identity from 'ctx' if it's cached there.
 func GetWhoAmI(ctx context.Context) string {
 	if v := ctx.Value(whoAmIResultKey); v != nil {
 		return v.(string)

@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+// Buffer is an in-memory buffer of FileSet operations, used by UnorderedWriter
+// and Validator
 type Buffer struct {
 	additive map[string]*file
 	deletive map[string]*file
@@ -22,6 +24,7 @@ type part struct {
 	buf *bytes.Buffer
 }
 
+// NewBuffer constructs a Buffer that is ready for use
 func NewBuffer() *Buffer {
 	return &Buffer{
 		additive: make(map[string]*file),
@@ -29,6 +32,12 @@ func NewBuffer() *Buffer {
 	}
 }
 
+// Add adds an add operation to 'b'. It's similar to the Add method of
+// fileset.Writer, providing, essentially, a shorthand for:
+// ```
+// filewriter := filesetWriter.add(p); filewriter.Add(tag);
+// ...use filewriter...
+// ```
 func (b *Buffer) Add(p, tag string) io.Writer {
 	p = Clean(p, false)
 	if _, ok := b.additive[p]; !ok {
@@ -45,6 +54,8 @@ func (b *Buffer) Add(p, tag string) io.Writer {
 	return buf
 }
 
+// Delete implements the same functionality as the Delete method of
+// fileset.Writer for 'b'.
 func (b *Buffer) Delete(p string, tag ...string) {
 	p = Clean(p, IsDir(p))
 	if IsDir(p) {
@@ -75,6 +86,8 @@ func (b *Buffer) Delete(p string, tag ...string) {
 	b.deletive[p].parts[tag[0]] = &part{tag: tag[0]}
 }
 
+// WalkAdditive traverses the additive operations in b (ordered by path), where,
+// for each operation, it calls 'cb(path, tag, reader(data))'
 func (b *Buffer) WalkAdditive(cb func(string, string, io.Reader) error) error {
 	for _, file := range sortFiles(b.additive) {
 		for _, part := range sortParts(file.parts) {
@@ -108,6 +121,8 @@ func sortParts(parts map[string]*part) []*part {
 	return result
 }
 
+// WalkDeletive traverses the deletive operations in 'b' (ordered by path),
+// where, for each operation, it calls 'cb(path, tag)'
 func (b *Buffer) WalkDeletive(cb func(string, ...string) error) error {
 	for _, file := range sortFiles(b.deletive) {
 		if len(file.parts) == 0 {
@@ -125,6 +140,7 @@ func (b *Buffer) WalkDeletive(cb func(string, ...string) error) error {
 	return nil
 }
 
+// Empty returns true if 'b' is empty (no additive or deletive operations)
 func (b *Buffer) Empty() bool {
 	return len(b.additive) == 0 && len(b.deletive) == 0
 }

@@ -43,6 +43,7 @@ func newUnorderedWriter(ctx context.Context, storage *Storage, memThreshold int6
 	return uw, nil
 }
 
+// Put writes the data exposed by 'r' into the path at 'p'
 func (uw *UnorderedWriter) Put(p string, appendFile bool, r io.Reader, customTag ...string) (retErr error) {
 	// TODO: Validate
 	//if err := ppath.ValidatePath(hdr.Name); err != nil {
@@ -170,6 +171,7 @@ func (uw *UnorderedWriter) Delete(p string, tags ...string) error {
 	return nil
 }
 
+// Copy copies all files in 'fs' into the fileset backing 'uw'
 func (uw *UnorderedWriter) Copy(ctx context.Context, fs FileSet, appendFile bool, customTag ...string) error {
 	if err := uw.serialize(); err != nil {
 		return err

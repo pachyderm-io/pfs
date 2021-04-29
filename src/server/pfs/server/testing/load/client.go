@@ -35,9 +35,16 @@ func (pc *pachClient) GetFileTar(ctx context.Context, repo, commit, path string)
 	return pc.client.WithCtx(ctx).GetFileTar(repo, commit, path)
 }
 
+// ThroughputSpec specifies the throughput that can be achieved for fuzz
+// operations
 type ThroughputSpec struct {
-	Limit int     `yaml:"limit,omitempty"`
-	Prob  float64 `yaml:"prob,omitempty"`
+	// Limit specifies the maximum throughput of an operation using this
+	// ThroughputSpec, in B/s.
+	Limit int `yaml:"limit,omitempty"`
+
+	// Prob is the probably that this ThroughputSpec is selected for any given
+	// operation.
+	Prob float64 `yaml:"prob,omitempty"`
 }
 
 type throughputLimitClient struct {

@@ -66,8 +66,15 @@ const (
 	// PeerPortEnv is the env var that sets a custom peer port
 	PeerPortEnv = "PEER_PORT"
 
+	// ReprocessSpecUntilSuccess indicates that a pipeline will, in each job,
+	// reprocess every datum that has not yet been processed successfully
 	ReprocessSpecUntilSuccess = "until_success"
-	ReprocessSpecEveryJob     = "every_job"
+
+	// ReprocessSpecEveryJob indicates that a pipeline will, in each job,
+	// reprocess every datum in that job's input, regardless of whether the datum
+	// has been successfully processed previously. This is useful for pipelines
+	// with side effects (e.g. deploying other resources, ingesting data, etc.)
+	ReprocessSpecEveryJob = "every_job"
 )
 
 // NewJob creates a pps.Job.

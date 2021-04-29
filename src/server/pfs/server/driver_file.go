@@ -435,11 +435,11 @@ func (d *driver) getFileset(pachClient *client.APIClient, commit *pfs.Commit) (*
 	var ids []fileset.ID
 	if commitInfo.ParentCommit != nil {
 		// ¯\_(ツ)_/¯
-		parentId, err := d.getFileset(pachClient, commitInfo.ParentCommit)
+		parentID, err := d.getFileset(pachClient, commitInfo.ParentCommit)
 		if err != nil {
 			return nil, err
 		}
-		ids = append(ids, *parentId)
+		ids = append(ids, *parentID)
 	}
 	id, err := d.commitStore.GetDiffFileset(pachClient.Ctx(), commitInfo.Commit)
 	if err != nil {

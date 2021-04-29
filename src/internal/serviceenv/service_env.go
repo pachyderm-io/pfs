@@ -25,20 +25,80 @@ import (
 
 const clusterIDKey = "cluster-id"
 
-// ServiceEnv contains connections to other services in the
-// cluster. In pachd, there is only one instance of this struct, but tests may
-// create more, if they want to create multiple pachyderm "clusters" served in
-// separate goroutines.
+// ServiceEnv contains connections to other services in the cluster, as well as
+// pachd's startup runtime configuration. These values (client connections and
+// configuration) are initialized on ServiceEnv creation and do not change over
+// the lifetime of the ServiceEnv. In particular, gRPC channels used by these
+// clients are shared by all callers after they are initialized (per gRPC best
+// practice).
+//
+// In pachd, there is only one instance of this struct, but tests may create
+// multiple, to give each test its own isolated "cluster", served in a separate
+// goroutine.
 type ServiceEnv interface {
+
+	// Config returns the (typically env-var-based) pachd runtime configuration
+	// options. Like pachd's peer service clients, these are passed on startup and
+	// do not change over the lifetime of the ServiceEnv (over the lifetime of pachd
+	// in production, or over the lifetime of a test run in test).
+	//
+	// In pachd, pachd/main.go parses its environment variables to initialize
+	// its Config, and in testing, many tests set these values manually
 	Config() *Configuration
+
+	// GetPachClient returns a pachyderm API client, that pachd can use to send
+	// RPCs to peer pachd instances or to itself. Pachd uses these for
+	// communication between its various APIs, e.g. PPS -> PFS -> FileSet, Auth,
+	// etc. The clients returned by this method must share their underlying gRPC
+	// channel, but each will each have its own context and auth token.
 	GetPachClient(ctx context.Context) *client.APIClient
+
+	// GetEtcdClient returns a client connected to a peer etcd instance, if any is
+	// available on startup. These clients must share their underlying gRPC
+	// channel, and all current implementations of GetEtcdClient return pointers
+	// to a single client which is returned to (and therefore shared by) all
+	// callers.
 	GetEtcdClient() *etcd.Client
+
+	// GetKubeClient returns a client connected to a peer Kubernetes API server,
+	// if any is available on startup. All current implementations of
+	// GetKubeClient return pointers to a single client which is returned to (and
+	// therefore shared by) all callers.
 	GetKubeClient() *kube.Clientset
+
+	// GetLokiClient returns a client connected to a peer Loki instance, if any is
+	// available on startup. All current implementations of GetLokiClient return
+	// pointers to a single client which is returned to (and therefore shared by)
+	// all callers.
 	GetLokiClient() (*loki.Client, error)
+
+	// GetDBClient returns a sqlx client connected to a SQL database (Postgres, in
+	// pachd), if any is available on startup. All current implementations of
+	// GetDBClient return pointers to a single client which is returned to (and
+	// therefore shared by) all callers.
 	GetDBClient() *sqlx.DB
+
+	// ClusterID returns the Cluster ID associated with this ServiceEnv's
+	// cluster. Like pachd's peer service clients, this is initialized on startup
+	// (from etcd) and does not change over the lifetime of the ServiceEnv.
 	ClusterID() string
+
+	// Context returns the context associated with this ServiceEnv, which
+	// tracks the lifetime of the ServiceEnv. The singleton ServiceEnv in pachd
+	// is never cancelled, but the ServiceEnvs used by tests may be cancelled when
+	// their corresponding test finishes.
 	Context() context.Context
+
+	// Logger returns a global logger associated with this ServiceEnv. Like
+	// other ServiceEnv data, this does not change over the lifetime of the
+	// ServiceEnv. Production pachd uses a stdout-based logger, but in tests this
+	// may send logs to a test-specific file.
 	Logger() *log.Logger
+
+	// Close closes this ServiceEnv's client instances and frees the ServiceEnv's
+	// resources. The singleton ServiceEnv in pachd is never closed, but the
+	// ServiceEnvs used by tests may be closed when their corresponding test
+	// finishes
 	Close() error
 }
 
@@ -49,16 +109,21 @@ type NonblockingServiceEnv struct {
 
 	// pachAddress is the domain name or hostport where pachd can be reached
 	pachAddress string
-	// pachClient is the "template" client other clients returned by this library
-	// are based on. It contains the original GRPC client connection and has no
-	// ctx and therefore no auth credentials or cancellation
+	// pachClient is the "template" client on which the other clients returned by
+	// GetPachClient are based.
+	//
+	// Per gRPC best practice, ServiceEnv dials a single GRPC channel which is
+	// shared by all clients returned from GetPachClient: each client is a
+	// separate instance of the APIClient struct, which has its own context and
+	// auth token, but points to shared protobuf-generated GRPC clients.
 	pachClient *client.APIClient
-	// pachEg coordinates the initialization of pachClient.  Note that NonblockingServiceEnv
-	// uses a separate error group for each client, rather than one for all
-	// three clients, so that pachd can initialize a NonblockingServiceEnv inside of its own
-	// initialization (if GetEtcdClient() blocked on intialization of 'pachClient'
-	// and pachd/main.go couldn't start the pachd server until GetEtcdClient() had
-	// returned, then pachd would be unable to start)
+	// pachEg coordinates the initialization of pachClient. Note that
+	// NonblockingServiceEnv uses a separate error group for each client, rather
+	// than one for all three clients, so that pachd can initialize a
+	// NonblockingServiceEnv inside of its own initialization (if GetEtcdClient()
+	// blocked on intialization of 'pachClient' and pachd/main.go couldn't start
+	// the pachd server until GetEtcdClient() had returned, then pachd would be
+	// unable to start)
 	pachEg errgroup.Group
 
 	// etcdAddress is the domain name or hostport where etcd can be reached
@@ -79,9 +144,9 @@ type NonblockingServiceEnv struct {
 	// there's no errgroup associated with it.
 	lokiClient *loki.Client
 
-	// clusterId is the unique ID for this pach cluster
-	clusterId   string
-	clusterIdEg errgroup.Group
+	// clusterID is the unique ID for this pach cluster
+	clusterID   string
+	clusterIDEg errgroup.Group
 
 	// dbClient is a database client.
 	dbClient *sqlx.DB
@@ -119,7 +184,7 @@ func InitServiceEnv(config *Configuration) *NonblockingServiceEnv {
 	env := InitPachOnlyEnv(config)
 	env.etcdAddress = fmt.Sprintf("http://%s", net.JoinHostPort(env.config.EtcdHost, env.config.EtcdPort))
 	env.etcdEg.Go(env.initEtcdClient)
-	env.clusterIdEg.Go(env.initClusterID)
+	env.clusterIDEg.Go(env.initClusterID)
 	env.dbEg.Go(env.initDBClient)
 	if env.config.LokiHost != "" && env.config.LokiPort != "" {
 		env.lokiClient = &loki.Client{
@@ -137,6 +202,8 @@ func InitWithKube(config *Configuration) *NonblockingServiceEnv {
 	return env // env is not ready yet
 }
 
+// Config implements the corresponding ServiceEnv method for
+// NonblockingServiceEnv
 func (env *NonblockingServiceEnv) Config() *Configuration {
 	return env.config
 }
@@ -155,7 +222,7 @@ func (env *NonblockingServiceEnv) initClusterID() error {
 			return err
 		} else {
 			// We expect there to only be one value for this key
-			env.clusterId = string(resp.Kvs[0].Value)
+			env.clusterID = string(resp.Kvs[0].Value)
 			return nil
 		}
 	}
@@ -309,22 +376,30 @@ func (env *NonblockingServiceEnv) GetDBClient() *sqlx.DB {
 	return env.dbClient
 }
 
+// ClusterID implements the corresponding ServiceEnv method for
+// NonblockingServiceEnv
 func (env *NonblockingServiceEnv) ClusterID() string {
-	if err := env.clusterIdEg.Wait(); err != nil {
+	if err := env.clusterIDEg.Wait(); err != nil {
 		panic(err)
 	}
 
-	return env.clusterId
+	return env.clusterID
 }
 
+// Context implements the corresponding ServiceEnv method for
+// NonblockingServiceEnv
 func (env *NonblockingServiceEnv) Context() context.Context {
 	return env.ctx
 }
 
+// Logger implements the corresponding ServiceEnv method for
+// NonblockingServiceEnv
 func (env *NonblockingServiceEnv) Logger() *log.Logger {
 	return log.StandardLogger()
 }
 
+// Close implements the corresponding ServiceEnv method for
+// NonblockingServiceEnv
 func (env *NonblockingServiceEnv) Close() error {
 	// Cancel anything using the ServiceEnv's context
 	env.cancel()

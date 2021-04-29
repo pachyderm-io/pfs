@@ -24,6 +24,8 @@ func (c APIClient) IsAuthActive() (bool, error) {
 	}
 }
 
+// GetClusterRoleBinding gets the singleton cluster-level rolebinding for this
+// client's endpoint Pachyderm cluster.
 func (c APIClient) GetClusterRoleBinding() (*auth.RoleBinding, error) {
 	resp, err := c.GetRoleBinding(c.Ctx(), &auth.GetRoleBindingRequest{
 		Resource: &auth.Resource{Type: auth.ResourceType_CLUSTER},
@@ -34,6 +36,8 @@ func (c APIClient) GetClusterRoleBinding() (*auth.RoleBinding, error) {
 	return resp.Binding, nil
 }
 
+// ModifyClusterRoleBinding grants the cluster-level 'roles' to 'principal' in
+// this client's endpoint Pachyderm cluster.
 func (c APIClient) ModifyClusterRoleBinding(principal string, roles []string) error {
 	_, err := c.ModifyRoleBinding(c.Ctx(), &auth.ModifyRoleBindingRequest{
 		Resource:  &auth.Resource{Type: auth.ResourceType_CLUSTER},
@@ -46,6 +50,7 @@ func (c APIClient) ModifyClusterRoleBinding(principal string, roles []string) er
 	return nil
 }
 
+// GetRepoRoleBinding gets the repo-level rolebinding for 'repo'.
 func (c APIClient) GetRepoRoleBinding(repo string) (*auth.RoleBinding, error) {
 	resp, err := c.GetRoleBinding(c.Ctx(), &auth.GetRoleBindingRequest{
 		Resource: &auth.Resource{Type: auth.ResourceType_REPO, Name: repo},
@@ -56,6 +61,8 @@ func (c APIClient) GetRepoRoleBinding(repo string) (*auth.RoleBinding, error) {
 	return resp.Binding, nil
 }
 
+// ModifyRepoRoleBinding grants the repo-level 'roles' to 'principal' on the
+// resource 'repo'.
 func (c APIClient) ModifyRepoRoleBinding(repo, principal string, roles []string) error {
 	_, err := c.ModifyRoleBinding(c.Ctx(), &auth.ModifyRoleBindingRequest{
 		Resource:  &auth.Resource{Type: auth.ResourceType_REPO, Name: repo},

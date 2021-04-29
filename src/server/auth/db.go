@@ -5,6 +5,7 @@ import (
 	"golang.org/x/net/context"
 )
 
+// CreateAuthTokensTable creates the SQL table that stores Pachyderm auth tokens
 // TODO(acohen4): Decide on hash as primary key or unique column
 // CreateTokensTable sets up the postgres table which tracks active clusters
 func CreateAuthTokensTable(ctx context.Context, tx *sqlx.Tx) error {

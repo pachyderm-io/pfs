@@ -940,9 +940,8 @@ func (a *apiServer) GetPipelineAuthTokenInTransaction(txnCtx *txnenv.Transaction
 	// TODO(acohen4): look at transaction context
 	if err := a.insertAuthTokenNoTTL(txnCtx.ClientContext, auth.HashToken(token), auth.PipelinePrefix+pipeline); err != nil {
 		return "", errors.Wrapf(err, "error storing token")
-	} else {
-		return token, nil
 	}
+	return token, nil
 }
 
 // GetOIDCLogin implements the protobuf auth.GetOIDCLogin RPC
@@ -1385,9 +1384,8 @@ func (a *apiServer) RestoreAuthToken(ctx context.Context, req *auth.RestoreAuthT
 	if err := func() error {
 		if ttl > 0 {
 			return a.insertAuthToken(ctx, req.Token.HashedToken, req.Token.Subject, ttl)
-		} else {
-			return a.insertAuthTokenNoTTL(ctx, req.Token.HashedToken, req.Token.Subject)
 		}
+		return a.insertAuthTokenNoTTL(ctx, req.Token.HashedToken, req.Token.Subject)
 	}(); err != nil {
 		return nil, errors.Wrapf(err, "error restoring auth token")
 	}

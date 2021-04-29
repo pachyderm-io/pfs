@@ -53,7 +53,7 @@ func (a *InactiveAPIServer) AddPipelineWriterToRepoInTransaction(txnCtx *txnenv.
 	return auth.ErrNotActivated
 }
 
-// RemovePipelineReaderToRepoInTransaction implements the RemovePipelineReaderToRepoInTransaction internal API
+// RemovePipelineReaderFromRepoInTransaction implements the RemovePipelineReaderFromRepoInTransaction internal API
 func (a *InactiveAPIServer) RemovePipelineReaderFromRepoInTransaction(txnCtx *txnenv.TransactionContext, sourceRepo, pipeline string) error {
 	return auth.ErrNotActivated
 }
@@ -174,7 +174,7 @@ func (a *InactiveAPIServer) RestoreAuthToken(context.Context, *auth.RestoreAuthT
 	return nil, auth.ErrNotActivated
 }
 
-// RestoreAuthToken implements the RestoreAuthToken RPC, but just returns NotActivatedError
+// DeleteExpiredAuthTokens implements the DeleteExpiredAuthTokens RPC, but just returns NotActivatedError
 func (a *InactiveAPIServer) DeleteExpiredAuthTokens(context.Context, *auth.DeleteExpiredAuthTokensRequest) (*auth.DeleteExpiredAuthTokensResponse, error) {
 	return nil, auth.ErrNotActivated
 }

@@ -128,6 +128,12 @@ func DoOAuthExchange(t testing.TB, pachClient, enterpriseClient *client.APIClien
 	require.NoError(t, err)
 }
 
+// GetOIDCTokenForTrustedApp goes through the Dex login flow for the 'testapp'
+// and returns an ID token for the Dex user 'admin'. This is used by various
+// authentication tests to confirm that OIDC tokens may be used to authenticate
+// with pachd repeatedly (e.g. users can log into the Pachyderm IDE, and then
+// the same token can be used to authenticate pachctl inside the IDE
+// automatically).
 func GetOIDCTokenForTrustedApp(t testing.TB) string {
 	// Create an HTTP client that doesn't follow redirects.
 	// We rewrite the host names for each redirect to avoid issues because

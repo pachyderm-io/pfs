@@ -209,32 +209,38 @@ func NewInterceptor(env serviceenv.ServiceEnv) *Interceptor {
 	}
 }
 
-// we use ServerStreamWrapper to set the stream's Context with added values
+// ServerStreamWrapper adds values into the stream's Go Context
 type ServerStreamWrapper struct {
 	stream grpc.ServerStream
 	ctx    context.Context
 }
 
+// Context returns the stream's Go context
 func (s ServerStreamWrapper) Context() context.Context {
 	return s.ctx
 }
 
+// SetHeader sets a header in 's's gGRPC ServerStream
 func (s ServerStreamWrapper) SetHeader(md metadata.MD) error {
 	return s.stream.SetHeader(md)
 }
 
+// SendHeader sends a header through 's's gGRPC ServerStream
 func (s ServerStreamWrapper) SendHeader(md metadata.MD) error {
 	return s.stream.SendHeader(md)
 }
 
+// SetTrailer sets a trailiner in 's's gGRPC ServerStream
 func (s ServerStreamWrapper) SetTrailer(md metadata.MD) {
 	s.stream.SetTrailer(md)
 }
 
+// SendMsg sends a message through 's's gGRPC ServerStream
 func (s ServerStreamWrapper) SendMsg(m interface{}) error {
 	return s.stream.SendMsg(m)
 }
 
+// RecvMsg receives a message from 's's gGRPC ServerStream
 func (s ServerStreamWrapper) RecvMsg(m interface{}) error {
 	return s.stream.RecvMsg(m)
 }

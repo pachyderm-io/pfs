@@ -382,6 +382,8 @@ func UpdateJobState(pipelines col.ReadWriteCollection, jobs col.ReadWriteCollect
 	return jobs.Put(jobPtr.Job.ID, jobPtr)
 }
 
+// FinishJob finishes the job indicated in 'jobInfo', setting its state to
+// 'state' (SUCCESS, FAILURE, or KILLED) and attaching 'reason'.
 func FinishJob(pachClient *client.APIClient, jobInfo *pps.JobInfo, state pps.JobState, reason string) error {
 	jobInfo.State = state
 	jobInfo.Reason = reason
@@ -407,6 +409,8 @@ func FinishJob(pachClient *client.APIClient, jobInfo *pps.JobInfo, state pps.Job
 	return err
 }
 
+// WriteJobInfo writes 'jobInfo' to etcd via an UpdateJobState RPC. This may set
+// the job's state, reason, data processed/skipped/failed, etc.
 func WriteJobInfo(pachClient *client.APIClient, jobInfo *pps.JobInfo) error {
 	_, err := pachClient.PpsAPIClient.UpdateJobState(pachClient.Ctx(), &pps.UpdateJobStateRequest{
 		Job:           jobInfo.Job,
@@ -423,6 +427,8 @@ func WriteJobInfo(pachClient *client.APIClient, jobInfo *pps.JobInfo) error {
 	return err
 }
 
+// GetStatsCommit extracts the stats commit (if any) from the subvenance of
+// output commit 'commitInfo'.
 func GetStatsCommit(commitInfo *pfs.CommitInfo) *pfs.Commit {
 	for _, commitRange := range commitInfo.Subvenance {
 		if commitRange.Lower.Repo.Name == commitInfo.Commit.Repo.Name {

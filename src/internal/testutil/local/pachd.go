@@ -56,6 +56,11 @@ import (
 	"google.golang.org/grpc"
 )
 
+// RunLocal runs an in-process Pachd instance that spawns pipeline and job
+// workers via a Kube client connected to an external Kubernetes API Server
+// (i.e., it does not run inside the Kubernetes cluster that it uses). This
+// allows for very fast local development, as there's no need to build/push a
+// new pachd image after every change.
 func RunLocal() (retErr error) {
 	config := &serviceenv.PachdFullConfiguration{}
 	cmdutil.Populate(config)

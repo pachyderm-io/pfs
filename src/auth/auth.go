@@ -100,6 +100,8 @@ var (
 	ErrExpiredToken = status.Error(codes.Internal, "token expiration is in the past")
 )
 
+// DefaultOIDCScopes are the OIDC/OAuth scopes that Pachyderm auth requests
+// from its identity service by default.
 var DefaultOIDCScopes = []string{"email", "profile", "groups", oidc.ScopeOpenID}
 
 // IsErrAlreadyActivated checks if an error is a ErrAlreadyActivated
