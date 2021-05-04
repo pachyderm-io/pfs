@@ -22,7 +22,7 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/docker/spdystream v0.0.0-20181023171402-6480d4af844c // indirect
 	github.com/elazarl/goproxy v0.0.0-20191011121108-aa519ddbe484 // indirect
-	github.com/evanphx/json-patch v4.5.0+incompatible
+	github.com/evanphx/json-patch v4.9.0+incompatible
 	github.com/fatih/camelcase v1.0.0
 	github.com/fatih/color v1.9.0
 	github.com/fsouza/go-dockerclient v1.4.1
@@ -92,8 +92,8 @@ require (
 	gopkg.in/yaml.v2 v2.2.8
 	helm.sh/helm/v3 v3.1.2
 	honnef.co/go/tools v0.1.3 // indirect
-	k8s.io/api v0.17.4
-	k8s.io/apimachinery v0.17.4
+	k8s.io/api v0.17.17
+	k8s.io/apimachinery v0.17.17
 	k8s.io/cli-runtime v0.17.4
 	k8s.io/client-go v12.0.0+incompatible
 	modernc.org/mathutil v1.0.0
@@ -105,8 +105,8 @@ require (
 // For the moment, the windows build requires a fix that has not been tagged with an official release
 replace github.com/docker/docker => github.com/docker/docker v1.4.2-0.20191213113251-3452f136aa68
 
-replace github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.3.2+incompatible
+replace github.com/Azure/go-autorest => github.com/Azure/go-autorest v14.2.0+incompatible
 
-replace k8s.io/client-go => k8s.io/client-go v0.0.0-20190718183610-8e956561bbf5
+//replace k8s.io/client-go => k8s.io/client-go v0.0.0-20190718183610-8e956561bbf5
 
 replace github.com/sercand/kuberesolver => github.com/sercand/kuberesolver v1.0.1-0.20200204133151-f60278fd3dac
