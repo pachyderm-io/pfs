@@ -6,17 +6,14 @@ import (
 	"github.com/pachyderm/pachyderm/v2/src/auth"
 	"github.com/pachyderm/pachyderm/v2/src/internal/require"
 	tu "github.com/pachyderm/pachyderm/v2/src/internal/testutil"
+	"github.com/pachyderm/pachyderm/v2/src/internal/testutil/multipach"
 )
 
 // TestOIDCAuthCodeFlow tests that we can configure an OIDC provider and do the
 // auth code flow
 func TestOIDCAuthCodeFlow(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration tests in short mode")
-	}
-	tu.DeleteAll(t)
+	multipach.GetTestContext(t, true)
 	tu.ConfigureOIDCProvider(t)
-	defer tu.DeleteAll(t)
 
 	testClient := tu.GetUnauthenticatedPachClient(t)
 	loginInfo, err := testClient.GetOIDCLogin(testClient.Ctx(), &auth.GetOIDCLoginRequest{})
@@ -39,12 +36,8 @@ func TestOIDCAuthCodeFlow(t *testing.T) {
 
 // TestOIDCTrustedApp tests using an ID token issued to another OIDC app to authenticate.
 func TestOIDCTrustedApp(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration tests in short mode")
-	}
-	tu.DeleteAll(t)
+	multipach.GetTestContext(t, true)
 	tu.ConfigureOIDCProvider(t)
-	defer tu.DeleteAll(t)
 	testClient := tu.GetUnauthenticatedPachClient(t)
 
 	token := tu.GetOIDCTokenForTrustedApp(t)

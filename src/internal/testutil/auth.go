@@ -7,7 +7,6 @@ import (
 
 	"github.com/pachyderm/pachyderm/v2/src/auth"
 	"github.com/pachyderm/pachyderm/v2/src/client"
-	"github.com/pachyderm/pachyderm/v2/src/internal/config"
 	"github.com/pachyderm/pachyderm/v2/src/internal/require"
 	"github.com/pachyderm/pachyderm/v2/src/pfs"
 	"github.com/pachyderm/pachyderm/v2/src/pps"
@@ -22,6 +21,13 @@ const (
 func ActivateAuth(tb testing.TB) {
 	tb.Helper()
 	client := GetPachClient(tb)
+	ActivateAuthWithClient(tb, client)
+}
+
+// ActivateAuthWithClient activates the auth service using the provided client.APIClient
+func ActivateAuthWithClient(tb testing.TB, client *client.APIClient) {
+	tb.Helper()
+	client = client.WithCtx(context.Background())
 	client.SetAuthToken(RootToken)
 
 	ActivateEnterprise(tb, client)
@@ -32,11 +38,8 @@ func ActivateAuth(tb testing.TB) {
 	if err != nil && !strings.HasSuffix(err.Error(), "already activated") {
 		tb.Fatalf("could not activate auth service: %v", err.Error())
 	}
-	config.WritePachTokenToConfig(RootToken, false)
 
 	// Activate auth for PPS
-	client = client.WithCtx(context.Background())
-	client.SetAuthToken(RootToken)
 	_, err = client.PfsAPIClient.ActivateAuth(client.Ctx(), &pfs.ActivateAuthRequest{})
 	require.NoError(tb, err)
 	_, err = client.PpsAPIClient.ActivateAuth(client.Ctx(), &pps.ActivateAuthRequest{})

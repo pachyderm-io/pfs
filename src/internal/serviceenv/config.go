@@ -19,6 +19,7 @@ type GlobalConfiguration struct {
 	S3GatewayPort       uint16 `env:"S3GATEWAY_PORT,default=600"`
 	PPSEtcdPrefix       string `env:"PPS_ETCD_PREFIX,default=pachyderm_pps"`
 	Namespace           string `env:"PACH_NAMESPACE,default=default"`
+	PipelineLabel       string `env:"PACH_WORKER_LABEL"`
 	StorageRoot         string `env:"PACH_ROOT,default=/pach"`
 	GCPercent           int    `env:"GC_PERCENT,default=50"`
 	LokiHost            string `env:"LOKI_SERVICE_HOST"`
