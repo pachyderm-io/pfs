@@ -48,7 +48,7 @@ Let's take a closer look at that pipeline:
     "name": "lazy_shuffle"
   },
   "transform": {
-    "image": "ubuntu",
+    "image": "ubuntu:18.04",
     "cmd": ["/bin/bash"],
     "stdin": [
       "echo 'process fruits if any'",

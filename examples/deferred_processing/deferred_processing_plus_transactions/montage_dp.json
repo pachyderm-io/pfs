@@ -18,7 +18,7 @@
   },
   "transform": {
     "cmd": [ "sh" ],
-    "image": "v4tech/imagemagick",
+    "image": "dpokidov/imagemagick:7.0.10-45",
     "stdin": [ "montage -shadow -background SkyBlue -geometry 300x300+2+2 $(find /pfs -type f | sort) /pfs/out/montage.png" ]
   }
 }

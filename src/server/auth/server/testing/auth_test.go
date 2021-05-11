@@ -394,7 +394,7 @@ func TestCreateAndUpdatePipeline(t *testing.T) {
 	createPipeline := func(args createArgs) error {
 		return args.client.CreatePipeline(
 			args.name,
-			"", // default image: ubuntu:16.04
+			"", // default image: ubuntu:18.04
 			[]string{"bash"},
 			[]string{"cp /pfs/*/* /pfs/out/"},
 			&pps.ParallelismSpec{Constant: 1},
@@ -567,7 +567,7 @@ func TestPipelineMultipleInputs(t *testing.T) {
 	createPipeline := func(args createArgs) error {
 		return args.client.CreatePipeline(
 			args.name,
-			"", // default image: ubuntu:16.04
+			"", // default image: ubuntu:18.04
 			[]string{"bash"},
 			[]string{"echo \"work\" >/pfs/out/x"},
 			&pps.ParallelismSpec{Constant: 1},
@@ -766,7 +766,7 @@ func TestPipelineRevoke(t *testing.T) {
 	pipeline := tu.UniqueString("bob-pipeline")
 	require.NoError(t, bobClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{"cp /pfs/*/* /pfs/out/"},
 		&pps.ParallelismSpec{Constant: 1},
@@ -831,7 +831,7 @@ func TestPipelineRevoke(t *testing.T) {
 	// alice updates bob's pipline, but the pipeline still doesn't run
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{"cp /pfs/*/* /pfs/out/"},
 		&pps.ParallelismSpec{Constant: 1},
@@ -885,7 +885,7 @@ func TestStopAndDeletePipeline(t *testing.T) {
 	pipeline := tu.UniqueString("alice-pipeline")
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{"cp /pfs/*/* /pfs/out/"},
 		&pps.ParallelismSpec{Constant: 1},
@@ -925,7 +925,7 @@ func TestStopAndDeletePipeline(t *testing.T) {
 	pipeline = tu.UniqueString("alice-pipeline")
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{"cp /pfs/*/* /pfs/out/"},
 		&pps.ParallelismSpec{Constant: 1},
@@ -1023,7 +1023,7 @@ func TestStopJob(t *testing.T) {
 	pipeline := tu.UniqueString("alice-pipeline")
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{"sleep 600"},
 		&pps.ParallelismSpec{Constant: 1},
@@ -1368,7 +1368,7 @@ func TestCreatePipelineRepoAlreadyExistsPermissions(t *testing.T) {
 	// bob creates a pipeline, and should get an "access denied" error
 	err := bobClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{"cp /pfs/*/* /pfs/out/"},
 		&pps.ParallelismSpec{Constant: 1},
@@ -1516,7 +1516,7 @@ func TestListDatum(t *testing.T) {
 	pipeline := tu.UniqueString("alice-pipeline")
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{"ls /pfs/*/*; cp /pfs/*/* /pfs/out/"},
 		&pps.ParallelismSpec{Constant: 1},
@@ -1609,7 +1609,7 @@ func TestListJob(t *testing.T) {
 	pipeline := tu.UniqueString("alice-pipeline")
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{"ls /pfs/*/*; cp /pfs/*/* /pfs/out/"},
 		&pps.ParallelismSpec{Constant: 1},
@@ -1732,157 +1732,157 @@ func TestInspectDatum(t *testing.T) {
 // TODO: Make logs work with V2.
 // TestGetLogs tests that you must have READER access to all of a job's input
 // repos and READER access to its output repo to call GetLogs()
-//func TestGetLogs(t *testing.T) {
-//	if testing.Short() {
-//		t.Skip("Skipping integration tests in short mode")
-//	}
-//	tu.DeleteAll(t)
-//	defer tu.DeleteAll(t)
-//	alice, bob := robot(tu.UniqueString("alice")), robot(tu.UniqueString("bob"))
-//	aliceClient, bobClient := tu.GetAuthenticatedPachClient(t, alice), tu.GetAuthenticatedPachClient(t, bob)
-//
-//	// alice creates a repo
-//	repo := tu.UniqueString(t.Name())
-//	require.NoError(t, aliceClient.CreateRepo(repo))
-//
-//	// alice creates a pipeline
-//	pipeline := tu.UniqueString("pipeline")
-//	require.NoError(t, aliceClient.CreatePipeline(
-//		pipeline,
-//		"", // default image: ubuntu:16.04
-//		[]string{"bash"},
-//		[]string{"cp /pfs/*/* /pfs/out/"},
-//		&pps.ParallelismSpec{Constant: 1},
-//		client.NewPFSInput(repo, "/*"),
-//		"", // default output branch: master
-//		false,
-//	))
-//
-//	// alice commits to the input repos, and the pipeline runs successfully
-//	err := aliceClient.PutFile(repo, "master", "/file1", strings.NewReader("test"))
-//	require.NoError(t, err)
-//	commitIter, err := aliceClient.FlushCommit(
-//		[]*pfs.Commit{client.NewCommit(repo, "master")},
-//		[]*pfs.Repo{client.NewRepo(pipeline)},
-//	)
-//	require.NoError(t, err)
-//	require.NoErrorWithinT(t, 60*time.Second, func() error {
-//		_, err := commitIter.Next()
-//		return err
-//	})
-//
-//	// bob cannot call GetLogs
-//	iter := bobClient.GetLogs(pipeline, "", nil, "", false, false, 0)
-//	require.False(t, iter.Next())
-//	require.YesError(t, iter.Err())
-//	require.True(t, auth.IsErrNotAuthorized(iter.Err()), iter.Err().Error())
-//
-//	// bob also can't call GetLogs for the master process
-//	iter = bobClient.GetLogs(pipeline, "", nil, "", true, false, 0)
-//	require.False(t, iter.Next())
-//	require.YesError(t, iter.Err())
-//	require.True(t, auth.IsErrNotAuthorized(iter.Err()), iter.Err().Error())
-//
-//	// alice adds bob to the input repo, but bob still can't call GetLogs
-//	aliceClient.SetScope(aliceClient.Ctx(), &auth.SetScopeRequest{
-//		Username: bob,
-//		Scope:    auth.Scope_READER,
-//		Repo:     repo,
-//	})
-//	iter = bobClient.GetLogs(pipeline, "", nil, "", false, false, 0)
-//	require.False(t, iter.Next())
-//	require.YesError(t, iter.Err())
-//	require.True(t, auth.IsErrNotAuthorized(iter.Err()), iter.Err().Error())
-//
-//	// alice removes bob from the input repo and adds bob to the output repo, but
-//	// bob still can't call GetLogs
-//	aliceClient.SetScope(aliceClient.Ctx(), &auth.SetScopeRequest{
-//		Username: bob,
-//		Scope:    auth.Scope_NONE,
-//		Repo:     repo,
-//	})
-//	aliceClient.SetScope(aliceClient.Ctx(), &auth.SetScopeRequest{
-//		Username: bob,
-//		Scope:    auth.Scope_READER,
-//		Repo:     pipeline,
-//	})
-//	iter = bobClient.GetLogs(pipeline, "", nil, "", false, false, 0)
-//	require.False(t, iter.Next())
-//	require.YesError(t, iter.Err())
-//	require.True(t, auth.IsErrNotAuthorized(iter.Err()), iter.Err().Error())
-//
-//	// alice adds bob to the output repo, and now bob can call GetLogs
-//	aliceClient.SetScope(aliceClient.Ctx(), &auth.SetScopeRequest{
-//		Username: bob,
-//		Scope:    auth.Scope_READER,
-//		Repo:     repo,
-//	})
-//	iter = bobClient.GetLogs(pipeline, "", nil, "", false, false, 0)
-//	iter.Next()
-//	require.NoError(t, iter.Err())
-//
-//	// bob can also call GetLogs for the master process
-//	iter = bobClient.GetLogs(pipeline, "", nil, "", true, false, 0)
-//	iter.Next()
-//	require.NoError(t, iter.Err())
-//}
-//
-//// TestGetLogsFromStats tests that GetLogs still works even when stats are
-//// enabled
-//func TestGetLogsFromStats(t *testing.T) {
-//	if testing.Short() {
-//		t.Skip("Skipping integration tests in short mode")
-//	}
-//	tu.DeleteAll(t)
-//	defer tu.DeleteAll(t)
-//	alice := robot(tu.UniqueString("alice"))
-//	aliceClient := tu.GetAuthenticatedPachClient(t, alice)
-//
-//	// alice creates a repo
-//	repo := tu.UniqueString(t.Name())
-//	require.NoError(t, aliceClient.CreateRepo(repo))
-//
-//	// alice creates a pipeline (we must enable stats for InspectDatum, which
-//	// means calling the grpc client function directly)
-//	pipeline := tu.UniqueString("alice")
-//	_, err := aliceClient.PpsAPIClient.CreatePipeline(aliceClient.Ctx(),
-//		&pps.CreatePipelineRequest{
-//			Pipeline: &pps.Pipeline{Name: pipeline},
-//			Transform: &pps.Transform{
-//				Cmd:   []string{"bash"},
-//				Stdin: []string{"cp /pfs/*/* /pfs/out/"},
-//			},
-//			ParallelismSpec: &pps.ParallelismSpec{Constant: 1},
-//			Input:           client.NewPFSInput(repo, "/*"),
-//			EnableStats:     true,
-//		})
-//	require.NoError(t, err)
-//
-//	// alice commits to the input repo, and the pipeline runs successfully
-//	err = aliceClient.PutFile(repo, "master", "/file1", strings.NewReader("test"))
-//	require.NoError(t, err)
-//	commitItr, err := aliceClient.FlushCommit(
-//		[]*pfs.Commit{client.NewCommit(repo, "master")},
-//		[]*pfs.Repo{client.NewRepo(pipeline)},
-//	)
-//	require.NoError(t, err)
-//	require.NoErrorWithinT(t, 3*time.Minute, func() error {
-//		_, err := commitItr.Next()
-//		return err
-//	})
-//	jobs, err := aliceClient.ListJob(pipeline, nil /*inputs*/, nil /*output*/, -1 /*history*/, true)
-//	require.NoError(t, err)
-//	require.Equal(t, 1, len(jobs))
-//	jobID := jobs[0].Job.ID
-//
-//	iter := aliceClient.GetLogs("", jobID, nil, "", false, false, 0)
-//	require.True(t, iter.Next())
-//	require.NoError(t, iter.Err())
-//
-//	iter = aliceClient.GetLogs("", jobID, nil, "", true, false, 0)
-//	iter.Next()
-//	require.NoError(t, iter.Err())
-//}
+func TestGetLogs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration tests in short mode")
+	}
+	tu.DeleteAll(t)
+	defer tu.DeleteAll(t)
+	alice, bob := tu.UniqueString("alice"), tu.UniqueString("bob")
+	aliceClient, bobClient := tu.GetAuthenticatedPachClient(t, alice), tu.GetAuthenticatedPachClient(t, bob)
+
+	// alice creates a repo
+	repo := tu.UniqueString(t.Name())
+	require.NoError(t, aliceClient.CreateRepo(repo))
+
+	// alice creates a pipeline
+	pipeline := tu.UniqueString("pipeline")
+	require.NoError(t, aliceClient.CreatePipeline(
+		pipeline,
+		"", // default image: ubuntu:18.04
+		[]string{"bash"},
+		[]string{"cp /pfs/*/* /pfs/out/"},
+		&pps.ParallelismSpec{Constant: 1},
+		client.NewPFSInput(repo, "/*"),
+		"", // default output branch: master
+		false,
+	))
+
+	// alice commits to the input repos, and the pipeline runs successfully
+	_, err := aliceClient.PutFile(repo, "master", "/file1", strings.NewReader("test"))
+	require.NoError(t, err)
+	commitIter, err := aliceClient.FlushCommit(
+		[]*pfs.Commit{client.NewCommit(repo, "master")},
+		[]*pfs.Repo{client.NewRepo(pipeline)},
+	)
+	require.NoError(t, err)
+	require.NoErrorWithinT(t, 60*time.Second, func() error {
+		_, err := commitIter.Next()
+		return err
+	})
+
+	// bob cannot call GetLogs
+	iter := bobClient.GetLogs(pipeline, "", nil, "", false, false, 0)
+	require.False(t, iter.Next())
+	require.YesError(t, iter.Err())
+	require.True(t, auth.IsErrNotAuthorized(iter.Err()), iter.Err().Error())
+
+	// bob also can't call GetLogs for the master process
+	iter = bobClient.GetLogs(pipeline, "", nil, "", true, false, 0)
+	require.False(t, iter.Next())
+	require.YesError(t, iter.Err())
+	require.True(t, auth.IsErrNotAuthorized(iter.Err()), iter.Err().Error())
+
+	// alice adds bob to the input repo, but bob still can't call GetLogs
+	aliceClient.SetScope(aliceClient.Ctx(), &auth.SetScopeRequest{
+		Username: bob,
+		Scope:    auth.Scope_READER,
+		Repo:     repo,
+	})
+	iter = bobClient.GetLogs(pipeline, "", nil, "", false, false, 0)
+	require.False(t, iter.Next())
+	require.YesError(t, iter.Err())
+	require.True(t, auth.IsErrNotAuthorized(iter.Err()), iter.Err().Error())
+
+	// alice removes bob from the input repo and adds bob to the output repo, but
+	// bob still can't call GetLogs
+	aliceClient.SetScope(aliceClient.Ctx(), &auth.SetScopeRequest{
+		Username: bob,
+		Scope:    auth.Scope_NONE,
+		Repo:     repo,
+	})
+	aliceClient.SetScope(aliceClient.Ctx(), &auth.SetScopeRequest{
+		Username: bob,
+		Scope:    auth.Scope_READER,
+		Repo:     pipeline,
+	})
+	iter = bobClient.GetLogs(pipeline, "", nil, "", false, false, 0)
+	require.False(t, iter.Next())
+	require.YesError(t, iter.Err())
+	require.True(t, auth.IsErrNotAuthorized(iter.Err()), iter.Err().Error())
+
+	// alice adds bob to the output repo, and now bob can call GetLogs
+	aliceClient.SetScope(aliceClient.Ctx(), &auth.SetScopeRequest{
+		Username: bob,
+		Scope:    auth.Scope_READER,
+		Repo:     repo,
+	})
+	iter = bobClient.GetLogs(pipeline, "", nil, "", false, false, 0)
+	iter.Next()
+	require.NoError(t, iter.Err())
+
+	// bob can also call GetLogs for the master process
+	iter = bobClient.GetLogs(pipeline, "", nil, "", true, false, 0)
+	iter.Next()
+	require.NoError(t, iter.Err())
+}
+
+// TestGetLogsFromStats tests that GetLogs still works even when stats are
+// enabled
+func TestGetLogsFromStats(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration tests in short mode")
+	}
+	tu.DeleteAll(t)
+	defer tu.DeleteAll(t)
+	alice := tu.UniqueString("alice")
+	aliceClient := tu.GetAuthenticatedPachClient(t, alice)
+
+	// alice creates a repo
+	repo := tu.UniqueString(t.Name())
+	require.NoError(t, aliceClient.CreateRepo(repo))
+
+	// alice creates a pipeline (we must enable stats for InspectDatum, which
+	// means calling the grpc client function directly)
+	pipeline := tu.UniqueString("alice")
+	_, err := aliceClient.PpsAPIClient.CreatePipeline(aliceClient.Ctx(),
+		&pps.CreatePipelineRequest{
+			Pipeline: &pps.Pipeline{Name: pipeline},
+			Transform: &pps.Transform{
+				Cmd:   []string{"bash"},
+				Stdin: []string{"cp /pfs/*/* /pfs/out/"},
+			},
+			ParallelismSpec: &pps.ParallelismSpec{Constant: 1},
+			Input:           client.NewPFSInput(repo, "/*"),
+			EnableStats:     true,
+		})
+	require.NoError(t, err)
+
+	// alice commits to the input repo, and the pipeline runs successfully
+	_, err = aliceClient.PutFile(repo, "master", "/file1", strings.NewReader("test"))
+	require.NoError(t, err)
+	commitItr, err := aliceClient.FlushCommit(
+		[]*pfs.Commit{client.NewCommit(repo, "master")},
+		[]*pfs.Repo{client.NewRepo(pipeline)},
+	)
+	require.NoError(t, err)
+	require.NoErrorWithinT(t, 3*time.Minute, func() error {
+		_, err := commitItr.Next()
+		return err
+	})
+	jobs, err := aliceClient.ListJob(pipeline, nil /*inputs*/, nil /*output*/, -1 /*history*/, true)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(jobs))
+	jobID := jobs[0].Job.ID
+
+	iter := aliceClient.GetLogs("", jobID, nil, "", false, false, 0)
+	require.True(t, iter.Next())
+	require.NoError(t, iter.Err())
+
+	iter = aliceClient.GetLogs("", jobID, nil, "", true, false, 0)
+	iter.Next()
+	require.NoError(t, iter.Err())
+}
 
 func TestPipelineNewInput(t *testing.T) {
 	if os.Getenv("RUN_BAD_TESTS") == "" {
@@ -1913,7 +1913,7 @@ func TestPipelineNewInput(t *testing.T) {
 	pipeline := tu.UniqueString("alice-pipeline")
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{"cp /pfs/*/* /pfs/out/"},
 		&pps.ParallelismSpec{Constant: 1},
@@ -1945,7 +1945,7 @@ func TestPipelineNewInput(t *testing.T) {
 	// alice updates the pipeline to replace repo[0] with repo[2]
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{"cp /pfs/*/* /pfs/out/"},
 		&pps.ParallelismSpec{Constant: 1},
@@ -2244,7 +2244,7 @@ func TestGetJobsBugFix(t *testing.T) {
 	pipeline := tu.UniqueString("alice-pipeline")
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{"cp /pfs/*/* /pfs/out/"},
 		&pps.ParallelismSpec{Constant: 1},

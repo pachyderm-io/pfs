@@ -13,9 +13,6 @@ base:
    - gcr.io/google_containers/kube-state-metrics:v0.5.0
    - gcr.io/k8s-minikube/storage-provisioner:v1.8.1
    - giantswarm/tiny-tools:latest
-   - golang:1.12.1
-   - golang:1.13.8
-   - golang:1.14.2
    - golang:1.15.4
    - grafana/grafana:4.2.0
    - grafana/loki:2.0.0
@@ -27,7 +24,7 @@ base:
    - k8s.gcr.io/kube-proxy:v1.18.3
    - k8s.gcr.io/kube-scheduler:v1.18.3
    - k8s.gcr.io/pause:3.2
-   - pachyderm/dash:0.5.48
+   - pachyderm/dash:0.5.57
    - pachyderm/etcd:v3.3.5
    - pachyderm/grpc-proxy:0.4.10
    - pachyderm/opencv:latest
@@ -39,8 +36,7 @@ base:
    - quay.io/prometheus/alertmanager:v0.7.1
    - ubuntu:16.04
    - ubuntu:18.04
-   - ubuntu:latest
-   - v4tech/imagemagick:latest
+   - dpokidov/imagemagick:7.0.10-45
 
   # TODO: make this optional
   kernel_image: "quay.io/testfaster/ignite-kernel"
@@ -55,15 +51,14 @@ base:
     RUN echo "AcceptEnv ENT_ACT_CODE BUCKET PPS_BUCKETS AUTH_BUCKETS GOPROXY CIRCLE_BRANCH RUN_BAD_TESTS DOCKER_PWD AMAZON_CLIENT_ID AMAZON_CLIENT_SECRET AMAZON_CLIENT_BUCKET AMAZON_CLIENT_REGION ECS_CLIENT_ID ECS_CLIENT_SECRET ECS_CLIENT_BUCKET ECS_CLIENT_CUSTOM_ENDPOINT GOOGLE_CLIENT_BUCKET GOOGLE_CLIENT_CREDS GOOGLE_CLIENT_HMAC_ID GOOGLE_CLIENT_HMAC_SECRET GOOGLE_CLIENT_REGION MICROSOFT_CLIENT_ID MICROSOFT_CLIENT_SECRET MICROSOFT_CLIENT_CONTAINER GOOGLE_TEST_UPLOAD_CREDS BIGQUERY_PROJECT BIGQUERY_DATASET BIGQUERY_TABLE TEST_RESULTS_BUCKET CIRCLE_REPOSITORY_URL CIRCLE_STAGE CIRCLE_BUILD_NUM CIRCLE_SHA1" >> /etc/ssh/sshd_config
     RUN mkdir /root/project
     WORKDIR /root/project
-    # Warm up go mod cache and go build cache we set CIRCLE_BRANCH so that
-    # Makefile uses cacheable build params (version).
+    # Warm up go mod cache and go build cache we set VERSION_ADDITIONAL so that
+    # Makefile uses cacheable build params (version).  Also cache the go deps
+    # the linter uses (we don't really care if the linter passes)
+    # To update the hash value below use `git log --pretty=format:%H | head -n 1`
     RUN git clone https://github.com/pachyderm/pachyderm && \
         cd pachyderm && \
-        git checkout bb4c26d7c838e61cff5b99c56f44662eea920c6b && \
-        CIRCLE_BRANCH=1 make install
-    # Also cache the go deps the linter uses (we don't really care if the
-    # linter passes)
-    RUN cd pachyderm && \
+        git checkout 3db216add840e6329b3b17ab1567739a98359df9 && \
+        CIRCLE_BRANCH=1 make install && \
         PATH="/root/go/bin:${PATH}" etc/testing/lint.sh || true
     RUN wget -nv https://github.com/instrumenta/kubeval/releases/download/0.15.0/kubeval-linux-amd64.tar.gz && \
         tar xf kubeval-linux-amd64.tar.gz && \

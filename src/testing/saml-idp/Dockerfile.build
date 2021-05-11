@@ -11,7 +11,7 @@
 # image (Dockerfile.idp) because we need to mount ../vendor into the container
 # as part of the build process, and there's no way to mount an external
 # directory into a docker container as part of 'docker build'
-FROM golang:1.10.2-alpine AS build
+FROM golang:1.15.4-alpine AS build
 LABEL maintainer="msteffen@pachyderm.io"
 
 # Add libc so we can build with it (saml-idp uses getaddrinfo)

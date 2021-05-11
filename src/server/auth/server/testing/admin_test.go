@@ -458,7 +458,7 @@ func TestPreActivationPipelinesKeepRunningAfterActivation(t *testing.T) {
 	require.NoError(t, aliceClient.CreateRepo(repo))
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:14.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{fmt.Sprintf("cp /pfs/%s/* /pfs/out/", repo)},
 		&pps.ParallelismSpec{Constant: 1},
@@ -544,7 +544,7 @@ func TestPipelinesRunAfterExpiration(t *testing.T) {
 	pipeline := tu.UniqueString("alice-pipeline")
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:14.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{fmt.Sprintf("cp /pfs/%s/* /pfs/out/", repo)},
 		&pps.ParallelismSpec{Constant: 1},
@@ -597,11 +597,274 @@ func TestPipelinesRunAfterExpiration(t *testing.T) {
 		return nil
 	}, backoff.NewTestingBackOff()))
 
-	// Make sure alice's pipeline still runs successfully
-	commit, err = rootClient.StartCommit(repo, "master")
+	// alice can't call GetScope on repo, even though she owns it
+	_, err := aliceClient.GetScope(aliceClient.Ctx(), &auth.GetScopeRequest{
+		Repos: []string{repo},
+	})
+	require.YesError(t, err)
+	require.Matches(t, "not active", err.Error())
+
+	// alice can't call SetScope on repo
+	_, err = aliceClient.SetScope(aliceClient.Ctx(), &auth.SetScopeRequest{
+		Repo:     repo,
+		Username: "carol",
+		Scope:    auth.Scope_READER,
+	})
+	require.YesError(t, err)
+	require.Matches(t, "not active", err.Error())
+	require.Equal(t, entries(alice, "owner"), getACL(t, adminClient, repo))
+
+	// alice can't call GetAcl on repo
+	_, err = aliceClient.GetACL(aliceClient.Ctx(), &auth.GetACLRequest{
+		Repo: repo,
+	})
+	require.YesError(t, err)
+	require.Matches(t, "not active", err.Error())
+
+	// alice can't call GetAcl on repo
+	_, err = aliceClient.SetACL(aliceClient.Ctx(), &auth.SetACLRequest{
+		Repo: repo,
+		Entries: []*auth.ACLEntry{
+			{Username: alice, Scope: auth.Scope_OWNER},
+			{Username: "carol", Scope: auth.Scope_READER},
+		},
+	})
+	require.YesError(t, err)
+	require.Matches(t, "not active", err.Error())
+	require.Equal(t, entries(alice, "owner"), getACL(t, adminClient, repo))
+
+	// admin *can* call GetScope on repo
+	resp, err := adminClient.GetScope(adminClient.Ctx(), &auth.GetScopeRequest{
+		Repos: []string{repo},
+	})
 	require.NoError(t, err)
-	err = rootClient.PutFile(repo, commit.ID, tu.UniqueString("/file2"),
+	require.Equal(t, []auth.Scope{auth.Scope_NONE}, resp.Scopes)
+
+	// admin can call SetScope on repo
+	_, err = adminClient.SetScope(adminClient.Ctx(), &auth.SetScopeRequest{
+		Repo:     repo,
+		Username: "carol",
+		Scope:    auth.Scope_READER,
+	})
+	require.NoError(t, err)
+	require.ElementsEqual(t,
+		entries(alice, "owner", "carol", "reader"), getACL(t, adminClient, repo))
+
+	// admin can call GetAcl on repo
+	aclResp, err := adminClient.GetACL(adminClient.Ctx(), &auth.GetACLRequest{
+		Repo: repo,
+	})
+	require.NoError(t, err)
+	aclEntries := make([]aclEntry, 0, len(aclResp.Entries))
+	for _, e := range aclResp.Entries {
+		aclEntries = append(aclEntries, aclEntry{
+			Username: e.Username,
+			Scope:    e.Scope,
+		})
+	}
+	require.ElementsEqual(t,
+		entries(alice, "owner", "carol", "reader"), aclEntries)
+
+	// admin can call SetAcl on repo
+	_, err = adminClient.SetACL(adminClient.Ctx(), &auth.SetACLRequest{
+		Repo: repo,
+		Entries: []*auth.ACLEntry{
+			{Username: alice, Scope: auth.Scope_OWNER},
+			{Username: "carol", Scope: auth.Scope_WRITER},
+		},
+	})
+	require.NoError(t, err)
+	require.ElementsEqual(t,
+		entries(alice, "owner", "carol", "writer"), getACL(t, adminClient, repo))
+}
+
+// TestAdminWhoAmI tests that when an admin calls WhoAmI(), the ClusterRoles reflects their admin roles
+func TestAdminWhoAmI(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration tests in short mode")
+	}
+	tu.DeleteAll(t)
+	defer tu.DeleteAll(t)
+	alice, bob := tu.UniqueString("alice"), tu.UniqueString("bob")
+	aliceClient, bobClient := tu.GetAuthenticatedPachClient(t, alice), tu.GetAuthenticatedPachClient(t, bob)
+	adminClient := tu.GetAuthenticatedPachClient(t, tu.AdminUser)
+
+	// 'admin' makes bob an FS admin
+	_, err := adminClient.ModifyClusterRoleBinding(adminClient.Ctx(),
+		&auth.ModifyClusterRoleBindingRequest{Principal: gh(bob), Roles: fsClusterRole()})
+	require.NoError(t, err)
+
+	// wait until bob shows up in admin list
+	require.NoError(t, backoff.Retry(func() error {
+		resp, err := aliceClient.GetClusterRoleBindings(aliceClient.Ctx(), &auth.GetClusterRoleBindingsRequest{})
+		require.NoError(t, err)
+		return require.EqualOrErr(
+			admins(tu.AdminUser)(gh(bob)), resp.Bindings,
+		)
+	}, backoff.NewTestingBackOff()))
+
+	// alice has no admin roles
+	resp, err := aliceClient.WhoAmI(aliceClient.Ctx(), &auth.WhoAmIRequest{})
+	require.NoError(t, err)
+	require.Equal(t, gh(alice), resp.Username)
+	require.Equal(t, 0, len(resp.ClusterRoles.Roles))
+
+	// admin has super admin
+	resp, err = adminClient.WhoAmI(adminClient.Ctx(), &auth.WhoAmIRequest{})
+	require.NoError(t, err)
+	require.Equal(t, tu.AdminUser, resp.Username)
+	require.Equal(t, superClusterRole(), resp.ClusterRoles)
+
+	// bob has FS admin
+	resp, err = bobClient.WhoAmI(bobClient.Ctx(), &auth.WhoAmIRequest{})
+	require.NoError(t, err)
+	require.Equal(t, gh(bob), resp.Username)
+	require.Equal(t, fsClusterRole(), resp.ClusterRoles)
+}
+
+// TestListRepoAdminIsOwnerOfAllRepos tests that when an admin calls ListRepo,
+// the result indicates that they're an owner of every repo in the cluster
+// (needed by the Pachyderm dashboard)
+func TestListRepoAdminIsOwnerOfAllRepos(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration tests in short mode")
+	}
+	tu.DeleteAll(t)
+	defer tu.DeleteAll(t)
+	// t.Parallel()
+	adminClient := tu.GetAuthenticatedPachClient(t, tu.AdminUser)
+	alice, bob := tu.UniqueString("alice"), tu.UniqueString("bob")
+	aliceClient, bobClient := tu.GetAuthenticatedPachClient(t, alice), tu.GetAuthenticatedPachClient(t, bob)
+
+	// alice creates a repo
+	repoWriter := tu.UniqueString("TestListRepoAdminIsOwnerOfAllRepos")
+	require.NoError(t, aliceClient.CreateRepo(repoWriter))
+
+	// bob calls ListRepo, but has NONE access to all repos
+	infos, err := bobClient.ListRepo()
+	require.NoError(t, err)
+	for _, info := range infos {
+		require.Equal(t, auth.Scope_NONE, info.AuthInfo.AccessLevel)
+	}
+
+	// admin calls ListRepo, and has OWNER access to all repos
+	infos, err = adminClient.ListRepo()
+	require.NoError(t, err)
+	for _, info := range infos {
+		require.Equal(t, auth.Scope_OWNER, info.AuthInfo.AccessLevel)
+	}
+}
+
+// TestGetAuthToken tests that an admin can manufacture auth credentials for
+// arbitrary other users
+func TestGetAuthToken(t *testing.T) {
+	if os.Getenv("RUN_BAD_TESTS") == "" {
+		t.Skip("Skipping because RUN_BAD_TESTS was empty")
+	}
+	if testing.Short() {
+		t.Skip("Skipping integration tests in short mode")
+	}
+	tu.DeleteAll(t)
+	defer tu.DeleteAll(t)
+	adminClient := tu.GetAuthenticatedPachClient(t, tu.AdminUser)
+
+	// Generate first set of auth credentials
+	robotUser := robot(tu.UniqueString("optimus_prime"))
+	resp, err := adminClient.GetAuthToken(adminClient.Ctx(),
+		&auth.GetAuthTokenRequest{Subject: robotUser})
+	require.NoError(t, err)
+	token1 := resp.Token
+	robotClient1 := tu.GetAuthenticatedPachClient(t, "")
+	robotClient1.SetAuthToken(token1)
+
+	// Confirm identity tied to 'token1'
+	who, err := robotClient1.WhoAmI(robotClient1.Ctx(), &auth.WhoAmIRequest{})
+	require.NoError(t, err)
+	require.Equal(t, robotUser, who.Username)
+	require.Equal(t, 0, len(who.ClusterRoles.Roles))
+	if version.IsAtLeast(1, 10) {
+		require.True(t, who.TTL >= 0 && who.TTL < secsInYear)
+	} else {
+		require.Equal(t, -1, who.TTL)
+	}
+
+	// Generate a second set of auth credentials--confirm that a unique token is
+	// generated, but that the identity tied to it is the same
+	resp, err = adminClient.GetAuthToken(adminClient.Ctx(),
+		&auth.GetAuthTokenRequest{Subject: robotUser})
+	require.NoError(t, err)
+	token2 := resp.Token
+	require.NotEqual(t, token1, token2)
+	robotClient2 := tu.GetAuthenticatedPachClient(t, "")
+	robotClient2.SetAuthToken(token2)
+
+	// Confirm identity tied to 'token1'
+	who, err = robotClient2.WhoAmI(robotClient2.Ctx(), &auth.WhoAmIRequest{})
+	require.NoError(t, err)
+	require.Equal(t, robotUser, who.Username)
+	require.Equal(t, 0, len(who.ClusterRoles.Roles))
+	if version.IsAtLeast(1, 10) {
+		require.True(t, who.TTL >= 0 && who.TTL < secsInYear)
+	} else {
+		require.Equal(t, -1, who.TTL)
+	}
+
+	// robotClient1 creates a repo
+	repo := tu.UniqueString("TestPipelinesRunAfterExpiration")
+	require.NoError(t, robotClient1.CreateRepo(repo))
+	require.Equal(t, entries(robotUser, "owner"), getACL(t, robotClient1, repo))
+
+	// robotClient1 creates a pipeline
+	pipeline := tu.UniqueString("optimus-prime-line")
+	require.NoError(t, robotClient1.CreatePipeline(
+		pipeline,
+		"", // default image: ubuntu:18.04
+		[]string{"bash"},
+		[]string{fmt.Sprintf("cp /pfs/%s/* /pfs/out/", repo)},
+		&pps.ParallelismSpec{Constant: 1},
+		client.NewPFSInput(repo, "/*"),
+		"",    // default output branch: master
+		false, // no update
+	))
+	require.OneOfEquals(t, pipeline, PipelineNames(t, robotClient1))
+	// check that robotUser owns the output repo
+	require.ElementsEqual(t,
+		entries(robotUser, "owner", pl(pipeline), "writer"), getACL(t, robotClient1, pipeline))
+
+	// Make sure that robotClient2 can commit to the input repo and flush their
+	// input commit
+	commit, err := robotClient2.StartCommit(repo, "master")
+	require.NoError(t, err)
+	_, err = robotClient2.PutFile(repo, commit.ID, tu.UniqueString("/file1"),
 		strings.NewReader("test data"))
+	require.NoError(t, err)
+	require.NoError(t, robotClient2.FinishCommit(repo, commit.ID))
+	iter, err := robotClient2.FlushCommit(
+		[]*pfs.Commit{commit},
+		[]*pfs.Repo{{Name: pipeline}},
+	)
+	require.NoError(t, err)
+	require.NoErrorWithinT(t, 60*time.Second, func() error {
+		_, err := iter.Next()
+		return err
+	})
+
+	// Make sure robotClient2 can update the pipeline, and it still runs
+	// successfully
+	require.NoError(t, robotClient2.CreatePipeline(
+		pipeline,
+		"", // default image: ubuntu:18.04
+		[]string{"bash"},
+		[]string{fmt.Sprintf("cp /pfs/%s/* /pfs/out/", repo)},
+		&pps.ParallelismSpec{Constant: 1},
+		client.NewPFSInput(repo, "/*"),
+		"",   // default output branch: master
+		true, // update
+	))
+	iter, err = robotClient2.FlushCommit(
+		[]*pfs.Commit{commit},
+		[]*pfs.Repo{{Name: pipeline}},
+	)
 	require.NoError(t, err)
 	require.NoError(t, rootClient.FinishCommit(repo, commit.ID))
 	require.NoErrorWithinT(t, 60*time.Second, func() error {
@@ -1035,7 +1298,7 @@ func TestDeleteAllAfterDeactivate(t *testing.T) {
 	require.NoError(t, aliceClient.CreateRepo(repo))
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:14.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{fmt.Sprintf("cp /pfs/%s/* /pfs/out/", repo)},
 		&pps.ParallelismSpec{Constant: 1},
@@ -1106,7 +1369,7 @@ func TestDeleteRCInStandby(t *testing.T) {
 		&pps.CreatePipelineRequest{
 			Pipeline: client.NewPipeline(pipeline),
 			Transform: &pps.Transform{
-				Image: "ubuntu:16.04",
+				Image: "ubuntu:18.04",
 				Cmd:   []string{"bash"},
 				Stdin: []string{"cp /pfs/*/* /pfs/out"},
 			},
@@ -1186,7 +1449,7 @@ func TestNoOutputRepoDoesntCrashPPSMaster(t *testing.T) {
 	pipeline := tu.UniqueString("pipeline")
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{
 			"sleep 10",
@@ -1246,7 +1509,7 @@ func TestNoOutputRepoDoesntCrashPPSMaster(t *testing.T) {
 	pipeline2 := tu.UniqueString("pipeline")
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline2,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{"cp /pfs/*/* /pfs/out/"},
 		&pps.ParallelismSpec{Constant: 1},
@@ -1297,7 +1560,7 @@ func TestPipelineFailingWithOpenCommit(t *testing.T) {
 	pipeline := tu.UniqueString("pipeline")
 	require.NoError(t, aliceClient.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{
 			"sleep 10",

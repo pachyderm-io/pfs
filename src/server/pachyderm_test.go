@@ -9270,7 +9270,7 @@ func TestNoOutputRepoDoesntCrashPPSMaster(t *testing.T) {
 	pipeline := tu.UniqueString("pipeline")
 	require.NoError(t, c.CreatePipeline(
 		pipeline,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{
 			"sleep 10",
@@ -9330,7 +9330,7 @@ func TestNoOutputRepoDoesntCrashPPSMaster(t *testing.T) {
 	pipeline2 := tu.UniqueString("pipeline")
 	require.NoError(t, c.CreatePipeline(
 		pipeline2,
-		"", // default image: ubuntu:16.04
+		"", // default image: ubuntu:18.04
 		[]string{"bash"},
 		[]string{"cp /pfs/*/* /pfs/out/"},
 		&pps.ParallelismSpec{Constant: 1},

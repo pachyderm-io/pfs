@@ -64,7 +64,7 @@ import (
 const (
 	// DefaultUserImage is the image used for jobs when the user does not specify
 	// an image.
-	DefaultUserImage = "ubuntu:16.04"
+	DefaultUserImage = "ubuntu:18.04"
 	// DefaultDatumTries is the default number of times a datum will be tried
 	// before we give up and consider the job failed.
 	DefaultDatumTries = 3

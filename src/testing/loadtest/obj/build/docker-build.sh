@@ -43,4 +43,4 @@ docker run \
   -v "${PWD}/_out:/out" \
   -v "${HOME}/.cache/go-build:/root/.cache/go-build" \
   -v "${GOPATH}/${PACH_PATH}:/go/${PACH_PATH}" \
-  golang:1.11 /bin/sh -c "${BUILD_CMD}"
+  golang:1.15.4 /bin/sh -c "${BUILD_CMD}"
