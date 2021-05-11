@@ -59,7 +59,7 @@ base:
     # Makefile uses cacheable build params (version).
     RUN git clone https://github.com/pachyderm/pachyderm && \
         cd pachyderm && \
-        git checkout bb4c26d7c838e61cff5b99c56f44662eea920c6b && \
+        git checkout 2029e820777fb59f423705450ffcd585510643cc && \
         CIRCLE_BRANCH=1 make install
     # Also cache the go deps the linter uses (we don't really care if the
     # linter passes)
@@ -134,8 +134,8 @@ runtime:
   memory: 16GB
   disk: 50GB
 
-prewarm_pool_size: 10
-max_pool_size: 20
+prewarm_pool_size: 22
+max_pool_size: 36
 # timeout vms after 6 hours. hopefully tests will clean them up sooner, but if
 # the tests themselves timeout and cleanup doesn't get run, we don't want old
 # VMs building up and stopping new ones getting scheduled.

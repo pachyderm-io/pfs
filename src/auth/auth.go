@@ -120,6 +120,7 @@ var (
 	ErrExpiredToken = status.Error(codes.Internal, "token expiration is in the past")
 )
 
+// DefaultOIDCScopes defines a list of the default OIDC scopes
 var DefaultOIDCScopes = []string{"email", "profile", "groups", oidc.ScopeOpenID}
 
 // IsErrAlreadyActivated checks if an error is a ErrAlreadyActivated

@@ -100,7 +100,7 @@ case "${BUCKET}" in
     make test-pfs-server
     make test-pfs-storage
     ;;
-  PPS?)
+  PPS*)
     pushd etc/testing/images/ubuntu_with_s3_clients
     make push-to-minikube
     popd

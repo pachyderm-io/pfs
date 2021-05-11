@@ -72,7 +72,7 @@ jobs:
         type: string
 
     environment:
-      PPS_BUCKETS: "4"
+      PPS_BUCKETS: "16"
       GOPROXY: https://proxy.golang.org
       BUCKET: << parameters.bucket >>
       RUN_BAD_TESTS: << pipeline.parameters.run_flaky_tests >>
@@ -115,11 +115,11 @@ jobs:
           command: |
             etc/testing/circle_tests.sh 2>&1 |ts
 
-      - run:
-          name: Upload test stats 
-          when: always
-          command: |
-            etc/testing/upload_stats.sh
+      #- run:
+      #    name: Upload test stats
+      #    when: always
+      #    command: |
+      #      etc/testing/upload_stats.sh
 
       - store_test_results:
           path: /tmp/test-results
@@ -189,5 +189,17 @@ workflows:
               - PPS2
               - PPS3
               - PPS4
+              - PPS5
+              - PPS6
+              - PPS7
+              - PPS8
+              - PPS9
+              - PPS10
+              - PPS11
+              - PPS12
+              - PPS13
+              - PPS14
+              - PPS15
+              - PPS16
               - EXAMPLES
               - OBJECT
