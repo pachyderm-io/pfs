@@ -27,8 +27,9 @@ type GlobalConfiguration struct {
 	OidcPort            uint16 `env:"OIDC_PORT,default=657"`
 	PostgresServiceHost string `env:"POSTGRES_SERVICE_HOST"`
 	PostgresServicePort int    `env:"POSTGRES_SERVICE_PORT"`
+	PostgresDB          string `env:"POSTGRES_DATABASE"`
 	PostgresServiceSSL  string `env:"POSTGRES_SERVICE_SSL,default=disable"`
-	PostgresDBName      string `env:"POSTGRES_DATABASE_NAME"`
+	PostgresUser        string `env:"POSTGRES_USER"`
 
 	// PPSSpecCommitID is only set for workers and sidecar pachd instances.
 	// Because both pachd and worker need to know the spec commit (the worker so
@@ -73,7 +74,7 @@ type PachdSpecificConfiguration struct {
 	PachdPodName string `env:"PACHD_POD_NAME,required"`
 
 	IdentityServerDatabase string `env:"IDENTITY_SERVER_DATABASE,default=dex"`
-	IdentityServerUser     string `env:"IDENTITY_SERVER_USER,default=postgres"`
+	IdentityServerUser     string `env:"IDENTITY_SERVER_USER,default=pachyderm"`
 	IdentityServerPassword string `env:"IDENTITY_SERVER_PASSWORD"`
 }
 

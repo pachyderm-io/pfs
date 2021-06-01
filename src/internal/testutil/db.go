@@ -22,6 +22,12 @@ import (
 	"github.com/pachyderm/pachyderm/v2/src/internal/serviceenv"
 )
 
+const (
+	PostgresDefaultHost = "127.0.0.1"
+	PostgresDefaultPort = 5432
+	PostgresDefaultUser = "postgres"
+)
+
 // set this to false if you want to keep the database around
 var cleanup = true
 
@@ -151,36 +157,20 @@ func initConnection(t testing.TB, db *sqlx.DB) {
 	}, backoff.NewTestingBackOff()))
 }
 
-func (pd *postgresDeployment) newDatabase(t testing.TB) string {
-	dbName := ephemeralDBName(t)
-	_, err := pd.db.Exec("CREATE DATABASE " + dbName)
-	require.NoError(t, err)
-
-	if cleanup {
-		t.Cleanup(func() {
-			_, err := pd.db.Exec("DROP DATABASE " + dbName)
-			require.NoError(t, err)
-		})
-	}
-
-	return dbName
-}
-
 func (pd *postgresDeployment) NewDatabaseConfig(t testing.TB) serviceenv.ConfigOption {
-	dbName := pd.newDatabase(t)
+	dbName := createEphemeralDB(t)
 	return func(config *serviceenv.Configuration) {
 		serviceenv.WithPostgresHostPort(pd.address, pd.port)(config)
-		config.PostgresDBName = dbName
+		config.PostgresDB = dbName
 	}
 }
 
 func (pd *postgresDeployment) NewDatabase(t testing.TB) (*sqlx.DB, *col.PostgresListener) {
-	dbName := pd.newDatabase(t)
+	dbName := createEphemeralDB(t)
 	options := []dbutil.Option{
 		dbutil.WithHostPort(pd.address, pd.port),
 		dbutil.WithDBName(dbName),
 	}
-
 	db, err := dbutil.NewDB(options...)
 	require.NoError(t, err)
 	initConnection(t, db)
@@ -196,14 +186,18 @@ func (pd *postgresDeployment) NewDatabase(t testing.TB) (*sqlx.DB, *col.Postgres
 	return db, listener
 }
 
-func newDatabase(t testing.TB) string {
+func createEphemeralDB(t testing.TB) string {
 	dbName := ephemeralDBName(t)
+	opts := []dbutil.Option{
+		dbutil.WithUserPassword(PostgresDefaultUser, "elephantastic"),
+		dbutil.WithHostPort(dbHost(), dbPort()),
+	}
 	require.NoError(t, withDB(func(db *sqlx.DB) error {
 		_, err := db.Exec("CREATE DATABASE " + dbName)
 		require.NoError(t, err)
 		t.Log("database", dbName, "successfully created")
 		return nil
-	}, dbutil.WithHostPort(dbHost(), dbPort())))
+	}, opts...))
 	if cleanup {
 		t.Cleanup(func() {
 			require.NoError(t, withDB(func(db *sqlx.DB) error {
@@ -211,7 +205,7 @@ func newDatabase(t testing.TB) string {
 				require.NoError(t, err)
 				t.Log("database", dbName, "successfully deleted")
 				return nil
-			}, dbutil.WithHostPort(dbHost(), dbPort())))
+			}, opts...))
 		})
 	}
 	return dbName
@@ -221,7 +215,7 @@ func dbHost() string {
 	if host, ok := os.LookupEnv("POSTGRES_SERVICE_HOST"); ok {
 		return host
 	}
-	return dbutil.DefaultHost
+	return PostgresDefaultHost
 }
 
 func dbPort() int {
@@ -230,14 +224,18 @@ func dbPort() int {
 			return portInt
 		}
 	}
-	return dbutil.DefaultPort
+	return PostgresDefaultPort
 }
 
 // NewTestDB connects to postgres using the default settings, creates a database
 // with a unique name then returns a sqlx.DB configured to use the newly created
 // database. After the test or suite finishes, the database is dropped.
 func NewTestDB(t testing.TB) *sqlx.DB {
-	db2, err := dbutil.NewDB(dbutil.WithHostPort(dbHost(), dbPort()), dbutil.WithDBName(newDatabase(t)))
+	dbName := createEphemeralDB(t)
+	db2, err := dbutil.NewDB(
+		dbutil.WithUserPassword(PostgresDefaultUser, "elephantastic"),
+		dbutil.WithHostPort(dbHost(), dbPort()),
+		dbutil.WithDBName(dbName))
 	require.NoError(t, err)
 	db2.SetMaxOpenConns(maxOpenConnsPerPool)
 	t.Cleanup(func() {
@@ -251,10 +249,12 @@ func NewTestDB(t testing.TB) *sqlx.DB {
 // connect to the new database. After test test or suite finishes, the database
 // is dropped.
 func NewTestDBConfig(t testing.TB) serviceenv.ConfigOption {
-	dbName := newDatabase(t)
+	dbName := createEphemeralDB(t)
 	return func(config *serviceenv.Configuration) {
-		serviceenv.WithPostgresHostPort(dbHost(), dbPort())(config)
-		config.PostgresDBName = dbName
+		config.PostgresUser = PostgresDefaultUser
+		config.PostgresDB = dbName
+		config.PostgresServiceHost = dbHost()
+		config.PostgresServicePort = dbPort()
 	}
 }
 

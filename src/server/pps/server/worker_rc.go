@@ -16,6 +16,7 @@ import (
 	"github.com/pachyderm/pachyderm/v2/src/internal/errors"
 	"github.com/pachyderm/pachyderm/v2/src/internal/errutil"
 	"github.com/pachyderm/pachyderm/v2/src/internal/ppsutil"
+	"github.com/pachyderm/pachyderm/v2/src/internal/serviceenv"
 	"github.com/pachyderm/pachyderm/v2/src/internal/tracing"
 	"github.com/pachyderm/pachyderm/v2/src/pps"
 	workerstats "github.com/pachyderm/pachyderm/v2/src/server/worker/stats"
@@ -119,10 +120,9 @@ func (a *apiServer) workerPodSpec(options *workerOptions, pipelineInfo *pps.Pipe
 	}, {
 		Name:  "GC_PERCENT",
 		Value: strconv.FormatInt(int64(a.gcPercent), 10),
-	}, {
-		Name:  "POSTGRES_DATABASE_NAME",
-		Value: a.env.Config().PostgresDBName,
-	}}
+	},
+	}
+	sidecarEnv = append(sidecarEnv, postgresEnvVars(a.env.Config())...)
 	sidecarEnv = append(sidecarEnv, assets.GetSecretEnvVars(a.storageBackend)...)
 	sidecarEnv = append(sidecarEnv, a.getStorageEnvVars(pipelineInfo)...)
 
@@ -180,6 +180,7 @@ func (a *apiServer) workerPodSpec(options *workerOptions, pipelineInfo *pps.Pipe
 			Value: strconv.FormatUint(uint64(a.peerPort), 10),
 		},
 	}...)
+	workerEnv = append(workerEnv, postgresEnvVars(a.env.Config())...)
 	workerEnv = append(workerEnv, assets.GetSecretEnvVars(a.storageBackend)...)
 
 	// Set S3GatewayPort in the worker (for user code) and sidecar (for serving)
@@ -844,4 +845,25 @@ func getGithookService(kubeClient *kube.Clientset, namespace string) (*v1.Servic
 		}
 	}
 	return &serviceList.Items[0], nil
+}
+
+func postgresEnvVars(config *serviceenv.Configuration) []v1.EnvVar {
+	return []v1.EnvVar{
+		{
+			Name:  "POSTGRES_DATABASE",
+			Value: config.PostgresDB,
+		}, {
+			Name:  "POSTGRES_USER",
+			Value: config.PostgresUser,
+		}, {
+			Name:  "POSTGRES_SERVICE_HOST",
+			Value: config.PostgresServiceHost,
+		}, {
+			Name:  "POSTGRES_SERVICE_PORT",
+			Value: strconv.Itoa(config.PostgresServicePort),
+		}, {
+			Name:  "POSTGRES_SERVICE_SSL",
+			Value: config.PostgresServiceSSL,
+		},
+	}
 }

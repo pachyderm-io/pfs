@@ -11,6 +11,7 @@ import http.client
 from pathlib import Path
 
 ETCD_IMAGE = "pachyderm/etcd:v3.3.5"
+PG_BOUNCER_IMAGE = "edoburu/pgbouncer:1.15.0"
 IDE_USER_IMAGE = "pachyderm/ide-user:local"
 IDE_HUB_IMAGE = "pachyderm/ide-hub:local"
 PIPELINE_BUILD_DIR = "etc/pipeline-build"
@@ -93,7 +94,7 @@ class BaseDriver:
             pull_images.append(run("docker", "pull", grpc_proxy_spec["image"]))
         await asyncio.gather(*pull_images)
 
-        push_images = [ETCD_IMAGE, "pachyderm/pachd:local", "pachyderm/worker:local", *builder_images]
+        push_images = [ETCD_IMAGE, "pachyderm/pachd:local", "pachyderm/worker:local", PG_BOUNCER_IMAGE, *builder_images]
         if dash_spec is not None:
             push_images.append(dash_spec["image"])
         if grpc_proxy_spec is not None:
@@ -375,8 +376,6 @@ async def main():
     parser.add_argument("--builders", action="store_true", help="Deploy images used in pipeline builds")
     args = parser.parse_args()
 
-    if "GOPATH" not in os.environ:
-        raise Exception("Must set GOPATH")
     if "PACH_CA_CERTS" in os.environ:
         raise Exception("Must unset PACH_CA_CERTS\nRun:\nunset PACH_CA_CERTS")
     if args.ide and "PACH_ENTERPRISE_KEY" not in os.environ:

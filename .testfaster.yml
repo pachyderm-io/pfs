@@ -10,6 +10,7 @@ base:
    - bash:4
    - debian:buster-slim
    - dockermuenster/caddy:0.9.3
+   - edoburu/pgbouncer:1.15.0
    - gcr.io/google_containers/kube-state-metrics:v0.5.0
    - gcr.io/k8s-minikube/storage-provisioner:v1.8.1
    - giantswarm/tiny-tools:latest
@@ -67,7 +68,7 @@ base:
         rm kubeval-linux-amd64.tar.gz
     RUN cd /usr/local/ && \
         wget -nv -O - https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh
-
+  
   docker_bake_script: |-
     #!/bin/bash
     set -xeuo pipefail

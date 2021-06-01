@@ -278,7 +278,7 @@ test-cmds:
 	go test -v -count=1 ./src/server/enterprise/cmds -timeout $(TIMEOUT) $(TESTFLAGS)
 	go test -v -count=1 ./src/server/identity/cmds -timeout $(TIMEOUT) $(TESTFLAGS)
 
-test-transaction:
+test-transaction: test-postgres
 	go test -count=1 ./src/server/transaction/server/testing -timeout $(TIMEOUT) $(TESTFLAGS)
 
 test-client:
@@ -322,8 +322,7 @@ test-local:
 test-auth:
 	go test -v -count=1 ./src/server/auth/server/testing -timeout $(TIMEOUT) $(RUN) $(TESTFLAGS)
 
-test-identity:
-	etc/testing/forward-postgres.sh
+test-identity: test-postgres
 	go test -v -count=1 ./src/server/identity/server -timeout $(TIMEOUT) $(RUN) $(TESTFLAGS)
 
 test-license:

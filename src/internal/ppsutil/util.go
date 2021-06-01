@@ -141,7 +141,7 @@ func GetPipelineInfoAllowIncomplete(pachClient *client.APIClient, ptr *pps.Store
 func GetPipelineInfo(pachClient *client.APIClient, ptr *pps.StoredPipelineInfo) (*pps.PipelineInfo, error) {
 	result, err := GetPipelineInfoAllowIncomplete(pachClient, ptr)
 	if err == nil && result.Transform == nil {
-		return nil, errors.Errorf("could not retrieve pipeline spec file from PFS for pipeline '%s', there may be a problem reaching object storage, or the pipeline may need to be deleted and recreated", result.Pipeline.Name)
+		return nil, errors.Wrapf(err, "could not retrieve pipeline spec file from PFS for pipeline '%s', there may be a problem reaching object storage, or the pipeline may need to be deleted and recreated", result.Pipeline.Name)
 	}
 	return result, err
 }

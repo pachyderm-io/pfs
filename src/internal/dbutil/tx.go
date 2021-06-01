@@ -3,6 +3,7 @@ package dbutil
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -52,7 +53,11 @@ func WithTx(ctx context.Context, db *sqlx.DB, cb func(tx *sqlx.Tx) error, opts .
 		if err != nil {
 			return err
 		}
-		return tryTxFunc(tx, cb)
+		err = tryTxFunc(tx, cb)
+		if isQueryCancelled(err) {
+			return context.Canceled
+		}
+		return err
 	}, backoffStrategy, func(err error, _ time.Duration) error {
 		if isSerializationFailure(err) {
 			return nil
@@ -72,9 +77,18 @@ func tryTxFunc(tx *sqlx.Tx, cb func(tx *sqlx.Tx) error) error {
 }
 
 func isSerializationFailure(err error) bool {
+	if err == nil {
+		return false
+	}
 	pqErr, ok := err.(*pq.Error)
 	if !ok {
 		return false
 	}
 	return pqErr.Code.Name() == "serialization_failure"
+}
+
+func isQueryCancelled(err error) bool {
+	pqErr := &pq.Error{}
+	// https://github.com/lib/pq/blob/master/error.go#L304
+	return errors.As(err, pqErr) && pqErr.Code == "57014"
 }
