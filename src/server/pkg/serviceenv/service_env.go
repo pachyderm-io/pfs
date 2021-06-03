@@ -13,7 +13,7 @@ import (
 	"github.com/pachyderm/pachyderm/src/server/pkg/backoff"
 
 	etcd "github.com/coreos/etcd/clientv3"
-	loki "github.com/grafana/loki/pkg/logcli/client"
+	loki "github.com/pachyderm/pachyderm/src/server/pkg/lokiutil/client"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
