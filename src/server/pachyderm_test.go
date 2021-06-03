@@ -30,7 +30,6 @@ import (
 	globlib "github.com/pachyderm/ohmyglob"
 	"github.com/pachyderm/pachyderm/src/client"
 	"github.com/pachyderm/pachyderm/src/client/auth"
-	"github.com/pachyderm/pachyderm/src/client/enterprise"
 	"github.com/pachyderm/pachyderm/src/client/pfs"
 	"github.com/pachyderm/pachyderm/src/client/pkg/errors"
 	"github.com/pachyderm/pachyderm/src/client/pkg/require"
@@ -4772,6 +4771,7 @@ func TestManyLogs(t *testing.T) {
 	})
 }
 
+/*
 func TestLokiLogs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration tests in short mode")
@@ -4835,7 +4835,7 @@ func TestLokiLogs(t *testing.T) {
 	// Sleep for a 30 seconds give us some spacing to test from parameter.
 	time.Sleep(time.Second * 30)
 }
-
+*/
 func TestAllDatumsAreProcessed(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration tests in short mode")

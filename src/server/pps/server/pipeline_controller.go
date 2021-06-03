@@ -284,7 +284,8 @@ func (op *pipelineOp) getRC(expectation rcExpectation) (retErr error) {
 		otherErrCount int
 	return backoff.RetryNotify(func() error {
 		// List all RCs, so stale RCs from old pipelines are noticed and deleted
-		rcs, err := kubeClient.CoreV1().ReplicationControllers(namespace).List(
+		ctx := context.TODO()
+		rcs, err := kubeClient.CoreV1().ReplicationControllers(namespace).List(ctx,
 			metav1.ListOptions{LabelSelector: selector})
 		if err != nil && !isNotFoundErr(err) {
 			return err
@@ -545,7 +546,8 @@ func (op *pipelineOp) updateRC(update func(rc *v1.ReplicationController)) error 
 		// Apply op's update to rc
 		update(&newRC)
 		// write updated RC to k8s
-		_, err := rc.Update(&newRC)
+		ctx := context.TODO()
+		_, err := rc.Update(ctx, &newRC, metav1.UpdateOptions{})
 		return err
 	}, backoff.NewInfiniteBackOff(), func(err error, d time.Duration) error {
 		errCount++

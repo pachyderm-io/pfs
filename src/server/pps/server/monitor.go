@@ -362,7 +362,8 @@ func (m *ppsMaster) monitorPipeline(pachClient *client.APIClient, pipelineInfo *
 							kubeClient := m.a.env.GetKubeClient()
 							namespace := m.a.namespace
 							rc := kubeClient.CoreV1().ReplicationControllers(namespace)
-							scale, err := rc.GetScale(pipelineInfo.WorkerRc, metav1.GetOptions{})
+							ctx := context.TODO()
+							scale, err := rc.GetScale(ctx, pipelineInfo.WorkerRc, metav1.GetOptions{})
 							n := int64(scale.Spec.Replicas) + int64(unclaimedTasks)
 							if n > int64(pipelineInfo.ParallelismSpec.Constant) {
 								n = int64(pipelineInfo.ParallelismSpec.Constant)
@@ -372,7 +373,7 @@ func (m *ppsMaster) monitorPipeline(pachClient *client.APIClient, pipelineInfo *
 							}
 							if int64(scale.Spec.Replicas) < n {
 								scale.Spec.Replicas = int32(n)
-								if _, err := rc.UpdateScale(pipelineInfo.WorkerRc, scale); err != nil {
+								if _, err := rc.UpdateScale(ctx, pipelineInfo.WorkerRc, scale, metav1.UpdateOptions{}); err != nil {
 									return err
 								}
 							}

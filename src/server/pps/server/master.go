@@ -177,15 +177,16 @@ func (m *ppsMaster) deletePipelineResources(pipelineName string) (retErr error) 
 
 	// Delete any services associated with op.pipeline
 	selector := fmt.Sprintf("%s=%s", pipelineNameLabel, pipelineName)
-	opts := &metav1.DeleteOptions{
+	opts := metav1.DeleteOptions{
 		OrphanDependents: &falseVal,
 	}
-	services, err := kubeClient.CoreV1().Services(namespace).List(metav1.ListOptions{LabelSelector: selector})
+
+	services, err := kubeClient.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
 		return errors.Wrapf(err, "could not list services")
 	}
 	for _, service := range services.Items {
-		if err := kubeClient.CoreV1().Services(namespace).Delete(service.Name, opts); err != nil {
+		if err := kubeClient.CoreV1().Services(namespace).Delete(ctx, service.Name, opts); err != nil {
 			if !isNotFoundErr(err) {
 				return errors.Wrapf(err, "could not delete service %q", service.Name)
 			}
@@ -193,12 +194,12 @@ func (m *ppsMaster) deletePipelineResources(pipelineName string) (retErr error) 
 	}
 
 	// Delete any secrets associated with op.pipeline
-	secrets, err := kubeClient.CoreV1().Secrets(namespace).List(metav1.ListOptions{LabelSelector: selector})
+	secrets, err := kubeClient.CoreV1().Secrets(namespace).List(ctx, metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
 		return errors.Wrapf(err, "could not list secrets")
 	}
 	for _, secret := range secrets.Items {
-		if err := kubeClient.CoreV1().Secrets(namespace).Delete(secret.Name, opts); err != nil {
+		if err := kubeClient.CoreV1().Secrets(namespace).Delete(ctx, secret.Name, opts); err != nil {
 			if !isNotFoundErr(err) {
 				return errors.Wrapf(err, "could not delete secret %q", secret.Name)
 			}
@@ -207,12 +208,12 @@ func (m *ppsMaster) deletePipelineResources(pipelineName string) (retErr error) 
 
 	// Finally, delete op.pipeline's RC, which will cause pollPipelines to stop
 	// polling it.
-	rcs, err := kubeClient.CoreV1().ReplicationControllers(namespace).List(metav1.ListOptions{LabelSelector: selector})
+	rcs, err := kubeClient.CoreV1().ReplicationControllers(namespace).List(ctx, metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
 		return errors.Wrapf(err, "could not list RCs")
 	}
 	for _, rc := range rcs.Items {
-		if err := kubeClient.CoreV1().ReplicationControllers(namespace).Delete(rc.Name, opts); err != nil {
+		if err := kubeClient.CoreV1().ReplicationControllers(namespace).Delete(ctx, rc.Name, opts); err != nil {
 			if !isNotFoundErr(err) {
 				return errors.Wrapf(err, "could not delete RC %q: %v", rc.Name)
 			}

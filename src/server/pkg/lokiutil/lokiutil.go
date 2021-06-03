@@ -1,5 +1,6 @@
 package lokiutil
 
+/*
 import (
 	"context"
 	"sort"
@@ -83,3 +84,4 @@ type streamEntryPair struct {
 	entry  loghttp.Entry
 	labels loghttp.LabelSet
 }
+*/
