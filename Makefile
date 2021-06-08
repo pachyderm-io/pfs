@@ -101,6 +101,9 @@ docker-build-pipeline-build: install
 docker-build-proto:
 	docker build $(DOCKER_BUILD_FLAGS) -t pachyderm_proto etc/proto
 
+docker-build-python-proto:
+	docker build $(DOCKER_BUILD_FLAGS) -t pachyderm_python_proto etc/python
+
 docker-build-netcat:
 	docker build $(DOCKER_BUILD_FLAGS) -t pachyderm_netcat etc/netcat
 
@@ -237,6 +240,13 @@ regenerate-test-deploy-manifests: install
 
 proto: docker-build-proto
 	./etc/proto/build.sh
+
+python-proto: docker-build-python-proto
+	rm -rf etc/python/src/python_pachyderm
+	find src -regex ".*\.proto" | grep -v 'internal' | grep -v 'server' \
+	| xargs tar cf - \
+	| docker run -i pachyderm_python_proto \
+	| tar -C etc/python/src -xf -
 
 # Run all the tests. Note! This is no longer the test entrypoint for travis
 test: clean-launch-dev launch-dev lint enterprise-code-checkin-test docker-build test-pfs-server test-cmds test-libs test-auth test-identity test-license test-enterprise test-worker test-admin test-pps

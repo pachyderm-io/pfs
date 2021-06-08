@@ -53,6 +53,10 @@ _tmp
 # python stuff
 *.pyc
 __pycache__
+build/
+dist/
+*.egg-info/
+*.egg
 
 # local env vars
 /.envrc
