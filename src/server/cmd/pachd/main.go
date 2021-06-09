@@ -9,6 +9,7 @@ import (
 	"path"
 	"runtime/debug"
 	"runtime/pprof"
+	"time"
 
 	adminclient "github.com/pachyderm/pachyderm/v2/src/admin"
 	authclient "github.com/pachyderm/pachyderm/v2/src/auth"
@@ -70,7 +71,19 @@ func init() {
 }
 
 func main() {
-	log.SetFormatter(logutil.FormatterFunc(logutil.Pretty))
+	if os.Getenv("LOG_FORMAT") == "JSON" {
+		log.SetFormatter(&log.JSONFormatter{
+			FieldMap: log.FieldMap{
+				log.FieldKeyTime:  "time",
+				log.FieldKeyLevel: "severity",
+				log.FieldKeyMsg:   "message",
+			},
+			// https://github.com/sirupsen/logrus/pull/162/files
+			TimestampFormat: time.RFC3339Nano,
+		})
+	} else {
+		log.SetFormatter(logutil.FormatterFunc(logutil.Pretty))
+	}
 	maxprocs.Set(maxprocs.Logger(log.Printf))
 
 	switch {

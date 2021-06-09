@@ -29,8 +29,19 @@ import (
 )
 
 func main() {
-	log.SetFormatter(logutil.FormatterFunc(logutil.Pretty))
-
+	if os.Getenv("LOG_FORMAT") == "JSON" {
+		log.SetFormatter(&log.JSONFormatter{
+			FieldMap: log.FieldMap{
+				log.FieldKeyTime:  "time",
+				log.FieldKeyLevel: "severity",
+				log.FieldKeyMsg:   "message",
+			},
+			// https://github.com/sirupsen/logrus/pull/162/files
+			TimestampFormat: time.RFC3339Nano,
+		})
+	} else {
+		log.SetFormatter(logutil.FormatterFunc(logutil.Pretty))
+	}
 	// Copy certs embedded via go-bindata to /etc/ssl/certs. Because the
 	// container running this app is user-specified, we don't otherwise have
 	// control over the certs that are available.
