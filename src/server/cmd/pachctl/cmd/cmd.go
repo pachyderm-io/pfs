@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sort"
 	"strings"
 	"text/template"
@@ -40,6 +41,7 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/types"
 	"github.com/juju/ansiterm"
+	"github.com/juju/fslock"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -568,9 +570,21 @@ This resets the cluster to its initial state.`,
 			if err != nil {
 				return err
 			}
-			if context.PortForwarders != nil && len(context.PortForwarders) > 0 {
-				return errors.New("port forwarding appears to already be running for this context")
+
+			configDir, err := os.UserConfigDir()
+			if err != nil {
+				return errors.New("could not determine user config directory")
 			}
+			lockfilePath := filepath.Join(configDir, ".pachyderm", "lockfiles", fmt.Sprintf("port-forward.%s.lock", context.ClusterDeploymentID))
+			lockfile := fslock.New(lockfilePath)
+
+			if err := lockfile.TryLock(); err != nil {
+				if errors.Is(err, fslock.ErrLocked) {
+					return errors.Errorf("port forwarding is already running for this context, lockfile: %s", lockfilePath)
+				}
+				return err
+			}
+			defer lockfile.Unlock()
 
 			fw, err := client.NewPortForwarder(context, namespace)
 			if err != nil {

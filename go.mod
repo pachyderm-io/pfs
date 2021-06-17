@@ -39,6 +39,7 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
+	github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/lib/pq v1.10.0
