@@ -17,7 +17,7 @@ const (
 
 func (d *driverV2) master(env *serviceenv.ServiceEnv) {
 	ctx := context.Background()
-	masterLock := dlock.NewDLock(d.etcdClient, path.Join(d.prefix, masterLockPath))
+	masterLock := dlock.NewDLock(d.etcdClient, path.Join(d.prefix, masterLockPath), 15)
 	err := backoff.RetryNotify(func() error {
 		masterCtx, err := masterLock.Lock(ctx)
 		if err != nil {

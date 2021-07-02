@@ -88,7 +88,7 @@ func (a *apiServer) master() {
 		crashingMonitorCancels: make(map[string]func()),
 	}
 
-	masterLock := dlock.NewDLock(a.env.GetEtcdClient(), path.Join(a.etcdPrefix, masterLockPath))
+	masterLock := dlock.NewDLock(a.env.GetEtcdClient(), path.Join(a.etcdPrefix, masterLockPath), a.env.PPSMasterLockTimeoutSeconds)
 	backoff.RetryNotify(func() error {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()

@@ -163,7 +163,7 @@ func (w *Worker) master(etcdClient *etcd.Client, etcdPrefix string) {
 	pipelineInfo := w.driver.PipelineInfo()
 	logger := logs.NewMasterLogger(pipelineInfo)
 	lockPath := path.Join(etcdPrefix, masterLockPath, pipelineInfo.Pipeline.Name, pipelineInfo.Salt)
-	masterLock := dlock.NewDLock(etcdClient, lockPath)
+	masterLock := dlock.NewDLock(etcdClient, lockPath, 15)
 
 	b := backoff.NewInfiniteBackOff()
 	// Setting a high backoff so that when this master fails, the other

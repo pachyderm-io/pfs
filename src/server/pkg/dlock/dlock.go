@@ -20,8 +20,9 @@ type DLock interface {
 }
 
 type etcdImpl struct {
-	client *etcd.Client
-	prefix string
+	client         *etcd.Client
+	prefix         string
+	timeoutSeconds int
 
 	session *concurrency.Session
 	mutex   *concurrency.Mutex
@@ -29,17 +30,18 @@ type etcdImpl struct {
 
 // NewDLock attempts to acquire a distributed lock that locks a given prefix
 // in the data store.
-func NewDLock(client *etcd.Client, prefix string) DLock {
+func NewDLock(client *etcd.Client, prefix string, timeoutSeconds int) DLock {
 	return &etcdImpl{
-		client: client,
-		prefix: prefix,
+		client:         client,
+		prefix:         prefix,
+		timeoutSeconds: timeoutSeconds,
 	}
 }
 
 func (d *etcdImpl) Lock(ctx context.Context) (context.Context, error) {
 	// The default TTL is 60 secs which means that if a node dies, it
 	// still holds the lock for 60 secs, which is too high.
-	session, err := concurrency.NewSession(d.client, concurrency.WithContext(ctx), concurrency.WithTTL(15))
+	session, err := concurrency.NewSession(d.client, concurrency.WithContext(ctx), concurrency.WithTTL(d.timeoutSeconds))
 	if err != nil {
 		return nil, err
 	}

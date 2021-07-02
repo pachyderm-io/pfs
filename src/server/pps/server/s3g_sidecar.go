@@ -139,7 +139,7 @@ func (s *sidecarS3G) createK8sServices() {
 			path.Join(s.apiServer.etcdPrefix,
 				s3gSidecarLockPath,
 				s.pipelineInfo.Pipeline.Name,
-				s.pipelineInfo.Salt))
+				s.pipelineInfo.Salt), 15)
 		ctx, err := masterLock.Lock(s.pachClient.Ctx())
 		if err != nil {
 			// retry obtaining lock
