@@ -16,6 +16,8 @@ import (
 	"github.com/pachyderm/pachyderm/src/server/pfs/pretty"
 	"github.com/pachyderm/pachyderm/src/server/pkg/backoff"
 	"github.com/pachyderm/pachyderm/src/server/pkg/ppsutil"
+	"github.com/pachyderm/pachyderm/src/server/pkg/work"
+	"github.com/pachyderm/pachyderm/src/server/worker/driver"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	log "github.com/sirupsen/logrus"
@@ -24,6 +26,7 @@ import (
 )
 
 const maxErrCount = 3 // gives all retried operations ~4.5s total to finish
+const scaleUpInterval = time.Second * 30
 
 type rcExpectation byte
 
@@ -274,7 +277,7 @@ func (op *pipelineOp) getRC(expectation rcExpectation) (retErr error) {
 		tracing.FinishAnySpan(span)
 	}(span)
 
-	kubeClient := op.m.a.env.GetKubeClient()
+	kubeClient := op.m.a.env.Get30sKubeClient()
 	namespace := op.m.a.namespace
 	selector := fmt.Sprintf("%s=%s", pipelineNameLabel, op.name)
 
@@ -285,7 +288,10 @@ func (op *pipelineOp) getRC(expectation rcExpectation) (retErr error) {
 	return backoff.RetryNotify(func() error {
 		// List all RCs, so stale RCs from old pipelines are noticed and deleted
 		rcs, err := kubeClient.CoreV1().ReplicationControllers(namespace).List(
-			metav1.ListOptions{LabelSelector: selector})
+			metav1.ListOptions{
+				TimeoutSeconds: &listTimeoutSeconds,
+				LabelSelector:  selector,
+			})
 		if err != nil && !isNotFoundErr(err) {
 			return err
 		}
@@ -534,8 +540,8 @@ func (op *pipelineOp) deletePipelineResources() error {
 // failing/restarting op's pipeline if it can't update its RC. If this happens,
 // it will return an error to the caller to indicate that the caller shouldn't
 // continue with further operations
-func (op *pipelineOp) updateRC(update func(rc *v1.ReplicationController)) error {
-	kubeClient := op.m.a.env.GetKubeClient()
+func (op *pipelineOp) updateRC(update func(rc *v1.ReplicationController) bool) error {
+	kubeClient := op.m.a.env.Get30sKubeClient()
 	namespace := op.m.a.namespace
 	rc := kubeClient.CoreV1().ReplicationControllers(namespace)
 
@@ -543,10 +549,17 @@ func (op *pipelineOp) updateRC(update func(rc *v1.ReplicationController)) error 
 	return backoff.RetryNotify(func() error {
 		newRC := *op.rc
 		// Apply op's update to rc
-		update(&newRC)
-		// write updated RC to k8s
-		_, err := rc.Update(&newRC)
-		return err
+		if update(&newRC) {
+			oldReplicas := int32(0)
+			if op.rc.Spec.Replicas != nil {
+				oldReplicas = *op.rc.Spec.Replicas
+			}
+			log.Infof("PPS master: scaling %q from %d to %d", op.name, oldReplicas, *newRC.Spec.Replicas)
+			// write updated RC to k8s
+			_, err := rc.Update(&newRC)
+			return err
+		}
+		return nil
 	}, backoff.NewInfiniteBackOff(), func(err error, d time.Duration) error {
 		errCount++
 		if strings.Contains(err.Error(), "try again") {
@@ -569,7 +582,7 @@ func (op *pipelineOp) updateRC(update func(rc *v1.ReplicationController)) error 
 // Like other functions in this file, it takes responsibility for
 // failing/restarting op's pipeline if it can't update its RC (via updateRC)
 func (op *pipelineOp) scaleUpPipeline() (retErr error) {
-	log.Infof("PPS master: scaling up workers for %q", op.name)
+	log.Debugf("PPS master: checking scale-up for %q", op.name)
 	span, _ := tracing.AddSpanToAnyExisting(op.opClient.Ctx(),
 		"/pps.Master/ScaleUpPipeline", "pipeline", op.name)
 	defer func() {
@@ -580,23 +593,61 @@ func (op *pipelineOp) scaleUpPipeline() (retErr error) {
 		tracing.FinishAnySpan(span)
 	}()
 
-	// compute target pipeline parallelism
-	parallelism := uint64(1)
-	if op.pipelineInfo.ParallelismSpec != nil {
-		parallelism = op.pipelineInfo.ParallelismSpec.Constant
+	// Compute maximum parallelism
+	maxParallelism := int32(1)
+	if op.pipelineInfo.ParallelismSpec != nil && op.pipelineInfo.ParallelismSpec.Constant > 0 {
+		maxParallelism = int32(op.pipelineInfo.ParallelismSpec.Constant)
 	}
 
 	// update pipeline RC
-	return op.updateRC(func(rc *v1.ReplicationController) {
-		if rc.Spec.Replicas != nil && *op.rc.Spec.Replicas > 0 {
-			return // prior attempt succeeded
+	return op.updateRC(func(rc *v1.ReplicationController) bool {
+		var curReplicas int32
+		if rc.Spec.Replicas != nil && *rc.Spec.Replicas > 0 {
+			curReplicas = int32(*rc.Spec.Replicas)
 		}
-		rc.Spec.Replicas = new(int32)
-		if op.pipelineInfo.Autoscaling {
-			*rc.Spec.Replicas = 1
-		} else {
-			*rc.Spec.Replicas = int32(parallelism)
+		target := func() int32 {
+			if !op.pipelineInfo.Autoscaling {
+				return maxParallelism // don't bother if Autoscaling is off
+			}
+			unclaimedTasks, err := work.NewWorker(
+				op.m.a.env.GetEtcdClient(),
+				op.m.a.etcdPrefix,
+				driver.WorkNamespace(op.pipelineInfo),
+			).UnclaimedTasks(op.opClient.Ctx())
+			if err != nil {
+				log.Errorf("couldn't compute unclaimed tasks for %q: %v", op.name, err)
+				return maxParallelism // default behavior if 'unclaimedTasks' is unavailable
+			}
+			log.Debugf("Beginning scale-up check for %q, which has %d unclaimed tasks",
+				op.name, unclaimedTasks)
+			if minParallelism := curReplicas + int32(unclaimedTasks); minParallelism < maxParallelism {
+				if minParallelism < 1 {
+					// initialially curReplicas will be 0, and unclaimedTasks are created
+					// by the worker master, and so also initially 0. Need to bootstrap.
+					return 1
+				}
+				return minParallelism
+			}
+			return maxParallelism
+		}()
+		if curReplicas == target {
+			return false // no changes necessary
 		}
+
+		// Scaling is being updated; do another check in scaleUpInterval
+		go func() {
+			time.Sleep(scaleUpInterval)
+			select {
+			case op.m.eventCh <- &pipelineEvent{eventType: writeEv, pipeline: op.name}:
+				break
+			case <-op.m.masterClient.Ctx().Done():
+				break
+			}
+		}()
+
+		// Update the # of replicas
+		rc.Spec.Replicas = &target
+		return true
 	})
 }
 
@@ -606,7 +657,7 @@ func (op *pipelineOp) scaleUpPipeline() (retErr error) {
 // Like other functions in this file, it takes responsibility for
 // failing/restarting op's pipeline if it can't update its RC (via updateRC)
 func (op *pipelineOp) scaleDownPipeline() (retErr error) {
-	log.Infof("PPS master: scaling down workers for %q", op.name)
+	log.Debugf("PPS master: checking scale-down for %q", op.name)
 	span, _ := tracing.AddSpanToAnyExisting(op.opClient.Ctx(),
 		"/pps.Master/ScaleDownPipeline", "pipeline", op.name)
 	defer func() {
@@ -617,11 +668,12 @@ func (op *pipelineOp) scaleDownPipeline() (retErr error) {
 		tracing.FinishAnySpan(span)
 	}()
 
-	return op.updateRC(func(rc *v1.ReplicationController) {
-		if rc.Spec.Replicas != nil && *op.rc.Spec.Replicas == 0 {
-			return // prior attempt succeeded
+	return op.updateRC(func(rc *v1.ReplicationController) bool {
+		if rc.Spec.Replicas == nil || *rc.Spec.Replicas == 0 {
+			return false // prior attempt succeeded
 		}
 		rc.Spec.Replicas = &zero
+		return true
 	})
 }
 

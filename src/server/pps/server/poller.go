@@ -18,6 +18,15 @@ import (
 
 const pollBackoffTime = 2 * time.Second
 
+// listTimeoutSeconds is the requested timeout we send to the kubernetes
+// APIServer in pipeline-controller List requests. It's redundant with the
+// client-side timeout we use in serviceenv.Get30sKubeClient, but because it's a
+// server-side timeout (sent as a query param) it's insufficient to protect
+// pachd from locking up in case the kubernetes API server stops responding. We
+// send it to protect the kube API server, so that it doesn't continue
+// processing our requests after the client has already timed out.
+var listTimeoutSeconds int64 = 30
+
 // startPipelinePoller starts a new goroutine running pollPipelines
 func (m *ppsMaster) startPipelinePoller() {
 	m.pollPipelinesMu.Lock()
@@ -90,9 +99,11 @@ func (m *ppsMaster) pollPipelines(pollClient *client.APIClient) {
 			// CreatePipeline(foo) were to run between querying etcd and querying k8s,
 			// then we might delete the RC for brand-new pipeline 'foo'). Even if we
 			// do delete a live pipeline's RC, it'll be fixed in the next cycle)
-			kc := m.a.env.GetKubeClient().CoreV1().ReplicationControllers(m.a.env.Namespace)
+			log.Debugf("Polling all pipeline RCs")
+			kc := m.a.env.Get30sKubeClient().CoreV1().ReplicationControllers(m.a.env.Namespace)
 			rcs, err := kc.List(metav1.ListOptions{
-				LabelSelector: "suite=pachyderm,pipelineName",
+				TimeoutSeconds: &listTimeoutSeconds,
+				LabelSelector:  "suite=pachyderm,pipelineName",
 			})
 			if err != nil {
 				// No sensible error recovery here (e.g .if we can't reach k8s). We'll
@@ -176,6 +187,7 @@ func (m *ppsMaster) pollPipelinePods(pollClient *client.APIClient) {
 	if err := backoff.RetryUntilCancel(ctx, func() error {
 		kubePipelineWatch, err := m.a.env.GetKubeClient().CoreV1().Pods(m.a.namespace).Watch(
 			metav1.ListOptions{
+				TimeoutSeconds: &listTimeoutSeconds,
 				LabelSelector: metav1.FormatLabelSelector(metav1.SetAsLabelSelector(
 					map[string]string{
 						"component": "worker",
