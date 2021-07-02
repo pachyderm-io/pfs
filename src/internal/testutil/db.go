@@ -16,6 +16,14 @@ import (
 	"github.com/pachyderm/pachyderm/v2/src/internal/serviceenv"
 )
 
+const (
+	DefaultPostgresHost     = "127.0.0.1"
+	DefaultPostgresPort     = 30229
+	DefaultPostgresUser     = "pachyderm"
+	DefaultPostgresPassword = "correcthorsebatterystaple"
+	DefaultPostgresDatabase = "pachyderm"
+)
+
 // set this to false if you want to keep the database around
 var cleanup = true
 
@@ -23,7 +31,7 @@ const postgresMaxConnections = 100
 
 // we want to divide the total number of connections we can have up among the
 // concurrently running tests
-var maxOpenConnsPerPool = postgresMaxConnections / runtime.GOMAXPROCS(0)
+var maxOpenConnsPerPool = (postgresMaxConnections - 1) / runtime.GOMAXPROCS(0)
 
 // TestDatabaseDeployment represents a deployment of postgres, and databases may
 // be created for individual tests.
@@ -32,32 +40,27 @@ type TestDatabaseDeployment interface {
 	NewDatabaseConfig(t testing.TB) serviceenv.ConfigOption
 }
 
-func newDatabase(t testing.TB) string {
-	dbName := ephemeralDBName(t)
-	require.NoError(t, withDB(func(db *sqlx.DB) error {
-		_, err := db.Exec("CREATE DATABASE " + dbName)
-		require.NoError(t, err)
-		t.Log("database", dbName, "successfully created")
-		return nil
-	}, dbutil.WithHostPort(dbHost(), dbPort())))
-	if cleanup {
-		t.Cleanup(func() {
-			require.NoError(t, withDB(func(db *sqlx.DB) error {
-				_, err := db.Exec("DROP DATABASE " + dbName)
-				require.NoError(t, err)
-				t.Log("database", dbName, "successfully deleted")
-				return nil
-			}, dbutil.WithHostPort(dbHost(), dbPort())))
-		})
+// NewTestDBConfig connects to postgres using the default settings, creates a
+// database with a unique name then returns a ServiceEnv config option to
+// connect to the new database. After test test or suite finishes, the database
+// is dropped.
+func NewTestDBConfig(t testing.TB) serviceenv.ConfigOption {
+	opts := []dbutil.Option{
+		dbutil.WithHostPort(dbHost(), dbPort()),
 	}
-	return dbName
+	db := openEphemeralDB(t, opts...)
+	dbName := createEphemeralDB(t, db)
+	return func(config *serviceenv.Configuration) {
+		serviceenv.WithPostgresHostPort(dbHost(), dbPort())(config)
+		config.PostgresDBName = dbName
+	}
 }
 
 func dbHost() string {
 	if host, ok := os.LookupEnv("POSTGRES_HOST"); ok {
 		return host
 	}
-	return dbutil.DefaultHost
+	return DefaultPostgresHost
 }
 
 func dbPort() int {
@@ -66,46 +69,54 @@ func dbPort() int {
 			return portInt
 		}
 	}
-	return dbutil.DefaultPort
+	return DefaultPostgresPort
 }
 
 // NewTestDB connects to postgres using the default settings, creates a database
 // with a unique name then returns a sqlx.DB configured to use the newly created
 // database. After the test or suite finishes, the database is dropped.
 func NewTestDB(t testing.TB) *sqlx.DB {
-	db2, err := dbutil.NewDB(dbutil.WithHostPort(dbHost(), dbPort()), dbutil.WithDBName(newDatabase(t)))
-	require.NoError(t, err)
-	db2.SetMaxOpenConns(maxOpenConnsPerPool)
-	t.Cleanup(func() {
-		require.NoError(t, db2.Close())
-	})
-	return db2
-}
-
-// NewTestDBConfig connects to postgres using the default settings, creates a
-// database with a unique name then returns a ServiceEnv config option to
-// connect to the new database. After test test or suite finishes, the database
-// is dropped.
-func NewTestDBConfig(t testing.TB) serviceenv.ConfigOption {
-	dbName := newDatabase(t)
-	return func(config *serviceenv.Configuration) {
-		serviceenv.WithPostgresHostPort(dbHost(), dbPort())(config)
-		config.PostgresDBName = dbName
+	opts := []dbutil.Option{
+		dbutil.WithHostPort(dbHost(), dbPort()),
+		dbutil.WithUserPassword(DefaultPostgresUser, DefaultPostgresPassword),
+		dbutil.WithMaxOpenConns(1),
+		dbutil.WithDBName(DefaultPostgresDatabase),
 	}
+	db := openEphemeralDB(t, opts...)
+	dbName := createEphemeralDB(t, db)
+	opts2 := []dbutil.Option{
+		dbutil.WithHostPort(dbHost(), dbPort()),
+		dbutil.WithUserPassword(DefaultPostgresUser, DefaultPostgresPassword),
+		dbutil.WithDBName(dbName),
+		dbutil.WithMaxOpenConns(maxOpenConnsPerPool),
+	}
+	return openEphemeralDB(t, opts2...)
 }
 
-// withDB creates a database connection that is scoped to the passed in callback.
-func withDB(cb func(*sqlx.DB) error, opts ...dbutil.Option) (retErr error) {
+// openEphemeralDB connects to a database using opts and returns it.
+// the database will be cleaned up at the end of the test.
+func openEphemeralDB(t testing.TB, opts ...dbutil.Option) *sqlx.DB {
 	db, err := dbutil.NewDB(opts...)
-	if err != nil {
-		return err
+	require.NoError(t, err)
+	require.NoError(t, db.Ping())
+	t.Cleanup(func() { require.NoError(t, db.Close()) })
+	return db
+}
+
+// createEphemeralDB creates a new database using db with a lifetime scoped to the test t
+// and returns its name
+func createEphemeralDB(t testing.TB, db *sqlx.DB) string {
+	dbName := ephemeralDBName(t)
+	_, err := db.Exec(`CREATE DATABASE ` + dbName)
+	require.NoError(t, err)
+	if cleanup {
+		t.Cleanup(func() {
+			_, err := db.Exec(fmt.Sprintf(`DROP DATABASE %s WITH (FORCE)`, dbName))
+			require.NoError(t, err)
+		})
 	}
-	defer func() {
-		if err := db.Close(); retErr == nil {
-			retErr = err
-		}
-	}()
-	return cb(db)
+	t.Log("database", dbName, "successfully created")
+	return dbName
 }
 
 func ephemeralDBName(t testing.TB) string {
@@ -118,7 +129,7 @@ func ephemeralDBName(t testing.TB) string {
 	// it should be 64 but we might be passing the name as non-ascii, i'm not really sure.
 	// for now just use a random int, but it would be nice to go back to names with a timestamp.
 	return fmt.Sprintf("test_%08x", buf)
-	//now := time.Now()
+	// now := time.Now()
 	// test_<date>T<time>_<random int>
 	// return fmt.Sprintf("test_%04d%02d%02dT%02d%02d%02d_%04x",
 	// 	now.Year(), now.Month(), now.Day(),

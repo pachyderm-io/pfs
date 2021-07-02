@@ -10,14 +10,6 @@ import (
 )
 
 const (
-	// DefaultHost is the default host.
-	DefaultHost = "127.0.0.1"
-	// DefaultPort is the default port.
-	DefaultPort = 32228
-	// DefaultUser is the default user
-	DefaultUser = "postgres"
-	// DefaultDBName is the default DB name.
-	DefaultDBName = "pgc"
 	// DefaultMaxOpenConns is the default maximum number of open connections; if you change
 	// this, also consider changing the default from the environment in
 	// serviceenv.GlobalConfiguration.
@@ -46,10 +38,6 @@ type dbConfig struct {
 
 func newConfig(opts ...Option) *dbConfig {
 	dbc := &dbConfig{
-		host:            DefaultHost,
-		port:            DefaultPort,
-		user:            DefaultUser,
-		name:            DefaultDBName,
 		maxOpenConns:    DefaultMaxOpenConns,
 		maxIdleConns:    DefaultMaxIdleConns,
 		connMaxLifetime: DefaultConnMaxLifetime,
