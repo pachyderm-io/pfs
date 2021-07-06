@@ -192,3 +192,26 @@ type emptySource struct{}
 func (emptySource) Iterate(ctx context.Context, cb func(*pfs.FileInfo, fileset.File) error) error {
 	return nil
 }
+
+// singleFile iterates through the source and returns exactly one file or an error.
+// If the source contains a directory, then singleFile errors.
+// If the source contains more than one file of any type, then singleFile errors
+func singleFile(ctx context.Context, src Source) (*pfs.FileInfo, fileset.File, error) {
+	var retFinfo *pfs.FileInfo
+	var retFile fileset.File
+	err := src.Iterate(ctx, func(finfo *pfs.FileInfo, fsFile fileset.File) error {
+		if retFinfo != nil {
+			return errors.Errorf("matched multiple files")
+		}
+		if finfo.FileType != pfs.FileType_FILE {
+			return errors.Errorf("cannot get non-regular file. Try GetFileTAR for directories")
+		}
+		retFinfo = finfo
+		retFile = fsFile
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return retFinfo, retFile, nil
+}

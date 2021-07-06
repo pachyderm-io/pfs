@@ -2395,7 +2395,7 @@ func TestPFS(suite *testing.T) {
 		t.Run("Directory", func(t *testing.T) {
 			buffer := bytes.Buffer{}
 			err = env.PachClient.GetFile(commit, "dir", &buffer)
-			require.NoError(t, err)
+			require.YesError(t, err)
 		})
 	})
 
@@ -3139,41 +3139,56 @@ func TestPFS(suite *testing.T) {
 			require.Equal(t, numFiles+1, len(fileInfos))
 
 			var output strings.Builder
-			err = env.PachClient.GetFile(commit, "*", &output)
+			rc, err := env.PachClient.GetFileTAR(commit, "*")
 			require.NoError(t, err)
+			defer rc.Close()
+			require.NoError(t, tarutil.ConcatFileContent(&output, rc))
+
 			require.Equal(t, numFiles*3, len(output.String()))
 
 			output = strings.Builder{}
-			err = env.PachClient.GetFile(commit, "dir2/dir3/file1?", &output)
+			rc, err = env.PachClient.GetFileTAR(commit, "dir2/dir3/file1?")
 			require.NoError(t, err)
+			defer rc.Close()
+			require.NoError(t, tarutil.ConcatFileContent(&output, rc))
 			require.Equal(t, 10, len(output.String()))
 
 			output = strings.Builder{}
-			err = env.PachClient.GetFile(commit, "**file1?", &output)
+			rc, err = env.PachClient.GetFileTAR(commit, "**file1?")
 			require.NoError(t, err)
+			defer rc.Close()
+			require.NoError(t, tarutil.ConcatFileContent(&output, rc))
 			require.Equal(t, 30, len(output.String()))
 
 			output = strings.Builder{}
-			err = env.PachClient.GetFile(commit, "**file1", &output)
+			rc, err = env.PachClient.GetFileTAR(commit, "**file1")
 			require.NoError(t, err)
+			defer rc.Close()
+			require.NoError(t, tarutil.ConcatFileContent(&output, rc))
 			require.True(t, strings.Contains(output.String(), "1"))
 			require.True(t, strings.Contains(output.String(), "2"))
 			require.True(t, strings.Contains(output.String(), "3"))
 
 			output = strings.Builder{}
-			err = env.PachClient.GetFile(commit, "**file1", &output)
+			rc, err = env.PachClient.GetFileTAR(commit, "**file1")
 			require.NoError(t, err)
+			defer rc.Close()
+			require.NoError(t, tarutil.ConcatFileContent(&output, rc))
 			match, err := regexp.Match("[123]", []byte(output.String()))
 			require.NoError(t, err)
 			require.True(t, match)
 
 			output = strings.Builder{}
-			err = env.PachClient.GetFile(commit, "dir?", &output)
+			rc, err = env.PachClient.GetFileTAR(commit, "dir?")
 			require.NoError(t, err)
+			defer rc.Close()
+			require.NoError(t, tarutil.ConcatFileContent(&output, rc))
 
 			output = strings.Builder{}
-			err = env.PachClient.GetFile(commit, "", &output)
+			rc, err = env.PachClient.GetFileTAR(commit, "")
 			require.NoError(t, err)
+			defer rc.Close()
+			require.NoError(t, tarutil.ConcatFileContent(&output, rc))
 
 			output = strings.Builder{}
 			err = env.PachClient.GetFile(commit, "garbage", &output)
@@ -3269,7 +3284,7 @@ func TestPFS(suite *testing.T) {
 	// right order. GetFile(glob) is supposed to return a stream of data of the
 	// form file1 + file2 + .. + fileN, where file1 is the lexicographically lowest
 	// file matching 'glob', file2 is the next lowest, etc.
-	suite.Run("GetFileGlobOrder", func(t *testing.T) {
+	suite.Run("GetFileTARGlobOrder", func(t *testing.T) {
 		t.Parallel()
 		env := testpachd.NewRealEnv(t, tu.NewTestDBConfig(t))
 
@@ -3287,7 +3302,11 @@ func TestPFS(suite *testing.T) {
 		require.NoError(t, env.PachClient.FinishCommit(repo, commit.Branch.Name, commit.ID))
 
 		var output bytes.Buffer
-		require.NoError(t, env.PachClient.GetFile(commit, "/data/*", &output))
+		rc, err := env.PachClient.GetFileTAR(commit, "/data/*")
+		require.NoError(t, err)
+		defer rc.Close()
+		require.NoError(t, tarutil.ConcatFileContent(&output, rc))
+
 		require.Equal(t, expected.String(), output.String())
 	})
 

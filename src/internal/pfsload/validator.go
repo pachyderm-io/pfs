@@ -105,7 +105,7 @@ func (v *Validator) Validate(client Client, commit *pfs.Commit) (retErr error) {
 			}
 		}
 	}()
-	r, err := client.GetFileTar(client.Ctx(), commit, "**")
+	r, err := client.GetFileTAR(client.Ctx(), commit, "**")
 	if err != nil {
 		return err
 	}

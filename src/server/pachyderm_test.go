@@ -33,6 +33,7 @@ import (
 	"github.com/pachyderm/pachyderm/v2/src/internal/ppsutil"
 	"github.com/pachyderm/pachyderm/v2/src/internal/pretty"
 	"github.com/pachyderm/pachyderm/v2/src/internal/require"
+	"github.com/pachyderm/pachyderm/v2/src/internal/tarutil"
 	tu "github.com/pachyderm/pachyderm/v2/src/internal/testutil"
 	"github.com/pachyderm/pachyderm/v2/src/internal/testutil/random"
 	"github.com/pachyderm/pachyderm/v2/src/internal/uuid"
@@ -4230,7 +4231,10 @@ func TestAllDatumsAreProcessed(t *testing.T) {
 	require.Equal(t, 5, len(commitInfos))
 
 	var buf bytes.Buffer
-	require.NoError(t, c.GetFile(commitInfo.Commit, "file", &buf))
+	rc, err := c.GetFileTAR(commitInfo.Commit, "file")
+	require.NoError(t, err)
+	defer rc.Close()
+	require.NoError(t, tarutil.ConcatFileContent(&buf, rc))
 	// should be 8 because each file gets copied twice due to cross product
 	require.Equal(t, strings.Repeat("foo\n", 8), buf.String())
 }

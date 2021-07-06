@@ -445,6 +445,8 @@ service API {
 
   // ModifyFile performs modifications on a set of files.
   rpc ModifyFile(stream ModifyFileRequest) returns (google.protobuf.Empty) {}
+  // GetFile returns the contents of a single file
+  rpc GetFile(GetFileRequest) returns (stream google.protobuf.BytesValue) {}
   // GetFileTAR returns a TAR stream of the contents matched by the request
   rpc GetFileTAR(GetFileRequest) returns (stream google.protobuf.BytesValue) {}
   // InspectFile returns info about a file.

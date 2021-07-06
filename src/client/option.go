@@ -50,3 +50,13 @@ func WithTagCopyFile(tag string) CopyFileOption {
 		cf.Tag = tag
 	}
 }
+
+// GetFileOption configures a GetFile call
+type GetFileOption func(*pfs.GetFileRequest)
+
+// WithTagGetFile sets the tag for the get file request
+func WithTagGetFile(tag string) GetFileOption {
+	return func(gf *pfs.GetFileRequest) {
+		gf.File.Tag = tag
+	}
+}

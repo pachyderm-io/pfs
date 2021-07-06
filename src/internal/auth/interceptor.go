@@ -139,6 +139,7 @@ var authHandlers = map[string]authHandler{
 	"/pfs_v2.API/ListBranch":       authDisabledOr(authenticated),
 	"/pfs_v2.API/DeleteBranch":     authDisabledOr(authenticated),
 	"/pfs_v2.API/ModifyFile":       authDisabledOr(authenticated),
+	"/pfs_v2.API/GetFile":          authDisabledOr(authenticated),
 	"/pfs_v2.API/GetFileTAR":       authDisabledOr(authenticated),
 	"/pfs_v2.API/InspectFile":      authDisabledOr(authenticated),
 	"/pfs_v2.API/ListFile":         authDisabledOr(authenticated),

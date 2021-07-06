@@ -21,6 +21,7 @@ import (
 	"github.com/pachyderm/pachyderm/v2/src/internal/errors"
 	"github.com/pachyderm/pachyderm/v2/src/internal/ppsutil"
 	"github.com/pachyderm/pachyderm/v2/src/internal/require"
+	"github.com/pachyderm/pachyderm/v2/src/internal/tarutil"
 	tu "github.com/pachyderm/pachyderm/v2/src/internal/testutil"
 	"github.com/pachyderm/pachyderm/v2/src/pfs"
 	"github.com/pachyderm/pachyderm/v2/src/pps"
@@ -589,7 +590,10 @@ func TestS3SkippedDatums(t *testing.T) {
 
 		// check output
 		var buf bytes.Buffer
-		c.GetFile(pipelineCommit, "out", &buf)
+		rc, err := c.GetFileTAR(pipelineCommit, "out")
+		require.NoError(t, err)
+		defer rc.Close()
+		require.NoError(t, tarutil.ConcatFileContent(&buf, rc))
 		s := bufio.NewScanner(&buf)
 		var seen [10]bool // One per file in 'pfsin'
 		for s.Scan() {
@@ -605,7 +609,7 @@ func TestS3SkippedDatums(t *testing.T) {
 			require.Equal(t, p[2], "bar") // s3 input is now "bar" everywhere
 		}
 		for j := 0; j < len(seen); j++ {
-			require.True(t, seen[j], j) // all datums from pfsin were reprocessed
+			require.True(t, seen[j], "%d", j) // all datums from pfsin were reprocessed
 		}
 	})
 

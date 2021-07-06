@@ -366,7 +366,9 @@ func (c APIClient) inspectCommitSet(id string, wait bool, cb func(*pfs.CommitInf
 		CommitSet: NewCommitSet(id),
 		Wait:      wait,
 	}
-	client, err := c.PfsAPIClient.InspectCommitSet(c.Ctx(), req)
+	ctx, cf := context.WithCancel(c.Ctx())
+	defer cf()
+	client, err := c.PfsAPIClient.InspectCommitSet(ctx, req)
 	if err != nil {
 		return err
 	}

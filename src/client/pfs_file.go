@@ -12,7 +12,6 @@ import (
 	"github.com/pachyderm/pachyderm/v2/src/internal/errutil"
 	"github.com/pachyderm/pachyderm/v2/src/internal/grpcutil"
 	"github.com/pachyderm/pachyderm/v2/src/internal/storage/renew"
-	"github.com/pachyderm/pachyderm/v2/src/internal/tarutil"
 	"github.com/pachyderm/pachyderm/v2/src/pfs"
 )
 
@@ -408,34 +407,48 @@ func (c APIClient) RenewFileSet(ID string, ttl time.Duration) (retErr error) {
 // size limits the total amount of data returned, note you will get fewer bytes
 // than size if you pass a value larger than the size of the file.
 // If size is set to 0 then all of the data will be returned.
-// TODO: Should we error if multiple files are matched?
-func (c APIClient) GetFile(commit *pfs.Commit, path string, w io.Writer) error {
-	r, err := c.getFileTar(commit, path)
+func (c APIClient) GetFile(commit *pfs.Commit, path string, w io.Writer) (retErr error) {
+	ctx, cf := context.WithCancel(c.Ctx())
+	defer cf()
+	gfc, err := c.PfsAPIClient.GetFile(ctx, &pfs.GetFileRequest{
+		File: &pfs.File{
+			Commit: commit,
+			Path:   path,
+		},
+	})
 	if err != nil {
 		return err
 	}
-	return tarutil.Iterate(r, func(f tarutil.File) error {
-		return f.Content(w)
-	}, true)
+	for m, err := gfc.Recv(); err != io.EOF; m, err = gfc.Recv() {
+		if err != nil {
+			return err
+		}
+		if _, err := w.Write(m.Value); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (c APIClient) getFileTar(commit *pfs.Commit, path string) (_ io.Reader, retErr error) {
+// GetFileTAR gets a tar file from PFS.
+func (c APIClient) GetFileTAR(commit *pfs.Commit, path string) (io.ReadCloser, error) {
+	return c.getFileTar(commit, path)
+}
+
+func (c APIClient) getFileTar(commit *pfs.Commit, path string) (_ io.ReadCloser, retErr error) {
 	defer func() {
 		retErr = grpcutil.ScrubGRPC(retErr)
 	}()
 	req := &pfs.GetFileRequest{
 		File: commit.NewFile(path),
 	}
-	client, err := c.PfsAPIClient.GetFileTAR(c.Ctx(), req)
+	ctx, cf := context.WithCancel(c.Ctx())
+	client, err := c.PfsAPIClient.GetFileTAR(ctx, req)
 	if err != nil {
+		cf()
 		return nil, err
 	}
-	return grpcutil.NewStreamingBytesReader(client, nil), nil
-}
-
-// GetFileTar gets a tar file from PFS.
-func (c APIClient) GetFileTar(commit *pfs.Commit, path string) (io.Reader, error) {
-	return c.getFileTar(commit, path)
+	return grpcutil.NewStreamingBytesReader(client, cf), nil
 }
 
 // GetFileReader gets a reader for the specified path

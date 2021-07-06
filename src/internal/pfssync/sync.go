@@ -84,7 +84,7 @@ func (d *downloader) Download(storageRoot string, file *pfs.File, opts ...Downlo
 	if dc.lazy || dc.empty {
 		return d.downloadInfo(storageRoot, file, dc)
 	}
-	r, err := d.pachClient.GetFileTar(file.Commit, file.Path)
+	r, err := d.pachClient.GetFileTAR(file.Commit, file.Path)
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func (d *downloader) downloadInfo(storageRoot string, file *pfs.File, config *do
 		}
 		if config.lazy {
 			return d.makePipe(fullPath, func(w io.Writer) error {
-				r, err := d.pachClient.GetFileTar(file.Commit, fi.File.Path)
+				r, err := d.pachClient.GetFileTAR(file.Commit, fi.File.Path)
 				if err != nil {
 					return err
 				}

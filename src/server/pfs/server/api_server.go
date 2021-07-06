@@ -502,7 +502,7 @@ func deleteFile(uw *fileset.UnorderedWriter, request *pfs.DeleteFile) error {
 	return nil
 }
 
-// GetFileTAR implements the protobuf pfs.GetFile RPC
+// GetFileTAR implements the protobuf pfs.GetFileTAR RPC
 func (a *apiServer) GetFileTAR(request *pfs.GetFileRequest, server pfs.API_GetFileTARServer) (retErr error) {
 	func() { a.Log(request, nil, nil, 0) }()
 	defer func(start time.Time) { a.Log(request, nil, retErr, time.Since(start)) }(time.Now())
@@ -524,6 +524,32 @@ func (a *apiServer) GetFileTAR(request *pfs.GetFileRequest, server pfs.API_GetFi
 			return err
 		})
 		return bytesWritten, err
+	})
+}
+
+// GetFile implements the protobuf pfs.GetFile RPC
+func (a *apiServer) GetFile(request *pfs.GetFileRequest, server pfs.API_GetFileServer) (retErr error) {
+	func() { a.Log(request, nil, nil, 0) }()
+	defer func(start time.Time) { a.Log(request, nil, retErr, time.Since(start)) }(time.Now())
+	return metrics.ReportRequestWithThroughput(func() (int64, error) {
+		ctx := server.Context()
+		src, err := a.driver.getFile(ctx, request.File)
+		if err != nil {
+			return 0, err
+		}
+		_, file, err := singleFile(ctx, src)
+		if err != nil {
+			return 0, err
+		}
+		if request.URL != "" {
+			return getFileURL(ctx, request.URL, src)
+		}
+		if err := grpcutil.WithStreamingBytesWriter(server, func(w io.Writer) error {
+			return file.Content(w)
+		}); err != nil {
+			return 0, err
+		}
+		return fileset.SizeFromIndex(file.Index()), nil
 	})
 }
 
@@ -549,11 +575,7 @@ func getFileURL(ctx context.Context, URL string, src Source) (int64, error) {
 		}); err != nil {
 			return err
 		}
-		// TODO(2.0 required) - SizeBytes requires constructing the src with
-		// `WithDetails` which we don't do here, so we can't get the size from here
-		// that easily.  One option is to always calculate the size of files in the
-		// source.
-		// bytesWritten += int64(fi.Details.SizeBytes)
+		bytesWritten += fileset.SizeFromIndex(file.Index())
 		return nil
 	})
 	return bytesWritten, err

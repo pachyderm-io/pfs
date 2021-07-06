@@ -282,3 +282,20 @@ func NewReader(files []File) (io.Reader, error) {
 	}
 	return buf, nil
 }
+
+// ConcatFileContent writes the content of each file in the stream to dst, one after another.
+// Headers are not copied.
+// `src` must be a tar stream
+//
+// This is not a terribly useful function but many of the tests are structured around
+// the 1.x behavior of concatenating files, and so this is useful for porting those tests.
+func ConcatFileContent(dst io.Writer, src io.Reader) error {
+	tr := tar.NewReader(src)
+	for _, err := tr.Next(); err != io.EOF; _, err = tr.Next() {
+		_, err := io.Copy(dst, tr)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

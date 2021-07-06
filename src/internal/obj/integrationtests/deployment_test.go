@@ -247,8 +247,10 @@ func withManifest(t *testing.T, backend assets.Backend, secrets map[string][]byt
 	require.NoError(t, tu.Cmd("kubectl", "wait", "--namespace", namespaceName, "--for=condition=available", "deployment/pachd", "--timeout", "2m").Run())
 
 	pachClient := getPachClient(t, kubeClient, namespaceName)
+	ctx, cf := context.WithCancel(context.Background())
+	defer cf()
+	pachClient = pachClient.WithCtx(ctx)
 	defer pachClient.Close()
-
 	callback(namespaceName, pachClient)
 }
 

@@ -156,3 +156,10 @@ func hashDataRefs(dataRefs []*chunk.DataRef) ([]byte, error) {
 	}
 	return h.Sum(nil), nil
 }
+
+func SizeFromIndex(idx *index.Index) (size int64) {
+	for _, dr := range idx.File.DataRefs {
+		size += dr.SizeBytes
+	}
+	return size
+}
