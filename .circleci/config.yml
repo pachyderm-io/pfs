@@ -107,27 +107,65 @@ jobs:
           paths:
             - "/go/pkg/mod"
 
+  release: #The install and build sections should match the above "circleci" section
+    resource_class: large
+    machine:
+      image: ubuntu-2004:202101-01
+    environment:
+      GOPROXY: https://proxy.golang.org
+    steps:
+      - checkout
+      - restore_cache:
+         keys:
+         - pach-build-dependencies-v2-{{ checksum "etc/testing/circle/install.sh" }}
+         - pach-build-dependencies-v2-
+      - run: etc/testing/circle/install.sh 
+      - save_cache:
+         key: pach-build-dependencies-v2-{{ checksum "etc/testing/circle/install.sh" }}
+         paths:
+         - cached-deps/
+      # The build cache will grow indefinitely, so we rotate the cache once a week. 
+      # This ensures the time to restore the cache isn't longer than the speedup in compilation.
+      - run: "echo $(($(date +%s)/604800)) > current_week"
+      - restore_cache:
+         keys:
+         - pach-go-build-cache-v1-{{ .Branch }}-{{ checksum "current_week" }}
+         - pach-go-build-cache-v1-master-{{ checksum "current_week" }}
+
+      # Only restore the module cache based on an exact match for go.sum.
+      # This also avoids accumulating old versions of modules over time.
+      - restore_cache:
+         keys:
+         - pach-go-mod-cache-v2-{{ checksum "go.sum" }}
+      - run: make docker-build
+      # make release-pachctl
+
 workflows:
-  circleci:
+#  circleci:
+#    jobs:
+#      - circleci:
+#          matrix:
+#            parameters:
+#              bucket:
+#              - MISC
+#              # If you want to update the number of PPS buckets, you'll neet to
+#              # update the value of PPS_BUCKETS above
+#              - AUTH
+#              - ENTERPRISE
+#              - PFS
+#              - PPS1
+#              - PPS2
+#              - PPS3
+#              - PPS4
+#              - PPS5
+#              - PPS6
+#              - EXAMPLES
+#              - INTERNAL
+#  helm:
+#    jobs:
+#      - helm-build
+  release:
     jobs:
-      - circleci:
-          matrix:
-            parameters:
-              bucket:
-              - MISC
-              # If you want to update the number of PPS buckets, you'll neet to
-              # update the value of PPS_BUCKETS above
-              - AUTH
-              - ENTERPRISE
-              - PFS
-              - PPS1
-              - PPS2
-              - PPS3
-              - PPS4
-              - PPS5
-              - PPS6
-              - EXAMPLES
-              - INTERNAL
-  helm:
-    jobs:
-      - helm-build
+      - release
+# TODO Only run on tag, require tests
+# TODO GITHUB ENV Var, Docker Hub creds
