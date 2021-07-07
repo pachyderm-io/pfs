@@ -3079,8 +3079,6 @@ func TestStopPipeline(t *testing.T) {
 }
 
 func TestStandby(t *testing.T) {
-	// TODO(2.0 required): Investigate flakiness.
-	t.Skip("Investigate flakiness")
 	if testing.Short() {
 		t.Skip("Skipping integration tests in short mode")
 	}
@@ -3093,7 +3091,7 @@ func TestStandby(t *testing.T) {
 		require.NoError(t, c.CreateRepo(dataRepo))
 		dataCommit := client.NewCommit(dataRepo, "master", "")
 
-		numPipelines := 10
+		numPipelines := 5
 		pipelines := make([]string, numPipelines)
 		for i := 0; i < numPipelines; i++ {
 			pipelines[i] = tu.UniqueString("TestStandby")
@@ -3114,7 +3112,7 @@ func TestStandby(t *testing.T) {
 			require.NoError(t, err)
 		}
 
-		require.NoErrorWithinTRetry(t, time.Second*30, func() error {
+		require.NoErrorWithinTRetry(t, time.Second*60, func() error {
 			pis, err := c.ListPipeline(false)
 			require.NoError(t, err)
 			var standby int
@@ -3175,27 +3173,31 @@ func TestStandby(t *testing.T) {
 			},
 		)
 		require.NoError(t, err)
-		numCommits := 100
+		numCommits := 10
 		for i := 0; i < numCommits; i++ {
 			require.NoError(t, c.PutFile(dataCommit, fmt.Sprintf("file-%d", i), strings.NewReader("foo")))
 		}
-		commitInfo, err := c.InspectCommit(dataRepo, "master", "")
-		require.NoError(t, err)
-		commitInfos, err := c.WaitCommitSetAll(commitInfo.Commit.ID)
-		require.NoError(t, err)
-		require.Equal(t, 2, len(commitInfos))
-		pod := ""
-		commitInfos, err = c.ListCommit(client.NewRepo(pipeline), client.NewCommit(pipeline, "master", ""), nil, 0)
-		require.NoError(t, err)
-		for _, ci := range commitInfos {
-			var buffer bytes.Buffer
-			require.NoError(t, c.GetFile(ci.Commit, "pod", &buffer))
-			if pod == "" {
-				pod = buffer.String()
-			} else {
-				require.True(t, pod == buffer.String(), "multiple pods were used to process commits")
+		require.NoErrorWithinTRetry(t, 120*time.Second, func() error {
+			// Let pipeline run
+			commitInfo, err := c.InspectCommit(dataRepo, "master", "")
+			require.NoError(t, err)
+			commitInfos, err := c.WaitCommitSetAll(commitInfo.Commit.ID)
+			require.NoError(t, err)
+			require.Equal(t, 2, len(commitInfos))
+			pod := ""
+			commitInfos, err = c.ListCommit(client.NewRepo(pipeline), client.NewCommit(pipeline, "master", ""), nil, 0)
+			require.NoError(t, err)
+			for _, ci := range commitInfos {
+				var buffer bytes.Buffer
+				require.NoError(t, c.GetFile(ci.Commit, "pod", &buffer))
+				if pod == "" {
+					pod = buffer.String()
+				} else {
+					require.True(t, pod == buffer.String(), "multiple pods were used to process commits")
+				}
 			}
-		}
+			return nil
+		})
 		pi, err := c.InspectPipeline(pipeline, false)
 		require.NoError(t, err)
 		require.Equal(t, pps.PipelineState_PIPELINE_STANDBY.String(), pi.State.String())
