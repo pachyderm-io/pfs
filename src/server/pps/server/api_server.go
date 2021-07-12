@@ -999,6 +999,12 @@ func (a *apiServer) RestartDatum(ctx context.Context, request *pps.RestartDatumR
 func (a *apiServer) InspectDatum(ctx context.Context, request *pps.InspectDatumRequest) (response *pps.DatumInfo, retErr error) {
 	func() { a.Log(request, nil, nil, 0) }()
 	defer func(start time.Time) { a.Log(request, response, retErr, time.Since(start)) }(time.Now())
+	if request.Datum == nil || request.Datum.ID == "" {
+		return nil, errors.New("must specify a datum")
+	}
+	if request.Datum.Job == nil {
+		return nil, errors.New("must specify a job")
+	}
 	// TODO: Auth?
 	if err := a.collectDatums(ctx, request.Datum.Job, func(meta *datum.Meta, pfsState *pfs.File) error {
 		if common.DatumID(meta.Inputs) == request.Datum.ID {
@@ -1008,6 +1014,9 @@ func (a *apiServer) InspectDatum(ctx context.Context, request *pps.InspectDatumR
 		return nil
 	}); err != nil {
 		return nil, err
+	}
+	if response == nil {
+		return nil, errors.Errorf("datum %s not found in job %s", request.Datum.ID, request.Datum.Job)
 	}
 	return response, nil
 }
