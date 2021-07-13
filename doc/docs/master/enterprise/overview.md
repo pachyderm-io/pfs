@@ -5,8 +5,7 @@
 Pachyderm Enterprise Edition includes everything you need to scale and manage Pachyderm data pipelines in an enterprise setting. It delivers the most recent version of Pachyderm along with:
 
 - Administrative and security features needed for enterprise-scale implementations of Pachyderm 
-- Visual and interactive interfaces to Pachyderm  
-- Detailed job and data statistics for faster development and data insight
+- Visual and interactive interfaces to Pachyderm
 
 Pachyderm Enterprise Edition can be deployed easily on top of an existing or new deployment of Pachyderm, and we have engineers available to help enterprise customers get up and running very quickly.  To get more information about Pachyderm Enterprise Edition, to ask questions, or to get access for evaluation, please contact us at [sales@pachyderm.io](mailto:sales@pachyderm.io) or on our [Slack](http://slack.pachyderm.io/). 
 
@@ -21,12 +20,6 @@ Pachyderm Enterprise Edition includes a full UI for visualizing pipelines and ex
 ![alt tag](auth/auth_dash5.png)
 
 Enterprise-scale deployments require access controls and multitenancy.  Pachyderm Enterprise Edition gives teams the ability to control access to production pipelines, data, and configuration.  Administrators can silo data, prevent unintended modifications to production pipelines, and support multiple data scientists or even multiple data science groups.
-
-## Advanced Statistics 
-
-![alt tag](stats.png)
-
-Pachyderm Enterprise Edition gives data scientists advanced insights into their data, jobs, and results. For example, data scientists can see how much time jobs spend downloading/uploading data, what data was processed or skipped, and which workers were given particular datums. This information can be explored programmatically or via a number of charts and plots that help users parse the information quickly.
 
 ## Administrative Controls, Interactive Pipeline Configuration
 

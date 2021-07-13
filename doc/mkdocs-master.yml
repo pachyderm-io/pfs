@@ -138,6 +138,7 @@ nav:
                 - Join: concepts/pipeline-concepts/datum/join.md
                 - Group: concepts/pipeline-concepts/datum/group.md
                 - Datum Processing States: concepts/pipeline-concepts/datum/datum-processing-states.md
+                - Datum Metadata: concepts/pipeline-concepts/datum/metadata.md
         - Advanced Concepts:
             - Global ID: concepts/advanced-concepts/globalID.md
             - Deferred Processing of Data: concepts/advanced-concepts/deferred_processing.md
@@ -408,7 +409,6 @@ nav:
         - Enterprise Server:
             - Setup an Enterprise Server: enterprise/auth/enterprise-server/setup.md 
             - Manage your Enterprise Server: enterprise/auth/enterprise-server/manage.md 
-        - Advanced Statistics: enterprise/stats.md
     - Troubleshooting:
         - Overview: troubleshooting/index.md
         - General Troubleshooting: troubleshooting/general_troubleshooting.md
