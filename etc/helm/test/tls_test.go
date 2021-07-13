@@ -72,30 +72,30 @@ func TestEnablePachTLSExistingSecret(t *testing.T) {
 
 }
 
-func TestEnableDashTLSNoName(t *testing.T) {
+func TestEnableconsoleTLSNoName(t *testing.T) {
 	helmChartPath := "../pachyderm"
 	options := &helm.Options{
 		SetValues: map[string]string{
 			"deployTarget":        "LOCAL",
-			"dash.enabled":        "true",
+			"console.enabled":     "true",
 			"ingress.tls.enabled": "true",
 			"ingress.host":        "http://blah.com",
 		},
 	}
 
-	_, err := helm.RenderTemplateE(t, options, helmChartPath, "secret", []string{"templates/dash/ingress.yaml"})
+	_, err := helm.RenderTemplateE(t, options, helmChartPath, "secret", []string{"templates/console/ingress.yaml"})
 	if err == nil {
 		t.Error("Template should error")
 	}
 }
 
-func TestEnableDashTLSExistingSecret(t *testing.T) {
+func TestEnableconsoleTLSExistingSecret(t *testing.T) {
 	helmChartPath := "../pachyderm"
 	expectedSecretName := "blah"
 	options := &helm.Options{
 		SetValues: map[string]string{
 			"deployTarget":           "LOCAL",
-			"dash.enabled":           "true",
+			"console.enabled":        "true",
 			"ingress.tls.enabled":    "true",
 			"ingress.tls.secretName": expectedSecretName,
 			"ingress.enabled":        "true",
@@ -119,18 +119,18 @@ func TestEnableDashTLSExistingSecret(t *testing.T) {
 
 }
 
-func TestDashTLSNewSecretNoEnable(t *testing.T) {
+func TestconsoleTLSNewSecretNoEnable(t *testing.T) {
 	helmChartPath := "../pachyderm"
 	options := &helm.Options{
 		SetValues: map[string]string{
 			"deployTarget":              "LOCAL",
-			"dash.enabled":              "true",
+			"console.enabled":           "true",
 			"ingress.tls.newSecret.crt": "blah",
 			"ingress.host":              "http://blah.com",
 		},
 	}
 
-	_, err := helm.RenderTemplateE(t, options, helmChartPath, "secret", []string{"templates/dash/ingress.yaml"})
+	_, err := helm.RenderTemplateE(t, options, helmChartPath, "secret", []string{"templates/console/ingress.yaml"})
 	if err == nil {
 		t.Error("Template should error")
 	}

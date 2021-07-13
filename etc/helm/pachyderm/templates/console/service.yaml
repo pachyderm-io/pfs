@@ -2,27 +2,27 @@
 SPDX-FileCopyrightText: Pachyderm, Inc. <info@pachyderm.com>
 SPDX-License-Identifier: Apache-2.0
 */ -}}
-{{- if .Values.dash.enabled -}}
+{{- if .Values.console.enabled -}}
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: dash
+    app: console
     suite: pachyderm
-    {{- if .Values.dash.service.labels }}
-    {{- toYaml .Values.dash.service.labels | nindent 4 }}
+    {{- if .Values.console.service.labels }}
+    {{- toYaml .Values.console.service.labels | nindent 4 }}
     {{- end }}
-  name: dash
+  name: console
   namespace: {{ .Release.Namespace }}
 spec:
   ports:
-  - name: dash-http
-    {{- if eq .Values.dash.service.type "NodePort" }}
+  - name: console-http
+    {{- if eq .Values.console.service.type "NodePort" }}
     nodePort: 30080
     {{- end }}
     port: 4000
   selector:
-    app: dash
+    app: console
     suite: pachyderm
-  type: {{ .Values.dash.service.type }}
+  type: {{ .Values.console.service.type }}
 {{ end -}}

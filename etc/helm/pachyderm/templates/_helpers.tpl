@@ -20,6 +20,6 @@ LOCAL
 {{- end -}}
 {{- end -}}
 
-{{- define "pachyderm.dashSecret" -}}
-{{ default (randAlphaNum 32) .Values.dash.config.oauthClientSecret }}
+{{- define "pachyderm.consoleSecret" -}}
+{{ default (randAlphaNum 32) .Values.console.config.oauthClientSecret }}
 {{- end -}}

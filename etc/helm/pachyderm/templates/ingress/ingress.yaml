@@ -2,15 +2,15 @@
 SPDX-FileCopyrightText: Pachyderm, Inc. <info@pachyderm.com>
 SPDX-License-Identifier: Apache-2.0
 */ -}}
-{{- if and .Values.dash.enabled .Values.ingress.enabled -}}
+{{- if and .Values.console.enabled .Values.ingress.enabled -}}
 apiVersion: "networking.k8s.io/v1beta1"
 kind: "Ingress"
 metadata:
-  name: "dash"
-  annotations: {{ toYaml .Values.dash.annotations | nindent 4 }}
+  name: "console"
+  annotations: {{ toYaml .Values.console.annotations | nindent 4 }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app: "dash"
+    app: "console"
     suite: "pachyderm"
 spec:
   {{- if .Values.ingress.tls.enabled }}
@@ -23,8 +23,8 @@ spec:
         paths:
           - path: "/"
             backend:
-              serviceName: "dash"
-              servicePort: "dash-http"
+              serviceName: "console"
+              servicePort: "console-http"
           - path: "/dex"
             backend:
               serviceName: "pachd"

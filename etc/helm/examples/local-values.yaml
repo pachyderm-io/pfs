@@ -3,11 +3,11 @@
 
 deployTarget: LOCAL
 
-dash:
+console:
   config:
     issuerURI: "http://localhost:30658/"
     oauthRedirectURI: "http://localhost:4000/oauth/callback/?inline=true"
-    oauthClientID: "dash"
+    oauthClientID: "console"
     oauthClientSecret: "abc"
     graphqlPort: 4000
     oauthPachdClientID: "pachd"
