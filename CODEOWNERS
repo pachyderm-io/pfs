@@ -1,0 +1,111 @@
+# Each line is a file pattern followed by one or more owners.
+
+# These owners will be the default owners for everything in
+# the repo. Unless a later match takes precedence,
+# @jdoliner and @nitinjainsj will be requested for
+# review when someone opens a pull request.
+
+* @jdoliner @nitinjainsj
+
+/doc @JoeyZwicker
+
+##############################
+#####      Services      #####
+##############################
+
+/src/server/auth @actgardner @msteffen
+
+/src/server/admin @msteffen
+/src/server/enterprise @msteffen
+/src/server/health @msteffen
+
+/src/server/debug @brycemcanally
+
+/src/server/http @jdoliner
+
+/src/server/pfs @brycemcanally @brendoncarroll
+
+/src/server/pps @adelelopez @Tryneus
+/src/server/worker @adelelopez @Tryneus
+
+/src/server/transaction @Tryneus
+
+##############################
+#####      Binaries      #####
+##############################
+
+/src/server/cmd/pachctl @Tryneus
+/src/server/cmd/pachd @jdoliner
+/src/server/cmd/worker @Tryneus
+/src/server/config @msteffen
+
+##############################
+#####      Packages      #####
+##############################
+
+# pachctl deploy-related packages
+/src/server/pkg/deploy @chainlink
+
+# PFS-related packages
+/src/server/pkg/ancestry @brycemcanally @brendoncarroll
+/src/server/pkg/backoff @brycemcanally @brendoncarroll
+/src/server/pkg/bloom @brycemcanally @brendoncarroll
+/src/server/pkg/cache @brycemcanally @brendoncarroll
+/src/server/pkg/collection @brycemcanally @brendoncarroll
+/src/server/pkg/hashtree @brycemcanally @brendoncarroll
+/src/server/pkg/localcache @brycemcanally @brendoncarroll
+/src/server/pkg/obj @brycemcanally @brendoncarroll
+/src/server/pkg/pfsdb @brycemcanally @brendoncarroll
+/src/server/pkg/tar @brycemcanally @brendoncarroll
+/src/server/pkg/tarutil @brycemcanally @brendoncarroll
+/src/server/pkg/pool @brycemcanally @brendoncarroll
+/src/server/pkg/storage @brycemcanally @brendoncarroll
+
+# New storage layer-related packages
+/src/server/pkg/lease @brycemcanally @brendoncarroll
+/src/server/pkg/work @brycemcanally @brendoncarroll
+
+# Auth- and security-related packages
+/src/server/pkg/cert @actgardner @msteffen
+
+# CLI packages
+/src/server/pkg/cmdutil @Tryneus
+/src/server/pkg/pager @jdoliner
+/src/server/pkg/pretty @jdoliner
+
+# Miscellaneous
+/src/server/pkg/dlock @jdoliner
+/src/server/pkg/errutil @jdoliner
+/src/server/pkg/exec @jdoliner
+/src/server/pkg/tabwriter @jdoliner
+/src/server/pkg/uuid @jdoliner
+/src/server/pkg/metrics @jdoliner
+/src/server/pkg/netutil @jdoliner
+/src/server/pkg/progress @jdoliner
+/src/server/pkg/serviceenv @msteffen
+/src/server/pkg/sql @msteffen
+/src/server/pkg/watch @msteffen
+
+# Loki/logging-related
+/src/server/pkg/lokiutil @jdoliner
+/src/server/pkg/log @jdoliner
+
+# JSON packages
+/src/server/pkg/serde @msteffen
+
+# PPS-related
+/src/server/pkg/ppsdb @adelelopez
+/src/server/pkg/ppsutil @adelelopez
+/src/server/pkg/ppsconsts @adelelopez
+
+# Worker-related
+/src/server/pkg/sync @jdoliner
+
+# Testing-related
+/src/server/pkg/testetcd @Tryneus
+/src/server/pkg/testpachd @Tryneus
+/src/server/pkg/transactiondb @Tryneus
+/src/server/pkg/transactionenv @Tryneus
+/src/server/pkg/workload @Tryneus
+# This should maybe be split up--very heterogeneous
+/src/server/pkg/testutil @Tryneus
