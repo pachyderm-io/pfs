@@ -25,7 +25,7 @@
   # todoPatterns is an array of strings you can match against failing reports
   todoPatterns = []
 
-  checkExternal = false
+  checkExternal = true
   followSourceMaps = false
 
 [[redirects]]
