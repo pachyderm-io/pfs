@@ -14,14 +14,16 @@ import (
 type Reader struct {
 	store     MetadataStore
 	chunks    *chunk.Storage
+	idxCache  index.Cache
 	id        ID
 	indexOpts []index.Option
 }
 
-func newReader(store MetadataStore, chunks *chunk.Storage, id ID, opts ...index.Option) *Reader {
+func newReader(store MetadataStore, chunks *chunk.Storage, idxCache index.Cache, id ID, opts ...index.Option) *Reader {
 	r := &Reader{
 		store:     store,
 		chunks:    chunks,
+		idxCache:  idxCache,
 		id:        id,
 		indexOpts: opts,
 	}
@@ -39,12 +41,12 @@ func (r *Reader) Iterate(ctx context.Context, cb func(File) error, deletive ...b
 		return errors.Errorf("fileset %v is not primitive", r.id)
 	}
 	if len(deletive) > 0 && deletive[0] {
-		ir := index.NewReader(r.chunks, prim.Deletive, r.indexOpts...)
+		ir := index.NewReader(r.chunks, r.idxCache, prim.Deletive, r.indexOpts...)
 		return ir.Iterate(ctx, func(idx *index.Index) error {
 			return cb(newFileReader(ctx, r.chunks, idx))
 		})
 	}
-	ir := index.NewReader(r.chunks, prim.Additive, r.indexOpts...)
+	ir := index.NewReader(r.chunks, r.idxCache, prim.Additive, r.indexOpts...)
 	return ir.Iterate(ctx, func(idx *index.Index) error {
 		return cb(newFileReader(ctx, r.chunks, idx))
 	})

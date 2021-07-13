@@ -15,6 +15,7 @@ import (
 // Reader is used for reading a multilevel index.
 type Reader struct {
 	chunks *chunk.Storage
+	cache  Cache
 	filter *pathFilter
 	topIdx *Index
 	tag    string
@@ -26,9 +27,10 @@ type pathFilter struct {
 }
 
 // NewReader create a new Reader.
-func NewReader(chunks *chunk.Storage, topIdx *Index, opts ...Option) *Reader {
+func NewReader(chunks *chunk.Storage, cache Cache, topIdx *Index, opts ...Option) *Reader {
 	r := &Reader{
 		chunks: chunks,
+		cache:  cache,
 		topIdx: topIdx,
 	}
 	for _, opt := range opts {
@@ -61,7 +63,7 @@ func (r *Reader) Iterate(ctx context.Context, cb func(*Index) error) error {
 		// Handle lowest level index.
 		if idx.Range == nil {
 			// Skip to the starting index.
-			if !r.atStart(idx.Path) {
+			if !atStart(idx.Path, r.filter) {
 				continue
 			}
 			if r.tag == "" || r.tag == idx.File.Tag {
@@ -75,10 +77,10 @@ func (r *Reader) Iterate(ctx context.Context, cb func(*Index) error) error {
 			continue
 		}
 		// Skip to the starting index.
-		if !r.atStart(idx.Range.LastPath) {
+		if !atStart(idx.Range.LastPath, r.filter) {
 			continue
 		}
-		levels = append(levels, pbutil.NewReader(newLevelReader(ctx, pbr, r.chunks, idx)))
+		levels = append(levels, pbutil.NewReader(newLevelReader(ctx, r, pbr, idx)))
 	}
 }
 
@@ -92,14 +94,14 @@ func (r *Reader) topLevel() pbutil.Reader {
 // atStart returns true when the name is in the valid range for a filter (always true if no filter is set).
 // For a range filter, this means the name is >= to the lower bound.
 // For a prefix filter, this means the name is >= to the prefix.
-func (r *Reader) atStart(name string) bool {
-	if r.filter == nil {
+func atStart(name string, filter *pathFilter) bool {
+	if filter == nil {
 		return true
 	}
-	if r.filter.pathRange != nil && r.filter.pathRange.Lower != "" {
-		return name >= r.filter.pathRange.Lower
+	if filter.pathRange != nil && filter.pathRange.Lower != "" {
+		return name >= filter.pathRange.Lower
 	}
-	return name >= r.filter.prefix
+	return name >= filter.prefix
 }
 
 // atEnd returns true when the name is past the valid range for a filter (always false if no filter is set).
@@ -123,17 +125,17 @@ func (r *Reader) atEnd(name string) bool {
 
 type levelReader struct {
 	ctx    context.Context
+	r      *Reader
 	parent pbutil.Reader
-	chunks *chunk.Storage
 	idx    *Index
 	buf    *bytes.Buffer
 }
 
-func newLevelReader(ctx context.Context, parent pbutil.Reader, chunks *chunk.Storage, idx *Index) *levelReader {
+func newLevelReader(ctx context.Context, r *Reader, parent pbutil.Reader, idx *Index) *levelReader {
 	return &levelReader{
 		ctx:    ctx,
+		r:      r,
 		parent: parent,
-		chunks: chunks,
 		idx:    idx,
 	}
 }
@@ -159,13 +161,12 @@ func (lr *levelReader) Read(data []byte) (int, error) {
 
 func (lr *levelReader) setup() error {
 	if lr.buf == nil {
-		r := lr.chunks.NewReader(lr.ctx, []*chunk.DataRef{lr.idx.Range.ChunkRef})
 		lr.buf = &bytes.Buffer{}
-		if err := r.Get(lr.buf); err != nil {
-			return err
-		}
+		// TODO: Clone?
+		chunkRef := lr.idx.Range.ChunkRef
 		// Skip offset bytes to get to first index entry in chunk.
-		lr.buf = bytes.NewBuffer(lr.buf.Bytes()[lr.idx.Range.Offset:])
+		chunkRef.OffsetBytes = lr.idx.Range.Offset
+		return lr.r.cache.Get(lr.ctx, chunkRef, lr.r.filter, lr.buf)
 	}
 	return nil
 }
@@ -175,7 +176,7 @@ func (lr *levelReader) next() error {
 	if err := lr.parent.Read(lr.idx); err != nil {
 		return err
 	}
-	r := lr.chunks.NewReader(lr.ctx, []*chunk.DataRef{lr.idx.Range.ChunkRef})
+	r := lr.r.chunks.NewReader(lr.ctx, []*chunk.DataRef{lr.idx.Range.ChunkRef})
 	lr.buf.Reset()
 	return r.Get(lr.buf)
 }
