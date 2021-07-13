@@ -236,7 +236,7 @@ We have listed all the possible outcomes in the following cheat sheet. Each part
 
 
 ### ***Case 1*** Outer join on the Returns repo only
-1. In the `examples/joins` directory, edit the pipeline's specification `outer_join.json` and set `"outer_join" :true` on the repo `returns`:
+1. In the `examples/joins` directory, open `outer_join.json` and note the lines setting `"outer_join" :true`:
     ```shell
     "input": {
         "join": [
