@@ -251,7 +251,7 @@ func (r *Reporter) internalMetrics(metrics *Metrics) {
 
 	// Pipeline info
 	if err := func() error {
-		lpClient, err := r.env.GetPachClient(ctx).PpsAPIClient.ListPipeline(ctx, &pps.ListPipelineRequest{Details: false})
+		lpClient, err := r.env.GetPachClient(ctx).PpsAPIClient.ListPipeline(ctx, &pps.ListPipelineRequest{Details: true})
 		if err != nil {
 			return err
 		}
@@ -261,18 +261,6 @@ func (r *Reporter) internalMetrics(metrics *Metrics) {
 		}
 		metrics.Pipelines = int64(len(pipelineInfos)) // Number of pipelines
 		for _, pi := range pipelineInfos {
-			if pi.Details.ParallelismSpec != nil {
-				if metrics.MaxParallelism < pi.Details.ParallelismSpec.Constant {
-					metrics.MaxParallelism = pi.Details.ParallelismSpec.Constant
-				}
-				if metrics.MinParallelism > pi.Details.ParallelismSpec.Constant {
-					metrics.MinParallelism = pi.Details.ParallelismSpec.Constant
-				}
-				metrics.NumParallelism++
-			}
-			if pi.Details.Egress != nil {
-				metrics.CfgEgress++
-			}
 			if pi.JobCounts != nil {
 				var cnt int64 = 0
 				for _, c := range pi.JobCounts {
