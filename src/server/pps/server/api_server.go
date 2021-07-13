@@ -2562,6 +2562,10 @@ func (a *apiServer) deletePipeline(ctx context.Context, request *pps.DeletePipel
 		return err
 	}
 
+	if _, err := a.StopPipeline(ctx, &pps.StopPipelineRequest{Pipeline: request.Pipeline}); err != nil {
+		return errors.Wrapf(err, "error stopping pipeline %s", request.Pipeline.Name)
+	}
+
 	// Load pipeline details so we can do some cleanup tasks based on certain
 	// input types and the output branch.
 	pachClient := a.env.GetPachClient(ctx)
@@ -2748,7 +2752,8 @@ func (a *apiServer) StopPipeline(ctx context.Context, request *pps.StopPipelineR
 		if err := a.env.PfsServer().CreateBranchInTransaction(txnCtx, &pfs.CreateBranchRequest{
 			Branch:     client.NewSystemRepo(pipelineInfo.Pipeline.Name, pfs.MetaRepoType).NewBranch(pipelineInfo.Details.OutputBranch),
 			Provenance: nil,
-		}); err != nil {
+		}); err != nil && !errutil.IsNotFoundError(err) {
+			// don't error if we're stopping a spout or service pipeline
 			return err
 		}
 
