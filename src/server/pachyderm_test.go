@@ -3107,7 +3107,11 @@ func TestAutoscalingStandby(t *testing.T) {
 				&pps.CreatePipelineRequest{
 					Pipeline: client.NewPipeline(pipelines[i]),
 					Transform: &pps.Transform{
-						Cmd: []string{"cp", path.Join("/pfs", input, "file"), "/pfs/out/file"},
+						Cmd: []string{"bash"},
+						Stdin: []string{
+							"sleep 1",
+							fmt.Sprintf("cp %s /pfs/out/file", path.Join("/pfs", input, "file")),
+						},
 					},
 					Input:       client.NewPFSInput(input, "/*"),
 					Autoscaling: true,
