@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="author" content="Canonical" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#E95420" />
+    <link rel="search"
+    type="application/opensearchdescription+xml"
+    href="/ubuntu-manpage-search.xml"
+    title="Ubuntu Manpage Search" />
+    <title>Ubuntu Manpage:
+
+       html2text - an advanced HTML-to-text converter
+    </title>
+    <link rel="stylesheet" href="https://assets.ubuntu.com/v1/vanilla-framework-version-1.8.1.min.css" />
+    <link rel="stylesheet" href="/assets/light/css/styles.css"/>
+    <link rel="icon" type="image/png" href="https://assets.ubuntu.com/v1/cb22ba5d-favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="https://assets.ubuntu.com/v1/49a1a858-favicon-32x32.png" sizes="32x32" />
+    <link rel="apple-touch-icon" sizes="144x144" href="https://assets.ubuntu.com/v1/3361409d-apple-touch-icon-144x144-precomposed.png" />
+    <link rel="apple-touch-icon" sizes="114x114" href="https://assets.ubuntu.com/v1/5fe4d3c8-apple-touch-icon-114x114-precomposed.png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="https://assets.ubuntu.com/v1/09460d9a-apple-touch-icon-72x72-precomposed.png" />
+    <link rel="apple-touch-icon" href="https://assets.ubuntu.com/v1/cc66da65-apple-touch-icon.png" />
+  </head>
+  <body>
+    <header id="navigation" class="p-navigation">
+      <div class="row">
+        <div class="p-navigation__banner">
+          <div class="p-navigation__logo">
+            <a class="p-navigation__link" href="/">
+              <img class="p-navigation__image" src="https://assets.ubuntu.com/v1/b93fecb3-ubuntu-manuals-lockup.svg" alt="">
+            </a>
+          </div>
+          <a href="#navigation" class="p-navigation__toggle--open" title="menu">Menu</a>
+          <a href="#navigation-closed" class="p-navigation__toggle--close" title="close menu">Close menu</a>
+        </div>
+        <nav class="p-navigation__nav" role="menubar">
+          <form class="p-search-box" method="get" action="/cgi-bin/search.py" id="cse-search-box">
+            <input class="p-search-box__input" name="q" placeholder="Search" required="" type="search">
+            <button type="reset" class="p-search-box__reset" alt="reset"><i class="p-icon--close"></i></button>
+            <button type="submit" class="p-search-box__button" alt="search"><i class="p-icon--search"></i></button>
+            <input type="hidden" name="cx" value="003883529982892832976:5zl6o8w6f0s" />
+            <input type="hidden" name="cof" value="FORID:9" />
+            <input type="hidden" name="ie" value="UTF-8" />
+            <script type="text/javascript" src="https://www.google.com/coop/cse/brand?form=cse-search-box&lang=en"></script>
+          </form>
+          <span class="u-off-screen">
+            <a href="#main-content">Jump to main content</a>
+          </span>
+          <ul class="p-navigation__links" role="menu" id="navigation-container"></ul>
+        </nav>
+      </div>
+    </header>
+    <div id="main-content">
+      <section class="p-strip is-bordered">
+        <div class="row">
+          <div class="col-3 u-hide--small u-hide" id="toc">
+          </div>
+          <div id="tableWrapper">
+            <p id="distroAndSection"></p>
+
+Provided by: <a href='https://launchpad.net/ubuntu/trusty/+package/html2text'>html2text_1.3.2a-17_amd64</a> <a href='https://bugs.launchpad.net/ubuntu/+source/html2text/+filebug-advanced' title='Report a bug in the content of this documentation'><img src='/img/bug.png' alt='bug' border=0></a><br><br><pre>
+</pre><h4><b>NAME</b></h4><pre>
+       html2text - an advanced HTML-to-text converter
+
+</pre><h4><b>SYNOPSIS</b></h4><pre>
+       <b>html2text</b> <b>-help</b>
+       <b>html2text</b> <b>-version</b>
+       <b>html2text</b>  [  <b>-unparse</b>  | <b>-check</b> ] [ <b>-debug-scanner</b> ] [ <b>-debug-parser</b> ] [ <b>-rcfile</b> <u>path</u> ] [
+       <b>-style</b> ( <b>compact</b> | <b>pretty</b> ) ] [ <b>-width</b> <u>width</u> ] [ <b>-o</b> <u>output-file</u> ] [ <b>-nobs</b>  ]  [  <b>-ascii</b>  |
+       <b>-utf8</b> ] [ <b>-nometa</b> ] [ <u>input-file</u> ...  ]
+
+</pre><h4><b>DESCRIPTION</b></h4><pre>
+       <b>html2text</b> reads HTML documents from the <u>input-file</u>s, formats each of them into a stream of
+       plain text characters, and writes the result to standard output (or into  <u>output-file</u>,  if
+       the <b>-o</b> command line option is used).
+
+       If  no <u>input-file</u>s are specified on the command line, <b>html2text</b> reads from standard input.
+       A dash as the <u>input-file</u> is an alternate way to specify standard input.
+
+       <b>html2text</b> understands all HTML 3.2 constructs, but can render only part of them due to the
+       limitations  of  the  text  output  format.  However, the program attempts to provide good
+       substitutes for the elements it cannot render.  <b>html2text</b> parses HTML 4  input,  too,  but
+       not always as successful as other HTML processors. It also accepts syntactically incorrect
+       input, and attempts to interpret it "reasonably".
+
+       The way <b>html2text</b> formats the HTML documents is controlled by formatting  properties  read
+       from  an RC file.  <b>html2text</b> attempts to read <u>$HOME/.html2textrc</u> (or the file specified by
+       the <b>-rcfile</b> command line option); if that file cannot be read, <b>html2text</b> attempts to  read
+       <u>/etc/html2textrc</u>.   If  no  RC  file  can be read (or if the RC file does not override all
+       formatting properties), then "reasonable" defaults are assumed.  The  RC  file  format  is
+       described in the <b><a href="../man5/html2textrc.5.html">html2textrc</a></b>(5) manual page.
+
+       Debian   version   of   <b>html2text</b>   also   can   do   input   and   output  recoding  (see
+       /usr/share/doc/html2text/README.Debian for more info).  <b>html2text</b> tries to fetch  encoding
+       from  HTML  document.  If encoding is not specified, you can use <b>-ascii</b> and <b>-utf8</b> options.
+       Output is converted to user's locale charset (LC_CTYPE).
+
+</pre><h4><b>OPTIONS</b></h4><pre>
+       <b>-nometa</b>
+              By default, Debian version  of  <b>html2text</b>  use  'meta  http-equiv'  tag  for  input
+              recoding. This option cancels this behavior.
+
+       <b>-ascii</b> By  default,  when  <b>-nometa</b>  is  supplied,  <b>html2text</b>  uses  <b>UTF-8</b>  for the output.
+              Specifying this option, plain <b>ASCII</b> is used instead.  To  find  out  how  non-ASCII
+              characters are rendered, refer to the file "ascii.substitutes".
+
+       <b>-utf8</b>  By  default,  when  <b>-nometa</b>  is  supplied, <b>html2text</b> uses <b>ISO</b> <b>8859-1</b> for the input.
+              Specifying this option, <b>UTF-8</b> is used instead (both for  input  and  output).  This
+              option implies <b>-nobs</b>.
+
+       <b>-check</b> This  option  is  for diagnostic purposes: The HTML document is only parsed and not
+              processed otherwise. In this mode of operation,  <b>html2text</b>  will  report  on  parse
+              errors  and  scan  errors, which it does not in other modes of operation. Note that
+              parse and scan errors are not fatal for <b>html2text</b>, but may cause mis-interpretation
+              of the HTML code and/or portions of the document being swallowed.
+
+       <b>-debug-parser</b>
+              Let  <b>html2text</b> report on the tokens being shifted, rules being applied, etc., while
+              scanning the HTML document. This option is for diagnostic purposes.
+
+       <b>-debug-scanner</b>
+              Let <b>html2text</b> report on  each  lexical  token  scanned,  while  scanning  the  HTML
+              document. This option is for diagnostic purposes.
+
+       <b>-help</b>  Print command line summary and exit.
+
+       <b>-nobs</b>  By  default,  original  <b>html2text</b>  renders  underlined  letters with sequences like
+              "underscore-backspace-character" and boldface  letters  like  "character-backspace-
+              character".  Because  of  issues  with  UTF-8,  Debian version of <b>html2text</b> doesn't
+              produce backspaces, so this option really does nothing.
+
+       <b>-o</b> <u>output-file</u>
+              Write the output  to  <u>output-file</u>  instead  of  standard  output.  A  dash  as  the
+              <u>output-file</u> is an alternate way to specify the standard output.
+
+       <b>-rcfile</b> <u>path</u>
+              Attempt to read the file specified in <u>path</u> as RC file.
+
+       <b>-style</b> ( <b>compact</b> | <b>pretty</b> )
+              Style  <b>pretty</b>  changes  some  of  the  default  values of the formatting parameters
+              documented in <b><a href="../man5/html2textrc.5.html">html2textrc</a></b>(5).  To find out which and how the  formatting  parameter
+              defaults  are  changed,  check  the file "pretty.style". If this option is omitted,
+              style <b>compact</b> is assumed as default.
+
+       <b>-unparse</b>
+              This option is for diagnostic purposes: Instead of formatting the parsed  document,
+              generate  HTML  code,  that is guaranteed to be syntactically correct. If <b>html2text</b>
+              has problems parsing a syntactically incorrect HTML document, this option may  help
+              you to understand what <b>html2text</b> thinks that the original HTML code means.
+
+       <b>-version</b>
+              Print program version and exit.
+
+       <b>-width</b> <u>width</u>
+              By  default,  <b>html2text</b>  formats  the  HTML  documents  for  a  screen  width of 79
+              characters. If redirecting the output into a file, or if your terminal has a  width
+              other  than  80  characters, or if you just want to get an idea how <b>html2text</b> deals
+              with large tables and  different  terminal  widths,  you  may  want  to  specify  a
+              different <u>width</u>.
+
+</pre><h4><b>FILES</b></h4><pre>
+       <u>/etc/html2textrc</u>
+              System wide parser configuration file.
+
+       <u>$HOME/.html2textrc</u>
+              Personal parser configuration file, overrides the system wide values.
+
+</pre><h4><b>CONFORMING</b> <b>TO</b></h4><pre>
+       <b>HTML</b> <b>3.2</b> (HTML 3.2 Reference Specification - <a href="http://www.w3.org/TR/REC-html32">http://www.w3.org/TR/REC-html32</a>),
+
+</pre><h4><b>RESTRICTIONS</b></h4><pre>
+       Debian version of <b>html2text</b> have no http support. Use <b>html2text</b> through pipes with curl or
+       wget instead. See README.Debian for more information.
+
+       <b>html2text</b> was written to convert HTML 3.2 documents. When using it with  HTML  4  or  even
+       XHTML  1  documents,  some  constructs  present  only  in these HTML versions might not be
+       rendered.
+
+</pre><h4><b>AUTHOR</b></h4><pre>
+       <b>html2text</b> was written up to  version  1.2.2  by  Arno  Unkrig  &lt;<a href="mailto:arno@unkrig.de">arno@unkrig.de</a>&gt;  for  GMRS
+       Software GmbH, Unterschleissheim.
+
+       Current maintainer and primary download location is:
+       Martin Bayer &lt;<a href="mailto:mail@mbayer.de">mail@mbayer.de</a>&gt;
+       <a href="http://www.mbayer.de/html2text/files.shtml">http://www.mbayer.de/html2text/files.shtml</a>
+
+       This man page was modified for Debian by Eugene V. Lyubimkin &lt;<a href="mailto:jackyf.devel@gmail.com">jackyf.devel@gmail.com</a>&gt; ⟨⟩
+
+</pre><h4><b>SEE</b> <b>ALSO</b></h4><pre>
+       <b><a href="../man5/html2textrc.5.html">html2textrc</a></b>(5), <b><a href="../man1/less.1.html">less</a></b>(1), <b><a href="../man1/more.1.html">more</a></b>(1)
+
+                                            2008-09-20                               <a href="../man1/html2text.1.html">html2text</a>(1)
+</pre>
+</pre>
+        </div>
+      </section>
+    </div>
+    <footer class="p-strip is-shallow">
+      <div class="row">
+        <p>Powered by the <a href="https://launchpad.net/ubuntu-manpage-repository">Ubuntu Manpage Repository</a>, file bugs in <a href="https://bugs.launchpad.net/ubuntu-manpage-repository/+filebug">Launchpad</a></p>
+        <p>&copy; 2019 Canonical Ltd. Ubuntu and Canonical are registered trademarks of Canonical Ltd.</p>
+      </div>
+    </footer>
+    <script src="/functions.js"></script>
+  </body>
+</html>
+

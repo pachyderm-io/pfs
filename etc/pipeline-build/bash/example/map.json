@@ -1,0 +1,18 @@
+{
+    "pipeline": {
+	"name": "map"
+    },
+    "description": "A pipeline that tokenizes scraped pages and appends counts of words to corresponding files.",
+    "transform": {
+	"build": {
+	    "image": "dventimiglia/bash-build:latest",
+	    "path": "./source"
+	}
+    },
+    "input": {
+	"pfs": {
+	    "repo": "scraper",
+	    "glob": "/"
+	}
+    }
+}
