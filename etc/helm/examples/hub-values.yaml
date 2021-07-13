@@ -55,8 +55,6 @@ pachd:
       # bucket is configured per workspace.
       bucket: "test-bucket"
       cred: ""
-      # serviceAccountName is configured per workspace.
-      serviceAccountName: "test-service-account"
     putFileConcurrencyLimit: 10
   resources:
     limits:
@@ -68,6 +66,18 @@ pachd:
   tls:
     enabled: true
     secretName: "dash-tls"
+  serviceAccount:
+    additionalAnnotations:
+      # serviceAccountName is configured per workspace.
+      iam.gke.io/gcp-service-account: "test-service-account"
+
+worker:
+  serviceAccount:
+    additionalAnnotations:
+      # serviceAccountName is configured per workspace.
+      iam.gke.io/gcp-service-account: "test-service-account"
+
 postgresql:
   # Set to false if you are bringing your own PostgreSQL instance. PostgreSQL is a requirement for Pachyderm.
   enabled: false
+

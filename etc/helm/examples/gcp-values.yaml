@@ -9,3 +9,11 @@ pachd:
       # You can also pass the creds on the command line using helm install --set-file storage.google.cred=creds.json 
       cred: |
         INSERT JSON HERE
+  serviceAccount:
+    additionalAnnotations:
+      iam.gke.io/gcp-service-account: blah123
+
+worker:
+  serviceAccount:
+    additionalAnnotations:
+      iam.gke.io/gcp-service-account: blah123

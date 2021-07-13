@@ -420,9 +420,6 @@
                                 },
                                 "cred": {
                                     "type": "string"
-                                },
-                                "serviceAccountName": {
-                                    "type": "string"
                                 }
                             }
                         },
@@ -553,9 +550,6 @@
                         },
                         "repository": {
                             "type": "string"
-                        },
-                        "usesRoot": {
-                            "type": "boolean"
                         }
                     }
                 },
@@ -572,6 +566,9 @@
                             "type": "string"
                         }
                     }
+                },
+                "usesRoot": {
+                    "type": "boolean"
                 }
             }
         }

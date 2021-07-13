@@ -278,7 +278,6 @@ pachd:
       #    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
       #    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/…%40….iam.gserviceaccount.com"
       #  }
-      serviceAccountName: "" # For Workload Identity access to the bucket
     local:
       # hostPath indicates the path on the host where the PFS metadata
       # will be stored.  It must end in /.  It is analogous to the
