@@ -1,0 +1,25 @@
+{
+    "pipeline": {
+        "name": "generate"
+    },
+    "description": "Generates gpt-3 completions using finetuned model.",
+    "transform": {
+        "image": "gpt3",
+        "cmd": ["/generate.sh"],
+        "secrets": [ {
+            "name": "openai",
+            "env_var": "OPENAI_API_KEY",
+            "key": "key"
+        }, {
+            "name": "openai",
+            "env_var": "ENGINE",
+            "key": "engine"
+        } ]
+    },
+    "input": {
+        "pfs": {
+            "repo": "prompts",
+            "glob": "/*"
+        }
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "pipeline": {
+        "name": "train"
+    },
+    "description": "Finetunes the gpt-3 model.",
+    "transform": {
+        "image": "gpt3",
+        "cmd": ["/train.sh"],
+        "secrets": [ {
+            "name": "openai",
+            "env_var": "OPENAI_API_KEY",
+            "key": "key"
+        }, {
+            "name": "openai",
+            "env_var": "ENGINE",
+            "key": "engine"
+        } ]
+    },
+    "input": {
+        "pfs": {
+            "repo": "data",
+            "glob": "/"
+        }
+    }
+}

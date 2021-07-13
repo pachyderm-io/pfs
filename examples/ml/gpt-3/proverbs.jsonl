@@ -1,0 +1,655 @@
+{"data": {"text_list": ["<proverb>", "A bad excuse is better than none."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A bad penny always turns up."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A bad workman blames his tools."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A bird in the hand is worth two in the bush."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A cat may look at a king."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A chain is only as strong as its weakest link."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A dog is a man's best friend."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A fool and his money are soon parted."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A friend in need is a friend indeed."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A friend to everyone is a friend to no one."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A journey of a thousand miles begins with a single step."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A little learning is a dangerous thing."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A leopard cannot change its spots."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A mill cannot grind with the water that is past."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A miss is as good as a mile."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A new language is a new life."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A penny saved is a penny earned."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A picture is worth a thousand words."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A rising tide lifts all boats."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A rolling stone gathers no moss."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A stitch in time saves nine."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A watched man never plays."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A watched pot/kettle never boils."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Absence makes the heart grow fonder."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Power corrupts, absolute power corrupts absolutely."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Accidents will happen."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Actions speak louder than words."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Adversity makes strange bedfellows."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All good things come to he who waits."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All good things must come to an end."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All hands on deck/to the pump."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All is grist that comes to the mill."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All roads lead to Rome."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All that glitters/glistens is not gold."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All the world loves a lover."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All things come to those who wait."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All things must pass."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All work and no play makes Jack a dull boy."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All you need is love."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All is fair in love and war."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All is for the best in the best of all possible worlds."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "All is well that ends well."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "An apple a day keeps the doctor away."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "An army marches on its stomach."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "An eye for an eye makes the whole world blind."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A man's home is his castle."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Another day, another dollar."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "An ounce of prevention is worth a pound of cure."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Any port in a storm."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Any publicity is good publicity."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "April showers bring forth May flowers."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "As you make your bed, so you must lie upon it."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "As you sow so shall you reap."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Ask a silly question and you will get a silly answer."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Ask my companion if I be a thief."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Ask no questions and hear no lies."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Attack is the best form of defense."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Bad news travels fast."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Barking dogs seldom bite."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Beauty is in the eye of the beholder."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Beauty is only skin deep."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Beggars cannot be choosers."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Behind every great man, there is a great woman."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Better late than never."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Better safe than sorry."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Be yourself."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Better the Devil you know (than the Devil you do not.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Better to have loved and lost than never to have loved at all."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Better to light one candle than to curse the darkness."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Better to remain silent and be thought a fool than to speak and remove all doubt."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Better wear out than rust out."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Beware of Greeks bearing gifts."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Big fish eat little fish."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Birds of a feather (flock together.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Blood is thicker than water."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Born with a silver spoon in one's mouth."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Boys will be boys."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Brevity is the soul of wit."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Business before pleasure."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Caesar's wife must be above suspicion."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Careless talk costs lives."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Charity begins at home."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Cheats never prosper."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Cheese, wine, and friends must be old to be good."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Children should be seen and not heard."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Christmas comes but once a year."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Cleanliness is next to godliness."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Clothes make the man."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Coffee and love taste best when hot. Ethiopian proverb."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Cold hands, warm heart."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Comparisons are odious."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Count your blessings."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Courage is the measure of a Man, Beauty is the measure of a Woman."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Cowards may die many times before their death."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Crime does not pay."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Cross the stream where it is shallowest."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Cut your coat according to your cloth."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Curiosity killed the cat."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Dead men tell no tales."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Devil take the hindmost."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Discretion is the better part of valour."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do as I say, not as I do."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do as you would be done by."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do unto others as you would have them do unto you."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not bite the hand that feeds you."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not burn your bridges behind you."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not cast your pearls before swine."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not cry over spilled milk."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not change horses in midstream."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not count your chickens before they are hatched."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not cross the bridge till you come to it."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not cut off your nose to spite your face."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not fish for a shark with your hands, fish for hands with a shark."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not judge a book by its cover."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not keep a dog and bark yourself."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not let the bastards grind you down."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not let the grass grow beneath (one's) feet."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not look a gift horse in the mouth."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not make a mountain out of a mole hill."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not meet troubles half-way."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not put all your eggs in one basket."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not put the cart before the horse."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not put too many irons in the fire."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not put new wine into old bottles."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not put off until tomorrow what you can do today."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not rock the boat."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not shut/lock the stable door after the horse has bolted."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not spend it all in one place."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not spoil the ship for a ha'porth of tar."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not throw pearls to swine."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not teach your Grandmother to suck eggs."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not throw the baby out with the bathwater."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not try to walk before you can crawl."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not upset the apple-cart."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not wash your dirty linen in public."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do not sympathize with those who can not empathize."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Do unto others as you would have them do unto you."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Doubt is the beginning, not the end, of wisdom."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Early to bed and early to rise makes a man healthy, wealthy and wise."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Easier said than done."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "East is east, and west is west (and never the twain shall meet.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "East, west, home is best."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Easy come, easy go."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Early marriage, earlier pregnant."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Eat breakfast like a king, lunch like a prince and dinner like a pauper."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Eat, drink and be merry, (for tomorrow we die.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Empty vessels make the most noise."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Enough is as good as a feast."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Even a worm will turn."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Even from a foe a man may learn wisdom."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Every cloud has a silver lining."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Every dog has his day."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Every Jack has his Jill."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Every little bit helps."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Every man for himself (and the Devil take the hindmost.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Every man has his price."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Every picture tells a story."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Every stick has two ends."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Everybody wants to go to heaven but nobody wants to die."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Everyone has their price."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Everything comes to those who wait."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Every tide has its ebb."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Failing to plan is planning to fail."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Faint heart never won fair lady (Scott.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Fair exchange is no robbery."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Faith will move mountains."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Fall seven times, stand up eight."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "False friends are worse than open enemies."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Fake it til' you make it."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Familiarity breeds contempt."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Feed a cold and starve a fever."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Fight fire with fire."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Fine feathers make fine birds."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Finders keepers (losers weepers.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "First come, first served."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "First impressions are the most lasting."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "First things first."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Fish always rots from the head downwards."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Fish and guests smell after three days."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Flattery will get you nowhere."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Fools rush in (where angels fear to tread.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "For want of a nail the shoe was lost; for want of a shoe the horse was lost; and for want of a horse the man was lost."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Forewarned is forearmed."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Fortune favours the bold/brave."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Free is for me."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Fretting cares make grey hair."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "From the sublime to the ridiculous (is only a step.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Genius is an infinite capacity for taking pains."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Give a dog a bad name and hang him."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Give a man a fish and you feed him for a day. Teach a man to fish and you feed him for a lifetime."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Give a man rope enough and he will hang himself."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Give credit where credit is due."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Give him an inch and he will take a mile."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Give the devil his/her due."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "God helps those who help themselves."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Good fences make good neighbours."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Good talk saves the food."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Good things come to those who wait."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Great minds think alike."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Half a loaf is better than no bread."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Handsome is as handsome does."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Hard cases make bad law."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Hard work never did anyone any harm."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Haste makes waste."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "He that goes a-borrowing, goes a-sorrowing."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "He who can, does; he who cannot, teaches."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "He who hesitates is lost."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "He who laughs last laughs longest."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "He who lives by the sword, dies by the sword."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "He who loves the world as his body may be entrusted with the empire."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "He who makes a beast out of himself gets rid of the pain of being a man."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "He who pays the piper calls the tune."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "He who knows does not speak. He who speaks does not know."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "He who sups with the Devil should have a long spoon."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Hell hath no fury like a woman scorned."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Heaven has no Rage, like Love to Hatred turned, Nor Hell a Fury, like a Woman scorned."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Hindsight is always twenty-twenty."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "History repeats itself."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Home is where the heart is."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Honesty is the best policy."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Hope for the best, and prepare for the worst."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Hope springs eternal."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Horses for courses."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Hunger never knows the taste, sleep never knows the comfort."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If anything can go wrong it will."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If a job is worth doing, it is worth doing well."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If at first you do not succeed, try, try again."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If God had meant us to fly, he would have given us wings."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If ifs and ands were pots and pans, there would be no work for tinkers."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If it ain't broke, don't fix it."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If it were not for hope the heart would break."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If it were a snake, it would have bit you."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If the shoe fits, wear it."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If the mountain will not come to Mohammed, then Mohammed must go to the mountain."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If wealth is lost, nothing is lost. If health is lost, something is lost. If character is lost, everything is lost."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If wishes were horses, beggars would ride."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you're growing in age, then you're nearing to the graveyard."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you cannot be good, be careful."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you cannot beat them, join them."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you cannot live longer, live deeper."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you cannot stand the heat, get out of the kitchen."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you give a mouse a cookie, he'll always ask for a glass of milk."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you think that you know everything, then you're a Jack ass."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you lie down with dogs, you will get up with fleas."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you pay peanuts, you get monkeys."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "play with fire, you will get burned."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you steal from one author, it is plagiarism; if you steal from many, it is research."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you want a thing done well, do it yourself."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you have never seen the bottom of the tree, you cannot know how tall it stands."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you must dance with the Devil, you might as well know his favorite song."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "If you've got it, flaunt it."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Ignorance is bliss."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Imitation is the sincerest form of flattery."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "In for a penny, in for a pound."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "(March comes) in like a lion, (and goes) out like a lamb."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "In the kingdom of the blind, the one eyed man is king."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "In the midst of life, we are in death."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Into every life a little rain must fall."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It ain't over till/until it's over."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It ain't over till the fat lady sings."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It ain’t what you don't know that gets you into trouble. It's what you know for sure that just ain’t so."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It goes without saying."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is a small world."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is all grist to the mill."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is an ill wind (that blows no one any good.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is best to be on the safe side."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is better to be smarter than you appear than to appear smarter than you are."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is better to give than to receive."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is better to have loved and lost than never to have loved at all."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is better to cultivate a Land with two Bulls, rather working under Boss who never gives Wage when asked."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is better to light a candle than curse the darkness."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is better to travel hopefully than to arrive."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is easy to be wise after the event."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is like juggling sand."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is never too late."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is no use crying over spilt milk."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is no use locking the stable door after the horse has bolted."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is not enough to learn how to ride, you must also learn how to fall."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is on."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is the early bird that gets the worm."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is the empty can that makes the most noise."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is the squeaky wheel that gets the grease."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is what it is."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It needs a hundred lies to cover a single lie."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It never rains but it pours."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It takes a thief to catch a thief."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It takes a whole village to raise a child."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It takes all sorts to make a world."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It takes one to know one."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It takes two to tango."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "I'm going to have to give you the pink slip."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It will come back and haunt you."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It will be the same a hundred years hence."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Islands depend on reeds, just as reeds depend on islands."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Jack of all trades, master of none."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Judge not, that ye be not judged."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Keep your chin up."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Keep your friends close and your enemies closer."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Keep your powder dry."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Kill the chicken to scare the monkey."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Kill the goose that lays the golden eggs."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Kill two birds with one stone."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Kindness in words creates confidence. Kindness in thinking creates profoundness. Kindness in giving creates love."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Knock on (or touch) wood."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Know which side (one's) bread is buttered (on.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Knowledge is power, guard it well."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "A language is a dialect with an army and navy."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The last drop makes the cup run over."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Laugh before breakfast, cry before supper."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Laugh and the world laughs with you, weep and you weep alone."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Laughter is the best medicine."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Late lunch makes day go faster."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Learn a language, and you will avoid a war."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Least said, soonest mended."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Less is more."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Let bygones be bygones."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Let not the sun go down on your wrath."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Let sleeping dogs lie."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Let the buyer beware."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Let the cat out of the bag."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Let the dead bury the dead."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Let the punishment fit the crime."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Let well alone."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Let your hair down."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Life begins at forty."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Life is too short not to do something that matters."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Life is not all beer and skittles."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Life is what you make it."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Lightning never strikes twice in the same place."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Like father, like son."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Little pitchers have big ears."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Little strokes fell great oaks."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Little things please little minds."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Live and let live."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Live for today, for tomorrow never comes."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "He who fights and runs away, may live to fight another day."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Loose lips sink ships."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Look before you leap."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Love is blind."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Love of money is the root of all evil."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Love makes the world go around."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Love will find a way."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Make hay while the sun shines."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Make love not war."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Man does not live by bread alone."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Manners maketh man."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Many a little makes a mickle."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Many a mickle makes a muckle."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Many a true word is spoken in jest."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Many hands make light work."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "March comes in like a lion and goes out like a lamb."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Marriages are made in heaven."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Marry in haste, repent at leisure."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Memory is the treasure of the mind."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Men are blind in their own cause. American journalist."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Men get spoiled by staying, Women get spoiled by wandering."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Might is right."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Might makes right."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Mighty oaks from little acorns grow."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Milking the bull."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Misery loves company."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Moderation in all things."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Monday's child is fair of face, Tuesday's child is full of grace, Wednesday's child is full of woe, Thursday's child has far to go, Friday's child is loving and giving, Saturday's child works hard for its living, and a child that is born on the Sabbath day is fair and wise and good and gay."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Money does not grow on trees."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Money earned by deceit, goes by deceit."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Money is not everything."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Money demands care, you abuse it and it disappears."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Money makes the world go around."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Money talks."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Money makes many things, but also makes devil dance."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "More haste, less speed."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Mud sticks."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Music has charms to soothe the savage breast."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Nature abhors a vacuum."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Necessity is the mother of invention."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Needs must when the devil drives."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never cast a clout until May be out."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never give advice unless asked."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never give a sucker an even break."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never judge a book by its cover."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never let the sun go down on your anger."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never let the truth get in the way of a good story."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never look a gift horse in the mouth."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never put off until tomorrow what you can do today."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never reveal a man's wage, and woman's age."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never speak ill of the dead."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never say die."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never say never."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never tell tales out of school."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Never too old to learn."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Nine tailors make a man."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "No guts, no glory."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "No man can serve two masters."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "No man is an island."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "No names, no pack-drill."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "No news is good news."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "No one can make you feel inferior without your consent."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "No pain, no gain."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "No rest for the wicked."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Not all those who wander are lost."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Not happy, Jan!."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Nothing is certain but death and taxes."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Nothing succeeds like success."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Nothing ventured, nothing gained."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Oil and water do not mix."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Old soldiers never die, (they simply/just fade away.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Once a thing, always a thing."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Once bitten, twice shy."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "One good turn deserves another."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "One half of the world does not know how the other half lives."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "One hand washes the other."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "One kind word can warm three winter months."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "One man's meat is another man's poison."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "One man's trash is another man's treasure."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "One might as well be hanged for a sheep as a lamb."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "One might as well throw water into the sea as to do a kindness to rogues."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "One law for the rich and another for the poor."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "One swallow does not make a summer."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "One who believes in Sword, dies by the Sword."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "One who speaks only one language is one person, but one who speaks two languages is two people."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "One year's seeding makes seven years weeding."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Only fools and horses work."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Open confession is good for the soul."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Opportunity never knocks twice at any man's door."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Other times other manners."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Out of sight, out of mind."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Out of the frying pan and into the fire."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Out of the mouths of babes (and sucklings.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Over greedy man, over wrathful woman will never flourish."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Parsley seed goes nine times to the Devil."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Patience is a virtue."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Pearls of wisdom."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Penny wise and pound foolish."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Penny, Penny. Makes many."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "People who live in glass houses should not throw stones."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Physician, heal thyself."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Possession is nine-tenths of the law."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Power corrupts; absolute power corrupts absolutely."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Practice makes perfect."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Practice what you preach."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Preaching to the choir."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Prevention is better than cure."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Pride comes/goes before a fall."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Procrastination is the thief of time."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Put your best foot forward."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Put your money where your mouth is."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Red sky at night shepherds delight; red sky in the morning, shepherds warning."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Respect is not given, it is earned."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Revenge is a dish best served cold."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Revenge is sweet."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Rome was not built in a day."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Right or wrong, my country."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Rules were made to be broken."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "See a penny and pick it up, all the day you will have good luck; see a penny and let it lay, bad luck you will have all day."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "See no evil, hear no evil, speak no evil."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Seeing is believing."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Seek and ye shall find."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Set a thief to catch a thief."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Shiny are the distant hills."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Shrouds have no pockets."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "(Speech is silver but) Silence is golden."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Slow and steady wins the race."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Slow but sure."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Softly, softly, catchee monkey."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Some are more equal than others."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Sometimes we are the student. Sometimes we are the master. And sometimes we are merely the lesson &ndash; Jacalyn Smith."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Spare the rod and spoil the child."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Speak as you find."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Speak softly and carry a big stick."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Sticks and stones may break my bones, but words will never hurt me."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Still waters run deep."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Strike while the iron is hot."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Stupid is as stupid does."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Success has many fathers, while failure is an orphan."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Speak of the devil and he shall/is sure/will appear."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "(A) swarm in May is worth a load of hay; a swarm in June is worth a silver spoon; but a swarm in July is not worth a fly."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Take care of the pennies, and the pounds will take care of themselves."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Talk is cheap."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Talk of the Devil, and he is bound to appear."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Talk of Angels, and hear the flutter of their wings."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Tell me who your friends are, and I'll tell you who you are."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Tell the truth and shame the Devil."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The age of miracles is past."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The apple does not fall/never falls far from the tree."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The best defence is a good offence."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The best-laid schemes of mice and men often go awry."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The best things in life are free."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The bigger they are, the harder they fall."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The boy is father to the man."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The bread never falls but on its buttered side."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The child is the father of the man."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The cobbler always wears the worst shoes."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The course of true love never did run smooth."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The customer is always right."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The darkest hour is just before the dawn."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The Devil finds work for idle hands to do."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The Devil looks after his own."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The die is cast<ref></ref>."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The early bird catches the worm."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The end justifies the means."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The enemy of my enemy is my friend."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The exception which proves the rule."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The female of the species is more deadly than the male."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The good die young."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The grass is always greener (on the other side) (of the fence.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The hand that rocks the cradle rules the world."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The husband is always the last to know."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The innocent seldom find an uncomfortable pillow."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The labourer is worthy of his hire."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "It is the last straw that breaks the camel's back."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The law is an ass."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The leopard does not change his spots."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The left hand doesn't know what the right hand is doing."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The light is on but nobody is home."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The longest day must have an end."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The longest journey starts with a single step."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The moon is made of green cheese."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The more the merrier."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The more things change, the more they stay the same."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The only disability in life is a bad attitude. Scott Hamilton."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The only way to understand a woman is to love her."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The pen is mightier than the sword."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The pot calling the kettle black."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The proof of the pudding is in the eating."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The road to Hell is paved with good intentions."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The shoemaker's son always goes barefoot."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The squeaky wheel gets the grease."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The streets are paved with gold."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The way to a man's heart is through his stomach."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The work praises the man."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "The worm will turn."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There ain't no such thing as a free lunch."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There are more ways of killing a cat than choking it with cream."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There are none so blind as those who will not see."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There are two sides to every question."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There but for the grace of God go I."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is an exception to every rule."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There are always more fish in the sea."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is honour among thieves."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is many a good tune played on an old fiddle."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is many a slip 'twixt cup and lip."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is more than one way to skin a cat."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is no accounting for tastes."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is no fool like an old fool."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There's no need to wear a hair shirt."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is no place like home."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is no shame in not knowing; the shame lies in not finding out."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Where there's smoke, there's fire."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is no such thing as a free lunch."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is no such thing as bad publicity."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is no time like the present."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There are none so deaf as those who will not hear."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There's nowt so queer as folk."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is one born every minute."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "There is safety in numbers."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "They that sow the wind shall reap the whirlwind."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Third time is a charm."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Those who do not learn from history are doomed to repeat it."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Those who live in glass houses should not throw stones."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Those who know many languages live as many lives as the languages they know."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Those who sleep with dogs will rise with fleas."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Time and tide wait for no man."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Time flies."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Time is a great healer."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Time is money."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "(Only) time will tell."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "'Tis better to have loved and lost than never to have loved at all."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "To be worn out is to be renewed."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "To each his own."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "To err is human, to forgive divine."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "To learn a language is to have one more window from which to look at the world."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "To the victor go the spoils."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "To travel hopefully is a better thing than to arrive."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Tomorrow is another day."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Tomorrow never comes."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Too many cooks spoil the broth."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Too little, too late."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Too much of a good thing."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Truth is stranger than fiction."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Truth is more valuable if it takes you a few years to find it."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "(The) truth will out."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Turn your face toward the sun and the shadows fall behind you."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Two can play at that game."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Two heads are better than one."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Two is company, but three is a crowd."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Two wrongs (do not) make a right."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Uneasy lies the head that wears a crown."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "United we stand, divided we fall."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Use it or lose it."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Ugly is as ugly does."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Up a creek without a paddle."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Variety is the spice of life."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Virtue is its own reward."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Walk softly but carry a big stick."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Walls have ears."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Walnuts and pears you plant for your heirs."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Waste not, want not."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Well begun is half done."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "What does not kill me makes me stronger."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Well done is better than well said."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "What cannot be cured must be endured."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "What goes around, comes around."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "What goes up must come down."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "What you lose on the swings you gain on the roundabouts."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "What is sauce for the goose is sauce for the gander."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "What the eye does not see (the heart does not grieve over.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "When in Rome, (do as the Romans do.)"], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Whatever floats your boat."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "When it rains it pours."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "When life gives you lemons, make lemonade."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "When the cat is away, the mice will play."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "When the going gets tough, the tough get going."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "When the oak is before the ash, then you will only get a splash; when the ash is before the oak, then you may expect a soak."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "When three women gather, it becomes noisy."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "When you have seen one, you have seen them all."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "What is learnt in the cradle lasts to the tombs."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "What the eye does not see, the heart does not grieve over."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Where there is a will there is a way."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Where there is muck there is brass."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Where there is life there is hope."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Whether you think you can, or you think you can't, you're right."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "While there is life there is hope."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Who will bell the cat?."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Whom the Gods love die young."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Why keep a dog and bark yourself?."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "With great responsibility comes great power."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Woman is the root of both good and evil."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Wonders will never cease."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Work expands so as to fill the time available."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Worrying never did anyone any good."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You are never too old to learn."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You are what you eat."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You can have too much of a good thing."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You can lead a horse to water, but you cannot make it drink."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You can never/never can tell."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You cannot always get what you want."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You cannot have your cake and eat it too."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You cannot get blood out of a stone."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You cannot make a silk purse from a sow's ear."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You cannot make an omelette without breaking eggs."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You cannot make bricks without straw."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You cannot push a rope."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You cannot run with the hare and hunt with the hounds."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "(You cannot) teach an old dog new tricks."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You cannot win them all."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You catch more flies with honey than with vinegar."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You pay your money and you take your choice."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Youth is wasted on the young."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You may/might as well be hanged/hung for a sheep as (for) a lamb."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You must have rocks in your head."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You scratch my back and I will scratch yours."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You'll never get if you never go."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You've got to separate the wheat from the chaff."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "You've made your bed and you must lie in/on it."], "loss_weights": [0, 1]}}
+{"data": {"text_list": ["<proverb>", "Zeal without knowledge is fire without light."], "loss_weights": [0, 1]}}
