@@ -27,6 +27,6 @@
  },
  "transform": {
   "cmd": [ "python", "outer/main.py" ],
-  "image": "pachyderm/example-joins-inner-outer:1.12.2"
+  "image": "pachyderm/example-joins-inner-outer:2.0.0-beta.test.3"
 }
 }

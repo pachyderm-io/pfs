@@ -1,0 +1,18 @@
+{
+    "pipeline": {
+      "name": "reduce_outer"
+    },
+    "description": "A pipeline that consolidates all purchases by zipcode in one file.",
+    "input": {
+        "pfs": {
+        "repo": "outer_join",
+        "branch": "master",
+        "glob": "/*"
+        }
+   },
+   "transform": {
+    "cmd": [ "bash" ],
+    "stdin": [ "set -x", "FILES=/pfs/outer_join/*/*", "for f in $FILES", "do", "directory=`dirname $f`", "out=`basename $directory`",  "cat $f >> /pfs/out/${out}.txt", "done" ]
+  }
+  }
+  

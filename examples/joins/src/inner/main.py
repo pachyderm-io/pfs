@@ -11,14 +11,17 @@ with open(store_path, 'r') as store_json:
     store = json.load(store_json)
     zipcode = store['address']['zipcode']
     print("zipcode: " + zipcode)
+
+    ## Create directory with zipcode name
+    os.makedirs("/pfs/out/"+zipcode, exist_ok=True)
     
-    with open("/pfs/out/"+zipcode+".txt", 'w') as location_file:  
+    with open("/pfs/out/"+zipcode+"/"+ os.path.basename(purchase_path), 'w') as location_file:  
         # Add a text separator to identify in what store the purchase was made
         separator_line = "\nPurchase at store: "+ str(store["storeid"]) +" - "+ store["name"]+" \n"    
         location_file.write(separator_line)
   
         print("Appending : " + purchase_path + " to:" + "/pfs/out/"+zipcode+".txt")
-        # Copy the content of the purchase file into the corresponding zipcode file
+        # Copy the content of the purchase file into the text file
         with  open(purchase_path, 'r') as purchase_file:
             location_file.write(purchase_file.read()) 
 
