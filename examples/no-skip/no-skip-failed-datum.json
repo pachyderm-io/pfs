@@ -1,0 +1,18 @@
+{
+  "pipeline": {
+    "name": "no-skip-test"
+  },
+  "enable_stats": true,
+  "description": "A pipeline that tests the no-skip field.",
+  "input": {
+    "pfs": {
+      "glob": "/*",
+      "repo": "model"
+    }
+  },
+  "no_skip": true,
+  "transform": {
+    "cmd": [ "bash"],
+    "stdin": [ "if [ -a /pfs/model/file1.txt ]; then exit 1 ; fi ; exit 0" ]
+  }
+}

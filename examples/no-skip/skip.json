@@ -1,0 +1,17 @@
+{
+  "pipeline": {
+    "name": "skip-test"
+  },
+  "enable_stats": true,
+  "description": "Benchmark: A pipeline equivalent to no-skip.json in everyway BUT the no-skip field.",
+  "input": {
+    "pfs": {
+      "glob": "/*",
+      "repo": "model"
+    }
+  },
+  "transform": {
+    "cmd": [ "python3", "main.py" ],
+    "image": "pachyderm/example-no-skip:11"
+  }
+}

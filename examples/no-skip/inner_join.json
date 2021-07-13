@@ -1,0 +1,31 @@
+{
+  "pipeline": {
+    "name": "inner_join"
+  },
+  "enable_stats": true,
+  "description": "A pipeline that lists all purchases by zipcode joining stores and purchases information.",
+  "input": {
+    "join": [
+      {
+        "pfs": {
+          "repo": "stores",
+          "branch": "master",
+          "glob": "/STOREID(*).txt",
+          "join_on": "$1"
+        }
+      },
+     {
+       "pfs": {
+         "repo": "purchases",
+         "branch": "master",
+         "glob": "/*_STOREID(*).txt",
+         "join_on": "$1"
+       }
+     }
+   ]
+ },
+ "transform": {
+  "cmd": [ "python", "inner/main.py" ],
+  "image": "pachyderm/example-joins-inner-outer:1.12.2"
+}
+}

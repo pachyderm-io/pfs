@@ -1,0 +1,34 @@
+{
+  "pipeline": {
+    "name": "outer_join"
+  },
+  "enable_stats": true,
+  "description": "A pipeline that lists all returns by zipcode joining stores and returns information.",
+  "input": {
+    "join": [
+      {
+        "pfs": {
+          "repo": "stores",
+          "branch": "master",
+          "glob": "/STOREID(*).txt",
+          "join_on": "$1",
+          "outer_join": true
+        }
+      },
+     {
+       "pfs": {
+         "repo": "returns",
+         "branch": "master",
+         "glob": "/*_STOREID(*).txt",
+         "join_on": "$1",
+         "outer_join": true
+       }
+     }
+   ]
+ },
+ "no_skip": true,
+ "transform": {
+  "cmd": [ "python", "outer/main.py" ],
+  "image": "pachyderm/example-joins-inner-outer:1.12.2"
+}
+}
