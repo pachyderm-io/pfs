@@ -96,6 +96,30 @@ Commit your change to the repo:
 
 ```git commit -am "Update Pachyderm version in helm for <new pachyderm version> release"```
 
+### Update testfaster commit hash [apply step only when running point-release target]
+
+When changing the version number, we have to update the version of various built assets. These assets are tagged with the version number which must correspond to the version that the tests try to use. In particular, [these docker images](https://github.com/pachyderm/pachyderm/blob/442f8e119c75c3f183f228dd0fcfb7f67b6c0798/.testfaster.yml#L92-L98) are version-tagged and cached in Testfaster. This means that to get the tests to work, the cached version number (e.g. `1.12.2`) must match the version number self-reported by `pachctl version --client-only`.
+
+**Related note:** If you modify the contents of those make targets and wonder why they're not changing, you'll also need to bump the hash (and wait for testfaster to build the base image next time you push) to get those changes to be reflected in CI.
+
+Find the latest commit hash:
+
+```shell
+git log --pretty=format:%H | head -n 1
+```
+
+Edit `.testfaster.yml` and edit the line that looks like [this](https://github.com/pachyderm/pachyderm/blob/442f8e119c75c3f183f228dd0fcfb7f67b6c0798/.testfaster.yml#L63) which specifies the commit hash that is included in the base image for the test VMs.
+
+In particular, update the line which includes `git checkout`.
+
+Update the hash to the one above, and make a new commit:
+
+```shell
+git commit -am "Update testfaster hash for $(pachctl version --client-only) release"
+```
+
+Note that most times that you push changes to `.testfaster.yml`, Testfaster will automatically rebuild the base image. This can take some time, but further usage of that base image should be fast again. It's also possible that these base image builds can fail due to transient network issues, in that case go to the [Testfaster UI](https://testfaster.ci/pools) and hit the retry button for the pool in question (corresponding to the branch name). Note that at time of writing, you need to manually refresh the "pool logs" page to get new logs.
+
 ### Update the changelog [apply step only when running point-release target]
 
 Update the changelog in the branch and commit it locally. Edit `CHANGELOG.md`
