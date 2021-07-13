@@ -127,6 +127,8 @@ func (s *sidecarS3G) serveS3Instances() {
 
 func (s *sidecarS3G) createK8sServices() {
 	logrus.Infof("Launching sidecar s3 gateway master process")
+	// TODO: This is one gateway per pipeline, but can multiple jobs run per pipeline at once?
+	// Is there a risk of a new job seeing old data if the S3 gateway is slow to process events?
 	// createK8sServices goes through master election so that only one k8s service
 	// is created per pachyderm job running sidecar s3 gateway
 	backoff.RetryNotify(func() error {
@@ -321,43 +323,7 @@ func (h *handleJobsCtx) start() {
 				logrus.Errorf("sidecar s3 gateway watch unmarshal error: %v", err)
 			}
 
-			// create new ctx for this job
-			jobCtx, jobCancel := context.WithCancel(context.Background())
-			h.processJobEvent(jobCtx, e.Type, jobInfo.Job)
-			// TODO(2.0 required): this is not true - this will continue to get PUT
-			// notifications on every job update - this needs to be refactored
-			// (preferrably with just one watcher, will likely require a way to know
-			// when initial PUTs are complete so we can remove dead jobs after
-			// recovering from a failed watcher):
-			// spin off handler for job termination. 'watcher' will not see any job
-			// state updates after the first because job state updates don't update
-			// the pipelines index, so this establishes a watcher that will.
-			go h.end(jobCtx, jobCancel, jobInfo.Job)
-		}
-	}
-}
-
-// end watches 'job' and calls h.OnTerminate() when the job finishes.
-func (h *handleJobsCtx) end(ctx context.Context, cancel func(), job *pps.Job) {
-	defer cancel()
-	for { // reestablish watch in a loop, in case there's a watch error
-		var watcher watch.Watcher
-		backoff.Retry(func() error {
-			var err error
-			watcher, err = h.s.apiServer.jobs.ReadOnly(ctx).WatchOne(ppsdb.JobKey(job))
-			if err != nil {
-				return errors.Wrapf(err, "error creating watch")
-			}
-			return nil
-		}, backoff.NewInfiniteBackOff())
-		defer watcher.Close()
-
-		for e := range watcher.Watch() {
-			if e.Type == watch.EventError {
-				logrus.Errorf("sidecar s3 gateway watch job %q error: %v", e.Key, e.Err)
-				break // reestablish watch
-			}
-			h.processJobEvent(ctx, e.Type, job)
+			h.processJobEvent(context.Background(), e.Type, jobInfo.Job)
 		}
 	}
 }
