@@ -553,9 +553,6 @@
                         },
                         "repository": {
                             "type": "string"
-                        },
-                        "usesRoot": {
-                            "type": "boolean"
                         }
                     }
                 },

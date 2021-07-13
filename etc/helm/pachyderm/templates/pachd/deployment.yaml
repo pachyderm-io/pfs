@@ -73,8 +73,10 @@ spec:
           {{- end }}
         - name: WORKER_IMAGE
           value: "{{ .Values.worker.image.repository }}:{{ default .Chart.AppVersion .Values.pachd.image.tag }}"
+        {{- if and (eq .Values.deployTarget "LOCAL") .Values.pachd.storage.local.requireRoot }}
         - name: WORKER_USES_ROOT
-          value: {{ .Values.worker.usesRoot | quote }}
+          value: "True"
+        {{- end }}
         - name: IMAGE_PULL_SECRET
           value: {{ .Values.imagePullSecret | quote }}
         - name: WORKER_SIDECAR_IMAGE
