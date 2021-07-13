@@ -184,10 +184,10 @@ nav:
                 - Deploy on GKE: deploy-manage/deploy/google_cloud_platform.md
                 - Deploy on AWS:
                     - Overview: deploy-manage/deploy/amazon_web_services/index.md
-                    - Deploy Pachyderm on Amazon EKS: deploy-manage/deploy/amazon_web_services/deploy-eks.md
-                    - Deploy Kubernetes with kops: deploy-manage/deploy/amazon_web_services/aws-deploy-kubernetes-kops.md
-                    - Deploy Pachyderm on AWS: deploy-manage/deploy/amazon_web_services/aws-deploy-pachyderm.md
-                    - Deploy a Pachyderm Cluster with CloudFront: deploy-manage/deploy/amazon_web_services/aws_cloudfront.md
+                    - Deploy K8s with EKS: deploy-manage/deploy/amazon_web_services/deploy-eks.md
+                    - Deploy K8s with kops: deploy-manage/deploy/amazon_web_services/aws-deploy-kubernetes-kops.md
+                    - Deploy Pachyderm: deploy-manage/deploy/amazon_web_services/aws-deploy-pachyderm.md
+                    - Deploy CloudFront: deploy-manage/deploy/amazon_web_services/aws_cloudfront.md
                 - Deploy on Azure: deploy-manage/deploy/azure.md
                 - Deploy on IBM CLoud: deploy-manage/deploy/ibmcloud-openshift.md
                 - Deploy on OpenShift: deploy-manage/deploy/openshift.md

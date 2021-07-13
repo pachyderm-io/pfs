@@ -12,7 +12,7 @@ Before you can deploy Pachyderm on an EKS cluster, verify that
 you have the following prerequisites installed and configured:
 
 * [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-* [AWS CLI](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html)
+* [AWS CLI](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html)
 * [eksctl](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html)
 * [aws-iam-authenticator](https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html).
 * [pachctl]()

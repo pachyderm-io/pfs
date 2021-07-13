@@ -41,7 +41,7 @@ deployment options and related topics:
         <h4 class="mdl-card__title-text">Production Deployments  &nbsp;&nbsp;&nbsp;<i class="fa fa-cogs"></i></h4>
       </div>
       <div class="mdl-card__supporting-text">
-        Deploy your production Pachyderm environment in
+        Deploy Pachyderm in production on
         one of the supported cloud platforms.
       </div>
       <div class="mdl-card__actions mdl-card--border">

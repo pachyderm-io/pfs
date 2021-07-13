@@ -1,75 +1,76 @@
 # Deploy Pachyderm on AWS
 
-After you deploy Kubernetes cluster by using `kops` or `eksctl`,
-you can deploy Pachyderm on top of that cluster.
+Once your Kubernetes cluster is up,
+you are ready to deploy Pachyderm.
 
-You need to complete the following steps to deploy Pachyderm:
+Complete the following steps:
 
-1. Install `pachctl` as described in [Install pachctl](../../../../getting_started/local_installation#install-pachctl).
-1. Add stateful storage for Pachyderm as described in [Add Stateful Storage](#add-stateful-storage).
-1. Deploy Pachyderm by using an [IAM role](#deploy-pachyderm-with-an-iam-role)
-(recommended) or [an access key](#deploy-pachyderm-with-an-access-key).
+1. [Deploy Amazon EBS CSI driver to your cluster](1-deploy-amazon-EBS-CSI-driver-to-your-cluster)
+1. [Create an S3 bucket](#2.1-create-an-S3-object-store-bucket-for-data) for Pachyderm
+1. [Deploy Pachyderm ](#3-deploy-pachyderm)
+1. Finally, you will need to install [pachctl](../../../../getting_started/local_installation#install-pachctl) to [interact with your cluster]((#have-pachctl-and-your-cluster-communicate)).
 
-## Add Stateful Storage
+## 1- Deploy Amazon EBS CSI driver to your cluster
 
-Pachyderm requires the following types of persistent storage:
+For metadata storage, etcd and PostgreSQL each claim the creation of a pv. 
+For your EKS cluster to successfully create two **Elastic Block Storage (EBS) persistent volumes (PV)**, follow the steps detailled in **[deploy Amazon EBS CSI driver to your cluster](https://docs.aws.amazon.com/eks/latest/userguide/ebs-csi.html)**.
 
-* An **S3 object store bucket for data**. The S3 bucket name
-  must be globally unique across the whole
-  Amazon region. Therefore, add a descriptive prefix to the S3 bucket
-  name, such as your username.
+In short, you will:
 
-* An **Elastic Block Storage (EBS) persistent volume (PV) for Pachyderm metadata**.
- 
+1. [Create an IAM OIDC provider for your cluster](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html).
+1. Create a CSI Driver service account whose IAM Role will be granted the permission (policy) to make calls to AWS APIs. 
+1. Install Amazon EBS Container Storage Interface (CSI) driver on your cluster configured with your created service account.
+
+
 !!! Warning
-      The metadata service generally requires a small persistent volume size (i.e. 10GB) **but high IOPS (1500)**. Pachyderm recommends SSD **gp3** for this persistent EBS volume which delivers a baseline performance of 3,000 IOPS and 125MB/s at any volume size. Any other disk choice may require to oversize the volume significantly to ensure enough IOPS.
+      The metadata services generally require a small persistent volume size (i.e. 10GB) **but high IOPS (1500)**. Pachyderm recommends SSD **gp3** for these persistent EBS volume which delivers a baseline performance of 3,000 IOPS and 125MB/s at any volume size. Any other disk choice may require to oversize the volume significantly to ensure enough IOPS.
 
 
 See [volume types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html).
 
 If you expect your cluster to be very long
-running or scale to thousands of jobs per commits, you might need to go add
+running or scale to thousands of jobs per commits, you might need to add
 more storage.  However, you can easily increase the size of the persistent
 volume later.
 
-To add stateful storage, complete the following steps:
+## 2- Create an S3 bucket
+### Create an **S3 object store bucket for data**
+The S3 bucket name
+must be globally unique across the whole
+Amazon region. Therefore, add a descriptive prefix to the S3 bucket
+name, such as your username.
 
-1. Set up the following system variables:
+* Set up the following system variables:
 
       * `BUCKET_NAME` — A globally unique S3 bucket name.
-      * `STORAGE_SIZE` — The size of the persistent volume in GB. For example, `500`.
       * `AWS_REGION` — The AWS region of your Kubernetes cluster. For example,
       `us-west-2` and not `us-west-2a`.
-   
 
-1. Create an S3 bucket:
+* If you are creating an S3 bucket in the `us-east-1` region, run the following
+      command:
 
-   * If you are creating an S3 bucket in the `us-east-1` region, run the following
-   command:
-
-     ```shell
-     aws s3api create-bucket --bucket ${BUCKET_NAME} --region ${AWS_REGION}
-     ```
-
-   * If you are creating an S3 bucket in any region but the `us-east-1`
-   region, run the following command:
-
-     ```shell
-     aws s3api create-bucket --bucket ${BUCKET_NAME} --region ${AWS_REGION} --create-bucket-configuration LocationConstraint=${AWS_REGION}
-     ```
-
-1. Verify that the S3 bucket was created:
-
+      ```shell
+      $ aws s3api create-bucket --bucket ${BUCKET_NAME} --region ${AWS_REGION}
       ```
-      aws s3api list-buckets --query 'Buckets[].Name'
+
+* If you are creating an S3 bucket in any region but the `us-east-1`
+region, run the following command:
+
+      ```shell
+      $ aws s3api create-bucket --bucket ${BUCKET_NAME} --region ${AWS_REGION} --create-bucket-configuration LocationConstraint=${AWS_REGION}
+      ```
+
+* Verify that the S3 bucket was created:
+
+      ```shell   
+      $ aws s3 ls
       ```
 
 ### (Optional) Set up Bucket Encryption
 
 Amazon S3 supports two types of bucket encryption — server-side encryption
 (SSE-S3) and AWS Key Management Service (AWS KMS), which stores customer
-master keys. Pachyderm supports both these methods. Therefore, when you
-are creating a bucket for your Pachyderm cluster, you can set up either
+master keys. When creating a bucket for your Pachyderm cluster, you can set up either
 of them. Because Pachyderm requests that buckets do not include encryption
 information, the method that you select for the bucket is applied.
 
@@ -80,116 +81,171 @@ information, the method that you select for the bucket is applied.
 
 To set up bucket encryption, see [Amazon S3 Default Encryption for S3 Buckets](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html).
 
-## Deploy Pachyderm with an IAM Role
+## 3- Deploy Pachyderm
+You have configure your EKS cluster to create your pvs (metadata) 
+and have created your S3 bucket.
 
-IAM roles provide better user management and security
-capabilities compared to access keys. If a malicious user gains access to
-an access key, your data might become compromised. Therefore, enterprises
-often opt out to use IAM roles rather than access keys for production
-deployments.
+You now need to give your cluster access to your bucket either by:
 
-You need to configure the following IAM settings:
+- adding a policy to your cluster IAM Role (Recommended)
+- passing your AWS credentials (account ID and KEY) to your values.yaml when installing
 
-* The worker nodes on which Pachyderm is deployed must be associated
-with the IAM role that is assigned to the Kubernetes cluster.
-If you created your cluster by using `kops` or `eksctl`
-the nodes must have a dedicated IAM role already assigned.
+!!! Info
+      IAM roles provide finer grained user management and security
+      capabilities than access keys. Pachyderm recommends the use of IAM roles for production
+      deployments.
 
-* The IAM role must have access to the S3 bucket that you created for
-Pachyderm.
+### Add a policy to your EKS IAM Role
 
-* The IAM role must have correct trust relationships.
-
-  You need to set a system variable `IAM_ROLE` to the name
-  of the IAM role that you will use to deploy the cluster.
-  This role is different from the Role ARN or the Instance
-  Profile ARN of the role. It is the actual role name.
-
-To deploy Pachyderm with an IAM role, complete the following steps:
+Make sure the **IAM role of your cluster has access to the S3 bucket that you created for Pachyderm**. 
 
 1. Find the IAM role assigned to the cluster:
 
       1. Go to the AWS Management console.
-      1. Select an EC2 instance in the Kubernetes cluster.
-      1. Click **Description**.
+      1. Select your cluster instance in **Amazon EKS**.
+      1. In the general **Details** tab, find your **Cluster IAM Role ARN**.
       1. Find the **IAM Role** field.
 
-1. Enable access to the S3 bucket for the IAM role:
+1. **Enable access to the S3 bucket** for the IAM role:
 
-      1. In the **IAM Role** field, click on the IAM role.
-      1. In the **Permissions** tab, click **Edit policy**.
+      1. Click on the **IAM Role**.
+      1. In the **Permissions** tab, click **Add inline policy**.
       1. Select the **JSON** tab.
-      1. Append the following text to the end of the existing JSON:
+      1. Copy/Paste the following text in the JSON tab:
 
-         ```json
-         {
-            "Effect": "Allow",
-               "Action": [
-                     "s3:ListBucket"
-               ],
-               "Resource": [
-                     "arn:aws:s3:::<your-bucket>"
-               ]
-         },
-         {
-            "Effect": "Allow",
+      ```json
+      {
+      "Version": "2012-10-17",
+      "Statement": [
+            {
+      "Effect": "Allow",
             "Action": [
-               "s3:PutObject",
-            "s3:GetObject",
-            "s3:DeleteObject"
+                  "s3:ListBucket"
             ],
             "Resource": [
-               "arn:aws:s3:::<your-bucket>/*"
-            ]
-         }
-         ```
+                  "arn:aws:s3:::<your-bucket>"
+            ]},{
+      "Effect": "Allow",
+      "Action": [
+            "s3:PutObject",
+      "s3:GetObject",
+      "s3:DeleteObject"
+      ],
+      "Resource": [
+            "arn:aws:s3:::<your-bucket>/*"
+      ]}
+      ]}
+      ```
 
-         Replace `<your-bucket>` with the name of your S3 bucket.
+      Replace `<your-bucket>` with the name of your S3 bucket.
 
-         **Note:** For the EKS cluster, you might need to use the
-         **Add inline policy** button and create a name for the new policy.
-         The JSON above is inserted between the square brackets for the `Statement` element.
+1. Create a name for the new policy.
 
-1. Set up trust relationships for the IAM role:
 
-      1. Click the **Trust relationships > Edit trust relationship**.
-      1. Ensure that you see a statement with `sts:AssumeRole`. Example:
+### Create your values.yaml   
 
-         ```json
-         {
-         "Version": "2012-10-17",
-         "Statement": [
-            {
-               "Effect": "Allow",
-               "Principal": {
-               "Service": "ec2.amazonaws.com"
-               },
-               "Action": "sts:AssumeRole"
-            }
-         ]
-         }
-         ```
+Update your values.yaml with your bucket name ([see example of values.yaml here](https://github.com/pachyderm/helmchart/blob/v2.0.x/examples/gcp-values.yaml)) or use our minimal example below.
 
-1. Set the system variable `IAM_ROLE` to the IAM role name
-   for the Pachyderm deployment.
 
-1. Deploy Pachyderm:
+=== "values.yaml with an added policy to your cluster IAM Role"
+      ```yaml
+      # SPDX-FileCopyrightText: Pachyderm, Inc. <info@pachyderm.com>
+      # SPDX-License-Identifier: Apache-2.0
+      pachd:
+      storage:
+      backend: AMAZON
+      amazon:
+            bucket: pachyderm-bucket-02114 
+            region: us-east-2
+      serviceAccount:
+      additionalAnnotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::190146978412:role/eksctl-new-pachyderm-cluster-cluster-ServiceRole-1H3YFIPV75B52
+
+      worker:
+      serviceAccount:
+      additionalAnnotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::190146978412:role/eksctl-new-pachyderm-cluster-cluster-ServiceRole-1H3YFIPV75B52
+      ```
+=== "values.yaml passing AWS credentials (account ID and KEY)"
+      ```yaml
+      # SPDX-FileCopyrightText: Pachyderm, Inc. <info@pachyderm.com>
+      # SPDX-License-Identifier: Apache-2.0
+      pachd:
+      storage:
+      backend: AMAZON
+      amazon:
+            bucket: pachyderm-bucket-02114 
+            region: us-east-2
+            id: AKIASYRNEUJWABZTZBF5
+            secret: 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
+      serviceAccount:
+      additionalAnnotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::190146978412:role/eksctl-new-pachyderm-cluster-cluster-ServiceRole-1H3YFIPV75B52
+
+      worker:
+      serviceAccount:
+      additionalAnnotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::190146978412:role/eksctl-new-pachyderm-cluster-cluster-ServiceRole-1H3YFIPV75B52
+      ```
+
+!!! Note
+      * The **worker nodes on which Pachyderm is deployed must be associated
+      with the IAM role that is assigned to the Kubernetes cluster**.
+      If you created your cluster by using `eksctl` or `kops` 
+      the nodes must have a dedicated IAM role already assigned.
+
+      * The IAM role of your cluster must have correct trust relationships.
+
+            1. Click the **Trust relationships > Edit trust relationship**.
+            1. Append the following statement to your JSON relationship:
+                  ```json
+                  {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                        {
+                        "Effect": "Allow",
+                        "Principal": {
+                        "Service": "ec2.amazonaws.com"
+                        },
+                        "Action": "sts:AssumeRole"
+                        }
+                  ]
+                  }
+                  ```
+
+### Deploy Pachyderm on the Kubernetes cluster
+
+Refer to our generic ["Helm Install"](./helm_install.md) page for more information on the required installations and modus operandi of an installation using `Helm`.
+
+- Now you can deploy a Pachyderm cluster by running this command:
 
       ```shell
-      pachctl deploy amazon ${BUCKET_NAME} ${AWS_REGION} ${STORAGE_SIZE} --dynamic-etcd-nodes=1 --iam-role ${IAM_ROLE}
+      $ helm repo add pachyderm https://pachyderm.github.io/helmchart
+      $ helm repo update
+      $ helm install pachyderm -f my_values.yaml pachyderm/pachyderm --version <version-of-the-chart>
+
       ```
+
+      **System Response:**
+
+      ```shell
+
+
+      Pachyderm is launching. Check its status with "kubectl get all"
+      ```
+
 
       The deployment takes some time. You can run `kubectl get pods` periodically
       to check the status of deployment. When Pachyderm is deployed, the command
       shows all pods as `READY`:
 
       ```shell
-      kubectl get pods
+      $ kubectl get pods
       ```
 
-      **System Response:**
+      **System Response**
 
-      ```shell
+      ```
       NAME                     READY     STATUS    RESTARTS   AGE
       dash-6c9dc97d9c-89dv9    2/2       Running   0          1m
       etcd-0                   1/1       Running   0          4m
@@ -200,10 +256,10 @@ To deploy Pachyderm with an IAM role, complete the following steps:
       Kubernetes tried to bring up those pods before `etcd` was ready. Therefore,
       Kubernetes restarted those pods. You can safely ignore this message.
 
-   1. Verify that the Pachyderm cluster is up and running:
+- Verify that the Pachyderm cluster is up and running:
 
       ```shell
-      pachctl version
+      $ pachctl version
       ```
 
       **System Response:**
@@ -214,99 +270,18 @@ To deploy Pachyderm with an IAM role, complete the following steps:
       pachd               {{ config.pach_latest_version }}
       ```
      
-      * Finally, make sure [`pachtl` talks with your cluster](#have-pachctl-and-your-cluster-communicate).
+- Finally, make sure [`pachtl` talks with your cluster](#4-have-pachctl-and-your-cluster-communicate).
 
-      * If you want to access the Pachyderm UI or use the S3 gateway, you need to
-      forward Pachyderm ports. Open a new terminal window and run the
-      following command:
+## 4- Have 'pachctl' and your Cluster Communicate
 
-      ```shell
-      pachctl port-forward
-      ```
-
-## Deploy Pachyderm with an Access Key
-
-When you installed `kops`, you created a dedicated IAM
-user with access credentials such as an access key and
-secret key. You can deploy
-Pachyderm by using the credentials of this IAM user
-directly. However, deploying Pachyderm with an
-access key might not satisfy your enterprise security
-requirements. Therefore, deploying with an IAM role
-is preferred.
-
-To deploy Pachyderm with an access key, complete the following
-steps:
-
-1. Run the following command to deploy your Pachyderm cluster:
-
-      ```shell
-      pachctl deploy amazon ${BUCKET_NAME} ${AWS_REGION} ${STORAGE_SIZE} --dynamic-etcd-nodes=1 --credentials "${AWS_ACCESS_KEY_ID},${AWS_SECRET_ACCESS_KEY},"
-      ```
-
-      The `,` at the end of the `credentials` flag in the deploy
-      command is for an optional temporary AWS token. You might use
-      such a token if you are just experimenting with
-      Pachyderm. However, do not use this token in a
-      production deployment.
-
-      The deployment takes some time. You can run `kubectl get pods` periodically
-      to check the status of deployment. When Pachyderm is deployed, the command
-      shows all pods as `READY`:
-
-      ```shell
-      kubectl get pods
-      ```
-
-      **System Response:**
-
-      ```shell
-      NAME                     READY     STATUS    RESTARTS   AGE
-      dash-6c9dc97d9c-89dv9    2/2       Running   0          1m
-      etcd-0                   1/1       Running   0          4m
-      pachd-65fd68d6d4-8vjq7   1/1       Running   0          4m
-      ```
-
-      **Note:** If you see a few restarts on the `pachd` nodes, it means that
-      Kubernetes tried to bring up those pods before `etcd` was ready.
-      Therefore, Kubernetes restarted those pods. You can safely ignore this
-      message.
-
-1. Verify that the Pachyderm cluster is up and running:
-
-      ```shell
-      pachctl version
-      ```
-
-      **System Response:**
-
-      ```shell
-
-      COMPONENT           VERSION
-      pachctl             {{ config.pach_latest_version }}
-      pachd               {{ config.pach_latest_version }}
-      ```
-
-      * Finally, make sure [`pachtl` talks with your cluster](#have-pachctl-and-your-cluster-communicate).
-
-      * If you want to access the Pachyderm UI or use S3 gateway, you need to
-      forward Pachyderm ports. Open a new terminal window and run the
-      following command:
-
-      ```shell
-      pachctl port-forward 
-      ```
-
-## Have 'pachctl' and your Cluster Communicate
-
-Finally, assuming your `pachd` is running as shown above, 
-make sure that `pachctl` can talk to the cluster by:
+Assuming your `pachd` is running as shown above, 
+make sure that `pachctl` can talk to the cluster by either:
 
 - Running a port-forward:
 
 ```shell
 # Background this process because it blocks.
-pachctl port-forward   
+$ pachctl port-forward   
 ```
 
 - Exposing your cluster to the internet by setting up a LoadBalancer as follow:
@@ -316,21 +291,21 @@ pachctl port-forward
 
 1. To get an external IP address for a Cluster, edit its k8s service, 
 ```shell
-kubectl edit service pachd
+$ kubectl edit service pachd
 ```
-and change its `spec.type` value from `NodePort` to `LoadBalancer`. 
+and change its `spec.type` value from `ClusterIP` to `LoadBalancer`. 
 
 1. Retrieve the external IP address of the edited service.
 When listing your services again, you should see an external IP address allocated to the service you just edited. 
 ```shell
-kubectl get service
+$ kubectl get service
 ```
 1. Update the context of your cluster with their direct url, using the external IP address above:
 ```shell
-echo '{"pachd_address": "grpc://<external-IP-address>:650"}' | pachctl config set context "your-cluster-context-name" --overwrite
+$ echo '{"pachd_address": "grpc://<external-IP-address>:650"}' | pachctl config set context "<your-cluster-context-name>" --overwrite
 ```
 1. Check that your are using the right context: 
 ```shell
-pachctl config get active-context`
+$ pachctl config get active-context`
 ```
-Your cluster context name set above should show up. 
+Your cluster context name should show up. 
