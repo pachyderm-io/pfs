@@ -403,7 +403,8 @@ message ActivateAuthResponse {}
 
 message RunLoadTestRequest {
   bytes spec = 1;
-  int64 seed = 2; 
+  Branch branch = 2;
+  int64 seed = 3; 
 }
 
 message RunLoadTestResponse {

@@ -29,6 +29,9 @@ func newUnorderedWriter(ctx context.Context, storage *Storage, memThreshold int6
 	if err := storage.filesetSem.Acquire(ctx, 1); err != nil {
 		return nil, err
 	}
+	// Half of the memory will be for buffering in the unordered writer.
+	// The other half will be for buffering in the chunk writer.
+	memThreshold /= 2
 	uw := &UnorderedWriter{
 		ctx:          ctx,
 		storage:      storage,

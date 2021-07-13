@@ -49,23 +49,21 @@ func (mr *MergeReader) iterate(ctx context.Context, cb func(File) error) error {
 	return pq.Iterate(func(ss []stream.Stream) error {
 		var fss []*fileStream
 		for _, s := range ss {
-			fss = append(fss, s.(*fileStream))
+			fs := s.(*fileStream)
+			if fs.deletive {
+				fss = nil
+				continue
+			}
+			fss = append(fss, fs)
+		}
+		if len(fss) == 0 {
+			return nil
 		}
 		if len(fss) == 1 {
-			if fss[0].deletive {
-				return nil
-			}
 			return cb(newFileReader(ctx, mr.chunks, fss[0].file.Index()))
 		}
 		var dataRefs []*chunk.DataRef
-		for i, fs := range fss {
-			if fs.deletive {
-				if i == len(fss)-1 {
-					return nil
-				}
-				dataRefs = nil
-				continue
-			}
+		for _, fs := range fss {
 			idx := fs.file.Index()
 			dataRefs = append(dataRefs, idx.File.DataRefs...)
 		}
@@ -85,11 +83,8 @@ func (mr *MergeReader) iterateDeletive(ctx context.Context, cb func(File) error)
 	}
 	pq := stream.NewPriorityQueue(ss, compare)
 	return pq.Iterate(func(ss []stream.Stream) error {
-		var fss []*fileStream
-		for _, s := range ss {
-			fss = append(fss, s.(*fileStream))
-		}
-		return cb(newFileReader(ctx, mr.chunks, fss[0].file.Index()))
+		fs := ss[0].(*fileStream)
+		return cb(newFileReader(ctx, mr.chunks, fs.file.Index()))
 	})
 }
 

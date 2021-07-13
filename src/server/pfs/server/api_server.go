@@ -744,10 +744,16 @@ func (a *apiServer) RunLoadTest(ctx context.Context, req *pfs.RunLoadTestRequest
 	defer func(start time.Time) { a.Log(req, nil, retErr, time.Since(start)) }(time.Now())
 	pachClient := a.env.GetPachClient(ctx)
 	repo := "load_test"
+	if req.Branch != nil {
+		repo = req.Branch.Repo.Name
+	}
 	if err := pachClient.CreateRepo(repo); err != nil && !pfsserver.IsRepoExistsErr(err) {
 		return nil, err
 	}
 	branch := uuid.New()
+	if req.Branch != nil {
+		branch = req.Branch.Name
+	}
 	if err := pachClient.CreateBranch(repo, branch, "", "", nil); err != nil {
 		return nil, err
 	}

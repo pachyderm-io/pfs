@@ -46,7 +46,7 @@ func PutFile(env *Env, repo, branch, commit string, spec *PutFileSpec) error {
 	}
 	return c.WithModifyFileClient(c.Ctx(), client.NewCommit(repo, branch, commit), func(mf client.ModifyFile) error {
 		for _, file := range files {
-			if err := mf.PutFile(file.Path(), file.Reader()); err != nil {
+			if err := mf.PutFile(file.Path(), file); err != nil {
 				return err
 			}
 		}

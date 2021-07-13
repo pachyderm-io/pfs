@@ -1561,6 +1561,7 @@ Objects are a low-level resource and should not be accessed directly by most use
 	fsck.Flags().BoolVarP(&fix, "fix", "f", false, "Attempt to fix as many issues as possible.")
 	commands = append(commands, cmdutil.CreateAlias(fsck, "fsck"))
 
+	var branchStr string
 	var seed int64
 	runLoadTest := &cobra.Command{
 		Use:     "{{alias}} <spec>",
@@ -1581,13 +1582,21 @@ Objects are a low-level resource and should not be accessed directly by most use
 			if err != nil {
 				return err
 			}
-			resp, err := c.RunPFSLoadTest(spec, seed)
+			var branch *pfs.Branch
+			if branchStr != "" {
+				branch, err = cmdutil.ParseBranch(branchStr)
+				if err != nil {
+					return err
+				}
+			}
+			resp, err := c.RunPFSLoadTest(spec, branch, seed)
 			if err != nil {
 				return err
 			}
 			return cmdutil.Encoder(output, os.Stdout).EncodeProto(resp)
 		}),
 	}
+	runLoadTest.Flags().StringVarP(&branchStr, "branch", "b", "", "The branch to use for generating the load.")
 	runLoadTest.Flags().Int64VarP(&seed, "seed", "s", 0, "The seed to use for generating the load.")
 	commands = append(commands, cmdutil.CreateAlias(runLoadTest, "run pfs-load-test"))
 

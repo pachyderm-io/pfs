@@ -1,7 +1,6 @@
 package pfsload
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"math/rand"
@@ -12,24 +11,24 @@ import (
 
 const pathSize = 32
 
-type MemFile struct {
-	path    string
-	content []byte
+type RandomFile struct {
+	path string
+	r    io.Reader
 }
 
-func NewMemFile(path string, data []byte) *MemFile {
-	return &MemFile{
-		path:    path,
-		content: data,
+func NewRandomFile(path string, r io.Reader) *RandomFile {
+	return &RandomFile{
+		path: path,
+		r:    r,
 	}
 }
 
-func (mf *MemFile) Path() string {
-	return mf.path
+func (f *RandomFile) Path() string {
+	return f.path
 }
 
-func (mf *MemFile) Reader() io.Reader {
-	return bytes.NewReader(mf.content)
+func (f *RandomFile) Read(data []byte) (int, error) {
+	return f.r.Read(data)
 }
 
 type FileSourceSpec struct {
@@ -38,7 +37,7 @@ type FileSourceSpec struct {
 }
 
 type FileSource interface {
-	Next() (*MemFile, error)
+	Next() (*RandomFile, error)
 }
 
 func NewFileSource(spec *FileSourceSpec, random *rand.Rand) FileSource {
@@ -73,7 +72,7 @@ func newRandomFileSource(spec *RandomFileSourceSpec, random *rand.Rand) FileSour
 	}
 }
 
-func (rfs *randomFileSource) Next() (*MemFile, error) {
+func (rfs *randomFileSource) Next() (*RandomFile, error) {
 	sizeSpec, err := FuzzSize(rfs.spec.SizeSpecs, rfs.random)
 	if err != nil {
 		return nil, err
@@ -83,7 +82,7 @@ func (rfs *randomFileSource) Next() (*MemFile, error) {
 	if max > min {
 		size += rfs.random.Intn(max - min)
 	}
-	return NewMemFile(rfs.nextPath(), randutil.Bytes(rfs.random, size)), nil
+	return NewRandomFile(rfs.nextPath(), randutil.NewBytesReader(rfs.random, int64(size))), nil
 }
 
 func (rfs *randomFileSource) nextPath() string {
@@ -133,8 +132,8 @@ type FilesSpec struct {
 	FileSpecs []*FileSpec `yaml:"file,omitempty"`
 }
 
-func Files(env *Env, spec *FilesSpec) ([]*MemFile, error) {
-	var files []*MemFile
+func Files(env *Env, spec *FilesSpec) ([]*RandomFile, error) {
+	var files []*RandomFile
 	for i := 0; i < spec.Count; i++ {
 		file, err := FuzzFile(env, spec.FileSpecs)
 		if err != nil {
@@ -151,7 +150,7 @@ type FileSpec struct {
 	Prob   int    `yaml:"prob,omitempty"`
 }
 
-func File(env *Env, spec *FileSpec) (*MemFile, error) {
+func File(env *Env, spec *FileSpec) (*RandomFile, error) {
 	return env.FileSource(spec.Source).Next()
 }
 

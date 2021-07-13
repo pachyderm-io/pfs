@@ -173,25 +173,26 @@ func (pj *pendingJob) withParallelDatums(pachClient *client.APIClient, cb func(c
 			return err
 		}
 		renewer.Add(fileSetID)
-		// Use the datums for the current job if no parent exists.
-		if pj.parentMetaCommit == nil {
-			return cb(ctx, datum.NewFileSetIterator(pachClient, fileSetID))
+		// Set up the datum iterators for merging.
+		// If there is no parent, only use the datum iterator for the current job.
+		var dits []datum.Iterator
+		if pj.parentMetaCommit != nil {
+			// Upload the datums from the parent job into the datum file set format.
+			parentFileSetID, err := uploadDatumFileSet(pachClient, pj.parentDit)
+			if err != nil {
+				return err
+			}
+			renewer.Add(parentFileSetID)
+			dits = append(dits, datum.NewFileSetIterator(pachClient, parentFileSetID))
 		}
-		// Upload the datums from the parent job into the datum file set format.
-		parentFileSetID, err := uploadDatumFileSet(pachClient, pj.parentDit)
-		if err != nil {
-			return err
-		}
-		renewer.Add(parentFileSetID)
+		dits = append(dits, datum.NewFileSetIterator(pachClient, fileSetID))
 		// Create the output datum file set for the new datums (datums that do not exist in the parent job).
-		// TODO: Logging?
-		fileSetIterator := datum.NewFileSetIterator(pachClient, fileSetID)
-		parentFileSetIterator := datum.NewFileSetIterator(pachClient, parentFileSetID)
 		outputFileSetID, err := withDatumFileSet(pachClient, func(outputSet *datum.Set) error {
-			return datum.Merge([]datum.Iterator{parentFileSetIterator, fileSetIterator}, func(metas []*datum.Meta) error {
+			return datum.Merge(dits, func(metas []*datum.Meta) error {
 				if len(metas) > 1 || !proto.Equal(metas[0].Job, pj.ji.Job) {
 					return nil
 				}
+				pj.logger.WithData(metas[0].Inputs).Logf("setting up datum for processing (parallel jobs)")
 				return outputSet.UploadMeta(metas[0], datum.WithPrefixIndex())
 			})
 		})
@@ -258,6 +259,7 @@ func (pj *pendingJob) withSerialDatums(pachClient *client.APIClient, cb func(con
 					if err := deleter(metas[0]); err != nil {
 						return err
 					}
+					pj.logger.WithData(metas[1].Inputs).Logf("setting up datum for processing (serial jobs)")
 					return s.UploadMeta(metas[1], datum.WithPrefixIndex())
 				})
 			})

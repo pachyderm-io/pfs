@@ -15,7 +15,7 @@ func TestLoad(t *testing.T) {
 		t.Run(fmt.Sprint("Load-", i), func(t *testing.T) {
 			t.Parallel()
 			env := testpachd.NewRealEnv(t, tu.NewTestDBConfig(t))
-			resp, err := env.PachClient.RunPFSLoadTest([]byte(load))
+			resp, err := env.PachClient.RunPFSLoadTest([]byte(load), nil, 0)
 			require.NoError(t, err)
 			require.Equal(t, "", resp.Error, fmt.Sprint("seed: ", resp.Seed))
 		})

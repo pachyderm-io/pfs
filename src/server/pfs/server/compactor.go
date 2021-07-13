@@ -70,8 +70,8 @@ func (c *compactor) Compact(ctx context.Context, ids []fileset.ID, ttl time.Dura
 				}
 				results := make([]fileset.ID, len(tasks))
 				if err := master.RunSubtasks(workTasks, func(_ context.Context, taskInfo *work.TaskInfo) error {
-					if taskInfo.Result == nil {
-						return errors.Errorf("no result set for compaction work.TaskInfo")
+					if taskInfo.State == work.State_FAILURE {
+						return errors.New(taskInfo.Reason)
 					}
 					res, err := deserializeCompactionResult(taskInfo.Result)
 					if err != nil {

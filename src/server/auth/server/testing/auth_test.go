@@ -2911,7 +2911,7 @@ func TestLoad(t *testing.T) {
 	for i, load := range loads {
 		load := load
 		t.Run(fmt.Sprint("Load-", i), func(t *testing.T) {
-			resp, err := aliceClient.RunPFSLoadTest([]byte(load))
+			resp, err := aliceClient.RunPFSLoadTest([]byte(load), nil, 0)
 			require.NoError(t, err)
 			require.Equal(t, "", resp.Error, fmt.Sprint("seed: ", resp.Seed))
 		})

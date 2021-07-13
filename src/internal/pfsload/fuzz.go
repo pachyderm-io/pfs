@@ -28,7 +28,7 @@ func FuzzOperation(env *Env, repo, branch, commit string, specs []*OperationSpec
 	panic("should not be able to reach here")
 }
 
-func FuzzFile(env *Env, specs []*FileSpec) (*MemFile, error) {
+func FuzzFile(env *Env, specs []*FileSpec) (*RandomFile, error) {
 	var totalProb int
 	for _, spec := range specs {
 		if err := validateProb(spec.Prob); err != nil {
