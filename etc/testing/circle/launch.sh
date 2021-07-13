@@ -10,7 +10,7 @@ source "$(dirname "$0")/env.sh"
 # so we explicitly create the host path on the host machine and chmod it so we can write to it. 
 minikube ssh 'mkdir -p /tmp/pachyderm/pachd && chmod -R 777 /tmp/pachyderm'
 
-pachctl deploy local --no-guaranteed -d --dry-run --rootless --host-path /tmp/pachyderm | kubectl apply -f -
+helm install pachyderm etc/helm/pachyderm -f etc/testing/circle/helm-values.yaml
 
 kubectl wait --for=condition=ready pod -l app=pachd --timeout=5m
 

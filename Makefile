@@ -171,14 +171,14 @@ clean-launch-kube:
 
 launch: install check-kubectl
 	$(eval STARTTIME := $(shell date +%s))
-	$(PACHCTL) deploy local --dry-run | kubectl $(KUBECTLFLAGS) apply -f -
+	helm install pachyderm etc/helm/pachyderm --set deployTarget=LOCAL
 	# wait for the pachyderm to come up
 	kubectl wait --for=condition=ready pod -l app=pachd --timeout=5m
 	@echo "pachd launch took $$(($$(date +%s) - $(STARTTIME))) seconds"
 
 launch-dev: check-kubectl check-kubectl-connection install
 	$(eval STARTTIME := $(shell date +%s))
-	$(PACHCTL) deploy local --no-guaranteed -d --dry-run $(LAUNCH_DEV_ARGS) | kubectl $(KUBECTLFLAGS) apply -f -
+	helm install pachyderm etc/helm/pachyderm -f etc/helm/examples/local-dev-values.yaml
 	# wait for the pachyderm to come up
 	kubectl wait --for=condition=ready pod -l app=pachd --timeout=5m
 	@echo "pachd launch took $$(($$(date +%s) - $(STARTTIME))) seconds"
@@ -186,22 +186,22 @@ launch-dev: check-kubectl check-kubectl-connection install
 launch-enterprise: check-kubectl check-kubectl-connection install
 	$(eval STARTTIME := $(shell date +%s))
 	kubectl create namespace enterprise --dry-run=true -o yaml | kubectl apply -f -
-	$(PACHCTL) deploy local --no-guaranteed -d --enterprise-server --namespace enterprise  --pachd-memory-request 128M --postgres-memory-request 128M --etcd-memory-request 128M --pachd-cpu-request 100m --postgres-cpu-request 100m --etcd-cpu-request 100m --dry-run $(LAUNCH_DEV_ARGS) | kubectl $(KUBECTLFLAGS) apply -f -
+	helm install enterprise etc/helm/pachyderm --namespace enterprise -f etc/helm/examples/enterprise-dev.yaml
 	# wait for the pachyderm to come up
 	kubectl wait --for=condition=ready pod -l app=pach-enterprise --namespace enterprise --timeout=5m
 	@echo "pachd launch took $$(($$(date +%s) - $(STARTTIME))) seconds"
 
-clean-launch: check-kubectl install
-	yes | $(PACHCTL) undeploy
+clean-launch: check-kubectl
+	helm delete pachyderm || true
+	helm delete enterprise || true
+	kubectl delete pvc -l suite=pachyderm
+	kubectl delete pvc -l suite=pachyderm -n enterprise
 
-clean-launch-dev: check-kubectl install
-	yes | $(PACHCTL) undeploy
-
-full-clean-launch: check-kubectl
-	kubectl $(KUBECTLFLAGS) delete --ignore-not-found job -l suite=pachyderm
-	kubectl $(KUBECTLFLAGS) delete --ignore-not-found all -l suite=pachyderm
-	kubectl $(KUBECTLFLAGS) delete --ignore-not-found serviceaccount -l suite=pachyderm
-	kubectl $(KUBECTLFLAGS) delete --ignore-not-found secret -l suite=pachyderm
+clean-launch-dev: check-kubectl
+	helm delete pachyderm || true
+	helm delete enterprise || true
+	kubectl delete pvc -l suite=pachyderm
+	kubectl delete pvc -l suite=pachyderm -n enterprise
 
 test-proto-static:
 	./etc/proto/test_no_changes.sh || echo "Protos need to be recompiled; run 'DOCKER_BUILD_FLAGS=--no-cache make proto'."
@@ -339,9 +339,6 @@ logs: check-kubectl
 follow-logs: check-kubectl
 	kubectl $(KUBECTLFLAGS) get pod -l app=pachd | sed '1d' | cut -f1 -d ' ' | xargs -n 1 -I pod sh -c 'echo pod && kubectl $(KUBECTLFLAGS) logs -f pod'
 
-google-cluster-manifest:
-	@$(PACHCTL) deploy --dry-run google $(BUCKET_NAME) $(STORAGE_NAME) $(STORAGE_SIZE)
-
 google-cluster:
 	gcloud container clusters create $(CLUSTER_NAME) --scopes storage-rw --machine-type $(CLUSTER_MACHINE_TYPE) --num-nodes $(CLUSTER_SIZE)
 	gcloud config set container/cluster $(CLUSTER_NAME)
@@ -356,9 +353,6 @@ clean-google-cluster:
 	gcloud compute firewall-rules delete pachd
 	gsutil -m rm -r gs://$(BUCKET_NAME)
 	gcloud compute disks delete $(STORAGE_NAME)
-
-amazon-cluster-manifest: install
-	@$(PACHCTL) deploy --dry-run amazon $(BUCKET_NAME) $(AWS_ID) $(AWS_KEY) $(AWS_TOKEN) $(AWS_REGION) $(STORAGE_NAME) $(STORAGE_SIZE)
 
 amazon-cluster:
 	aws s3api create-bucket --bucket $(BUCKET_NAME) --region $(AWS_REGION)
@@ -380,9 +374,6 @@ amazon-clean:
 	N|n) echo "The amazon clean process has been cancelled by user!";break;; \
 	*) echo "input parameter error, please input again ";continue;;esac; \
         fi;done;
-
-microsoft-cluster-manifest:
-	@$(PACHCTL) deploy --dry-run microsoft $(CONTAINER_NAME) $(AZURE_STORAGE_NAME) $(AZURE_STORAGE_KEY) $(VHD_URI) $(STORAGE_SIZE)
 
 microsoft-cluster:
 	azure group create --name $(AZURE_RESOURCE_GROUP) --location $(AZURE_LOCATION)
@@ -436,7 +427,6 @@ check-buckets:
 	launch-dev \
 	clean-launch \
 	clean-launch-dev \
-	full-clean-launch \
 	test-proto-static \
 	test-deploy-manifests \
 	regenerate-test-deploy-manifests \

@@ -12,11 +12,6 @@ from pathlib import Path
 
 ETCD_IMAGE = "pachyderm/etcd:v3.3.5"
 
-DELETABLE_RESOURCES = [
-    "roles.rbac.authorization.k8s.io",
-    "rolebindings.rbac.authorization.k8s.io"
-]
-
 NEWLINE_SEPARATE_OBJECTS_PATTERN = re.compile(r"\}\n+\{", re.MULTILINE)
 
 # Path to file used for ensuring minikube doesn't need to be deleted.
@@ -45,29 +40,14 @@ class BaseDriver:
     async def reset(self):
          # ignore errors here because most likely no cluster is just deployed
          # yet
-        await run("pachctl", "undeploy", "--metadata", stdin="y\n", raise_on_error=False)
-        # clear out resources not removed from the undeploy process
-        await run("kubectl", "delete", ",".join(DELETABLE_RESOURCES), "-l", "suite=pachyderm")
+        await run("helm", "delete", "pachyderm", raise_on_error=False)
+        # Helm won't remove statefulset volumes by design
+        await run("kubectl", "delete", "pvc", "-l", "suite=pachyderm")
 
     async def push_image(self, images):
         pass
 
-    def deploy_args(self):
-        # We use hostpaths for storage. On docker for mac and minikube,
-        # hostpaths aren't cleared until the VM is restarted. Because of this
-        # behavior, re-deploying on the same hostpath without a restart will
-        # cause us to bring up a new pachyderm cluster with access to the old
-        # cluster volume, causing a bad state. This works around the issue by
-        # just using a different hostpath on every deployment.
-        host_path = Path("/var") / f"pachyderm-{secrets.token_hex(5)}"
-        return ["local", "-d", "--no-guaranteed", f"--host-path={host_path}"]
-
     async def deploy(self):
-        deploy_args = ["pachctl", "deploy", *self.deploy_args(), "--dry-run", "--create-context", "--log-level=debug"]
-
-        deployments_str = await capture(*deploy_args)
-        deployments_json = json.loads("[{}]".format(NEWLINE_SEPARATE_OBJECTS_PATTERN.sub("},{", deployments_str)))
-        
         pull_images = [run("docker", "pull", ETCD_IMAGE)]
 
         await asyncio.gather(*pull_images)
@@ -75,7 +55,7 @@ class BaseDriver:
         push_images = [ETCD_IMAGE, "pachyderm/pachd:local", "pachyderm/worker:local"]
 
         await asyncio.gather(*[self.push_image(i) for i in push_images])
-        await run("kubectl", "create", "-f", "-", stdin=deployments_str)
+        await run("helm", "install", "pachyderm", "etc/helm/pachyderm", "-f", "etc/helm/examples/local-dev-values.yaml")
 
         await retry(ping, attempts=60)
 
