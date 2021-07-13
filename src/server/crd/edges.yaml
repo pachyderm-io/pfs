@@ -1,0 +1,12 @@
+apiVersion: "pachyderm.io/v1"
+kind: Pipeline
+metadata:
+  name: "edges"
+spec:
+  input:
+    pfs:
+      glob: "/*"
+      repo: images
+  transform:
+    cmd: [ python3, /edges.py ]
+    image: pachyderm/opencv

@@ -1,0 +1,101 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: pipelines.pachyderm.io
+spec:
+  group: pachyderm.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+  scope: Namespaced
+  names:
+    plural: pipelines
+    singular: pipeline
+    kind: Pipeline
+    shortNames:
+    - pl
+  validation:
+    # openAPIV3Schema is the schema for validating custom objects.
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            description: { type: string }
+            transform:
+              type: object
+              required: [ image ] # TODO anything else?
+              properties:
+                image: { type: string }
+                cmd:
+                  type: array
+                  items: { type: string }
+                stdin:
+                  type: array
+                  items: { type: string }
+                err_cmd:
+                  type: array
+                  items: { type: string }
+                err_stdin:
+                  type: array
+                  items: { type: string }
+                env:
+                  type: object
+                secrets:
+                  type: array
+                  items:
+                    type: object
+                    required: [ name ]
+                    # TODO we could express the two types of secrets in this
+                    # spec, but for do the validation in pachd instead of here to
+                    # make the spec simpler
+                    properties:
+                      name: {type: string}
+                      mount_path: {type: string}
+                      env_var: {type: string}
+                      key: {type: string}
+                image_pull_secrets:
+                  type: array
+                  items: { type: string }
+                accept_return_code:
+                  type: array
+                  items: { type: integer }
+                debug: {type: boolean }
+                user: { type: string }
+                working_dir: { type: string }
+            parallelism_spec:
+              type: object
+              required: [ constant ]
+              properties:
+                constant: { type: integer }
+            hashtree_spec:
+              type: object
+              required: [ constant ]
+              properties:
+                constant: { type: integer }
+            resource_requests:
+              type: object
+              properties:
+                memory: { type: string }
+                cpu: { type: string }
+                disk: { type: string }
+            resource_limits:
+              type: object
+              properties:
+                memory: { type: string }
+                cpu: { type: string }
+                disk: { type: string }
+                gpu:
+                  type: object
+                  properties:
+                    type: { type: string }
+                    number: { type: integer }
+            datum_timeout: { type: string }
+            datum_tries: { type: integer }
+            job_timeout: { type: string }
+            input: { type: object } # TODO this is totally free-form right now, for simplicity
+            output_branch: { type: string }
+            egress: { type: object } # TODO totally free-form
+            standby: { type: boolean }
+            # TODO add the rest of the fields
+
