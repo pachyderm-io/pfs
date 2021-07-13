@@ -184,7 +184,11 @@ button.
 
 From here, go back to the list of Pachyderm releases, and click "tags". Click
 on the tag for the release you want to delete, and then click "delete" again
-to delete the tag.
+to delete the tag. Finally, you'll need to sync your local set of Git tags
+with those on GitHub: either re-clone the Pachyderm repo or run: `git fetch
+--tags --prune --prune-tags` (This prevents the release process from failing
+with `tag already exists`, but _will delete any local tags that haven't been
+pushed_)
 
 At this point, you can re-run the release process when you're ready.
 
@@ -194,22 +198,19 @@ If a release has a problem and needs to be withdrawn, the steps in rolling
 back a release are similar to the steps under "If the release failed". In
 general, you'll need to:
 - Delete the tag and GitHub Release for both the bad release *and the most
-  recent good release*
-- Re-release the previous version (to update homebrew)
+  recent good release*.
+    - This will allow you to re-do the most recent good release, which will
+      update homebrew such that the most recent good release is again the
+      "latest"
+- Re-release the previous version, to update homebrew (as described above)
 
 All of these can be accomplished by:
-- Following the steps under "If the release failed" for deleting the tag and
-  GitHub release for both the bad release
 - Checking out the git commit associated with the most recent good release
-  (`git checkout tags/v<good release>`). Save this commit SHA
-  (`git rev-list tags/v<good> --max-count=1`), in case you need it later, as
-  we'll be deleting the tag.
-- Delete the tag and GitHub release for the last good release (the one you
-  just checked out)
-- Syncing your local Git tags with the set of tags on Github (either re-clone
-  the Pachyderm repo, or run
-  `git tag -l | xargs git tag -d; git fetch origin master --tags`). This
-  prevents the release process from failing with `tag already exists`.
+  (`git checkout v<good>`). Save this commit SHA (`git rev-parse v<good>`)
+  just in case you need it later, as we'll be deleting the tag.
+- Following the steps under "If the release failed" to delete the tag and
+  GitHub release for both the bad release and the most recent good release.
+  (the one you just checked out)
 - Run `make point-release` (or follow the release process for custom releases)
 
 Helm
