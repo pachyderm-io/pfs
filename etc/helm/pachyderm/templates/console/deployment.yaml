@@ -1,0 +1,60 @@
+{{- /*
+SPDX-FileCopyrightText: Pachyderm, Inc. <info@pachyderm.com>
+SPDX-License-Identifier: Apache-2.0
+*/ -}}
+{{- if .Values.console.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: console
+    suite: pachyderm
+  name: console
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: console
+      suite: pachyderm
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: console
+        suite: pachyderm
+        {{- if .Values.console.podLabels }}
+        {{- toYaml .Values.console.podLabels | nindent 8 }}
+        {{- end }}
+      name: console
+      namespace: {{ .Release.Namespace }}
+    spec:
+      {{- if .Values.imagePullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecret | quote }}
+      {{- end }}
+      containers:
+      - image: "{{ .Values.console.image.repository }}:{{ .Values.console.image.tag }}"
+        imagePullPolicy: {{ .Values.console.image.pullPolicy }}
+        name: console
+        ports:
+        - containerPort: {{ .Values.console.config.graphqlPort }}
+          name: console-http
+        env:
+        - name: ISSUER_URI
+          value: {{ .Values.console.config.issuerURI | quote}}
+        - name: OAUTH_REDIRECT_URI
+          value: {{ .Values.console.config.oauthRedirectURI | quote }}
+        - name: OAUTH_CLIENT_ID
+          value: {{ .Values.console.config.oauthClientID | quote }}
+        - name: OAUTH_CLIENT_SECRET
+          value: {{ include "pachyderm.consoleSecret" . | quote }}
+        - name: GRAPHQL_PORT
+          value: {{ .Values.console.config.graphqlPort | quote }}
+        - name: OAUTH_PACHD_CLIENT_ID
+          value: {{ .Values.console.config.oauthPachdClientID | quote }}
+        - name: PACHD_ADDRESS
+          value: {{ .Values.console.config.pachdAddress | quote }}
+        {{- if .Values.console.resources }}
+        resources: {{ toYaml .Values.console.resources | nindent 10 }}
+        {{- end }}
+{{ end -}}

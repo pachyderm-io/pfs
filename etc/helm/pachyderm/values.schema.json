@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/schema#",
     "type": "object",
     "properties": {
-        "dash": {
+        "console": {
             "type": "object",
             "properties": {
                 "config": {
@@ -553,9 +553,6 @@
                         },
                         "repository": {
                             "type": "string"
-                        },
-                        "usesRoot": {
-                            "type": "boolean"
                         }
                     }
                 },
@@ -572,6 +569,9 @@
                             "type": "string"
                         }
                     }
+                },
+                "usesRoot": {
+                    "type": "boolean"
                 }
             }
         }

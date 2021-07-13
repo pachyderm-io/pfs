@@ -3,7 +3,7 @@
 
 deployTarget: GOOGLE
 
-dash:
+console:
   enabled: true
   image:
     tag: "newVersion"
@@ -25,10 +25,10 @@ ingress:
   enabled: true
   tls:
     enabled: true
-    secretName: "dash-tls"
+    secretName: "console-tls"
   annotations:
     kubernetes.io/ingress.class: "traefik"
-  host: "dash.test"
+  host: "console.test"
 
 pachd:
   postgresql:
@@ -67,7 +67,7 @@ pachd:
       memory: 2G
   tls:
     enabled: true
-    secretName: "dash-tls"
+    secretName: "console-tls"
 postgresql:
   # Set to false if you are bringing your own PostgreSQL instance. PostgreSQL is a requirement for Pachyderm.
   enabled: false

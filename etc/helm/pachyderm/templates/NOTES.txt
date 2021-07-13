@@ -3,21 +3,21 @@ SPDX-FileCopyrightText: Pachyderm, Inc. <info@pachyderm.com>
 SPDX-License-Identifier: Apache-2.0
 */ -}}
 
-{{- if .Values.dash.enabled }}
+{{- if .Values.console.enabled }}
 If you are using Enterprise edition, you will need to have created a
 connector with `pachctl idp create-connector`.  Then:
 
   $ cat <<EOF | pachctl idp create-client --config -{
-    "id": "dash",
-    "name": "dash",
-    "secret": "{{ include "pachyderm.dashSecret" . }}",
-    "redirect_uris": ["https://{{ .Values.dash.host }}/oauth/callback/?inline=true"]
+    "id": "console",
+    "name": "console",
+    "secret": "{{ include "pachyderm.consoleSecret" . }}",
+    "redirect_uris": ["https://{{ .Values.console.host }}/oauth/callback/?inline=true"]
   }
   EOF
   $ cat <<EOF | pachctl idp update-client --config -
   {
     "id": "pachd",
-    "trusted_peers": ["dash"]
+    "trusted_peers": ["console"]
   }
   EOF
 {{ end -}}

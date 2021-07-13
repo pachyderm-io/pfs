@@ -14,7 +14,7 @@ pachd:
   metrics:
     enabled: false
 
-dash:
+console:
   enabled: false
 
 worker:

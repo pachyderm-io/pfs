@@ -1,5 +1,5 @@
 deployTarget: LOCAL
-dash:
+console:
   enabled: false
 enterpriseServer:
   enabled: true
